@@ -3,24 +3,15 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    updateProfile,
-    sendEmailVerification,
-    signInWithEmailAndPassword,
-    signOut,
-    sendPasswordResetEmail,
-    onAuthStateChanged
+    getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification,
+    signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
-    getFirestore, 
-    doc, 
-    setDoc,
-    getDoc
+    getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
-// 2. CONFIGURAÇÃO DO FIREBASE (SUAS CHAVES)
+// 2. CONFIGURAÇÃO
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
@@ -28,8 +19,7 @@ const firebaseConfig = {
   projectId: "neo-flux-c91c8",
   storageBucket: "neo-flux-c91c8.firebasestorage.app",
   messagingSenderId: "6686219198",
-  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef",
-  measurementId: "G-FR4TF3VMBB"
+  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -40,13 +30,20 @@ const db = getFirestore(app);
 // 3. TEXTOS DOS TERMOS
 // ==========================================
 const termosPlanos = {
-    start: `<h3>Plano Start — R$ 49,99 mensais</h3><p>A assinatura Start concede ao contratante acesso aos recursos da plataforma Neo Flux previstos neste documento...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
-    pro: `<h3>Plano Pro — R$ 79,99 mensais</h3><p>O plano Pro disponibiliza recursos de gestão de festas e eventos...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
-    elite: `<h3>Plano Elite — R$ 99,99 mensais</h3><p>O plano Elite disponibiliza os recursos avançados...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`
+    start: `<h3>Plano Start</h3><p>...</p>`,
+    pro: `<h3>Plano Pro</h3><p>...</p>`,
+    elite: `<h3>Plano Elite</h3><p>...</p>`
+};
+
+// REGRAS DE LIMITE DE SUBSITES POR PLANO
+const limitesPlanos = {
+    start: 1,
+    pro: 1,
+    elite: 999 // Ilimitado na prática
 };
 
 // ==========================================
-// 4. VARIÁVEIS GLOBAIS E CONTROLE DE TELAS
+// 4. VARIÁVEIS GLOBAIS
 // ==========================================
 let dadosCliente = { nome: "", documento: "", aceitouTermos: false, plano: "" };
 const todasAsTelas = document.querySelectorAll('.tela');
@@ -56,7 +53,6 @@ function mostrarTela(idDaTela) {
     todasAsTelas.forEach(tela => tela.classList.remove('ativa'));
     document.getElementById(idDaTela).classList.add('ativa');
     msgStatus.textContent = "";
-    msgStatus.className = "mensagem";
     window.scrollTo(0, 0);
 }
 
@@ -75,7 +71,7 @@ document.getElementById('voltar-login-rec').addEventListener('click', (e) => { e
 document.getElementById('btn-ir-para-login').addEventListener('click', () => mostrarTela('tela-login'));
 
 // ==========================================
-// 5. LÓGICA DE SELEÇÃO DE PLANO
+// 5. SELEÇÃO DE PLANO E TERMOS
 // ==========================================
 document.querySelectorAll('.btn-selecionar-plano').forEach(botao => {
     botao.addEventListener('click', (e) => {
@@ -102,7 +98,7 @@ document.getElementById('form-termos').addEventListener('submit', (e) => {
 });
 
 // ==========================================
-// 6. CRIAÇÃO DE CONTA (FIREBASE)
+// 6. CRIAÇÃO DE CONTA
 // ==========================================
 document.getElementById('form-cadastro-final').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -130,17 +126,14 @@ document.getElementById('form-cadastro-final').addEventListener('submit', async 
             criadoEm: new Date()
         });
 
-        // Preenche os dados na tela de pagamento e vai para ela
         const nomePlanoCapitalizado = dadosCliente.plano.charAt(0).toUpperCase() + dadosCliente.plano.slice(1);
         document.getElementById('resumo-plano-pagamento').textContent = nomePlanoCapitalizado;
         document.getElementById('resumo-nome-pagamento').textContent = dadosCliente.nome;
         mostrarTela('tela-pagamento');
 
     } catch (error) {
-        console.error(error);
-        if (error.code === 'auth/email-already-in-use') mostrarMensagem("Este e-mail já está cadastrado.", "erro");
-        else if (error.code === 'auth/weak-password') mostrarMensagem("A senha precisa ter no mínimo 6 caracteres.", "erro");
-        else mostrarMensagem("Erro ao cadastrar: " + error.message, "erro");
+        if (error.code === 'auth/email-already-in-use') mostrarMensagem("E-mail já cadastrado.", "erro");
+        else mostrarMensagem("Erro: " + error.message, "erro");
     } finally {
         btn.textContent = "Criar minha conta";
         btn.disabled = false;
@@ -148,90 +141,63 @@ document.getElementById('form-cadastro-final').addEventListener('submit', async 
 });
 
 // ==========================================
-// 7. VERIFICAÇÃO DE E-MAIL
+// 7. VERIFICAÇÃO, LOGIN E RECUPERAÇÃO
 // ==========================================
 document.getElementById('btn-ja-verifiquei').addEventListener('click', async () => {
-    const user = auth.currentUser;
-    if (user) {
-        await user.reload(); 
-        if (user.emailVerified) {
-            carregarDadosCliente(user.uid);
+    if (auth.currentUser) {
+        await auth.currentUser.reload(); 
+        if (auth.currentUser.emailVerified) {
+            carregarDadosCliente(auth.currentUser.uid);
             mostrarTela('tela-cliente');
         } else {
-            mostrarMensagem("E-mail ainda não verificado. Verifique sua caixa de entrada.", "erro");
+            mostrarMensagem("E-mail ainda não verificado.", "erro");
         }
     }
 });
 
 document.getElementById('btn-reenviar-email').addEventListener('click', async (e) => {
     e.preventDefault();
-    const user = auth.currentUser;
-    if (user) {
+    if (auth.currentUser) {
         try {
-            await sendEmailVerification(user);
-            mostrarMensagem("Novo e-mail de verificação enviado!", "sucesso");
-        } catch (error) {
-            mostrarMensagem("Aguarde alguns minutos antes de reenviar.", "erro");
-        }
+            await sendEmailVerification(auth.currentUser);
+            mostrarMensagem("E-mail reenviado!", "sucesso");
+        } catch (error) { mostrarMensagem("Aguarde para reenviar.", "erro"); }
     }
 });
 
-// ==========================================
-// 8. LOGIN
-// ==========================================
 document.getElementById('form-login').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email-login').value;
     const senha = document.getElementById('senha-login').value;
-    const btn = e.target.querySelector('button');
 
     try {
-        btn.textContent = "Entrando...";
-        btn.disabled = true;
-
         const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-        const user = userCredential.user;
-
-        if (!user.emailVerified) {
+        if (!userCredential.user.emailVerified) {
             mostrarTela('tela-verificacao');
-            mostrarMensagem("Por favor, verifique seu e-mail antes de entrar.", "info");
+            mostrarMensagem("Verifique seu e-mail antes de entrar.", "info");
         } else {
-            carregarDadosCliente(user.uid);
+            carregarDadosCliente(userCredential.user.uid);
             mostrarTela('tela-cliente');
         }
     } catch (error) {
-        console.error(error);
         mostrarMensagem("E-mail ou senha incorretos.", "erro");
-    } finally {
-        btn.textContent = "Entrar";
-        btn.disabled = false;
     }
 });
 
-// ==========================================
-// 9. RECUPERAR SENHA
-// ==========================================
 document.getElementById('form-recuperar').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('email-recuperar').value;
-    
     try {
-        await sendPasswordResetEmail(auth, email);
-        mostrarMensagem("Link de recuperação enviado para o seu e-mail!", "sucesso");
-        document.getElementById('form-recuperar').reset();
-    } catch (error) {
-        mostrarMensagem("Erro ao enviar. Verifique o e-mail digitado.", "erro");
-    }
+        await sendPasswordResetEmail(auth, document.getElementById('email-recuperar').value);
+        mostrarMensagem("Link de recuperação enviado!", "sucesso");
+    } catch (error) { mostrarMensagem("Erro ao enviar.", "erro"); }
 });
 
 // ==========================================
-// 10. ÁREA DO CLIENTE E LOGOUT
+// 8. ÁREA DO CLIENTE E SUBSITES
 // ==========================================
 async function carregarDadosCliente(uid) {
     try {
-        const docRef = doc(db, "usuarios", uid);
-        const docSnap = await getDoc(docRef);
-
+        const docSnap = await getDoc(doc(db, "usuarios", uid));
         if (docSnap.exists()) {
             const dados = docSnap.data();
             document.getElementById('cliente-nome').textContent = dados.nome;
@@ -243,19 +209,111 @@ async function carregarDadosCliente(uid) {
             } else {
                 document.getElementById('cliente-status').textContent = "Ativo (Pagamento Confirmado)";
             }
+
+            // Configura o limite de subsites
+            const limite = limitesPlanos[dados.planoPreferido] || 1;
+            document.getElementById('limite-subsites').textContent = limite === 999 ? "ilimitados" : limite;
+
+            // Carrega os subsites desse cliente
+            carregarSubsites(uid, limite);
+
         }
     } catch (error) {
         console.error("Erro ao buscar dados:", error);
     }
 }
 
+async function carregarSubsites(uidDono, limite) {
+    const lista = document.getElementById('lista-subsites');
+    const btnCriar = document.getElementById('btn-criar-subsite');
+    const inputTitulo = document.getElementById('titulo-subsite');
+    
+    try {
+        // Busca os subsites onde o idDono é igual ao uid do usuário logado
+        const q = query(collection(db, "subsites"), where("idDono", "==", uidDono));
+        const querySnapshot = await getDocs(q);
+        
+        lista.innerHTML = ""; // Limpa a lista
+
+        // Verifica se já bateu o limite
+        if (querySnapshot.size >= limite) {
+            btnCriar.disabled = true;
+            inputTitulo.disabled = true;
+            btnCriar.textContent = "Limite Atingido";
+            btnCriar.style.background = "#555";
+        } else {
+            btnCriar.disabled = false;
+            inputTitulo.disabled = false;
+            btnCriar.textContent = "Criar Subsite";
+            btnCriar.style.background = "";
+        }
+
+        // Mostra os subsites na tela
+        querySnapshot.forEach((docSnap) => {
+            const subsite = docSnap.data();
+            const li = document.createElement('li');
+            li.style.borderBottom = "1px solid #333";
+            li.style.padding = "10px 0";
+            li.innerHTML = `<strong>${subsite.titulo}</strong> <br><small>Criado em: ${subsite.criadoEm.toDate().toLocaleDateString()}</small>`;
+            lista.appendChild(li);
+        });
+
+        if (querySnapshot.size === 0) {
+            lista.innerHTML = "<li>Você ainda não criou nenhum subsite.</li>";
+        }
+
+    } catch (error) {
+        console.error("Erro ao carregar subsites:", error);
+        lista.innerHTML = "<li>Erro ao carregar subsites.</li>";
+    }
+}
+
+// Evento de criar o subsite
+document.getElementById('btn-criar-subsite').addEventListener('click', async () => {
+    const user = auth.currentUser;
+    const titulo = document.getElementById('titulo-subsite').value.trim();
+
+    if (!user) return;
+    if (titulo === "") {
+        alert("Digite um título para o subsite!");
+        return;
+    }
+
+    const btn = document.getElementById('btn-criar-subsite');
+    btn.textContent = "Criando...";
+    btn.disabled = true;
+
+    try {
+        // Pega o plano para checar o limite de novo
+        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+        const plano = userDoc.data().planoPreferido;
+        const limite = limitesPlanos[plano] || 1;
+
+        // Salva no Firestore
+        await addDoc(collection(db, "subsites"), {
+            idDono: user.uid,
+            titulo: titulo,
+            criadoEm: new Date()
+        });
+
+        document.getElementById('titulo-subsite').value = ""; // Limpa o campo
+        carregarSubsites(user.uid, limite); // Recarrega a lista
+
+    } catch (error) {
+        alert("Erro ao criar subsite: " + error.message);
+        btn.textContent = "Criar Subsite";
+        btn.disabled = false;
+    }
+});
+
+// Logout
 document.getElementById('btn-logout').addEventListener('click', async () => {
     await signOut(auth);
     mostrarTela('tela-boas-vindas');
 });
 
 // ==========================================
-// 11. OBSERVADOR DE ESTADO (MANTÉM LOGADO)
+// 9. OBSERVADOR DE ESTADO
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
