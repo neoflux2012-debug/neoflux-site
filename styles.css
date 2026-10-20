@@ -1,0 +1,327 @@
+/* ==========================================
+   1. RESET E CONFIGURAÇÕES GERAIS
+   ========================================== */
+:root {
+    --cor-fundo: #050505; /* Preto quase absoluto */
+    --cor-card: #121212; /* Preto um pouco mais claro para os cards */
+    --cor-azul: #00d2ff; /* Azul da logo */
+    --cor-roxo: #8a2be2; /* Roxo da logo */
+    --cor-roxo-escuro: #4b0082;
+    --texto-principal: #ffffff;
+    --texto-secundario: #a0a0a0;
+    --borda-sutil: #2a2a2a;
+    
+    /* Gradiente da logo para botões e detalhes */
+    --gradiente-neo: linear-gradient(135deg, var(--cor-azul) 0%, var(--cor-roxo) 100%);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--cor-fundo);
+    color: var(--texto-principal);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ==========================================
+   2. CABEÇALHO E LOGO
+   ========================================== */
+header {
+    width: 100%;
+    padding: 30px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo {
+    max-width: 200px; /* Ajuste conforme o tamanho da sua imagem */
+    height: auto;
+    /* Um leve brilho na logo */
+    filter: drop-shadow(0 0 10px rgba(138, 43, 226, 0.3));
+}
+
+/* ==========================================
+   3. CONTROLE DE TELAS (O Segredo do SPA)
+   ========================================== */
+main {
+    width: 100%;
+    max-width: 500px; /* Largura máxima para telas de celular e desktop */
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.tela {
+    display: none; /* Esconde todas as telas por padrão */
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.tela.ativa {
+    display: block; /* Mostra apenas a que tem a classe .ativa */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Títulos e textos */
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    background: var(--gradiente-neo);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+p {
+    text-align: center;
+    color: var(--texto-secundario);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* ==========================================
+   4. FORMULÁRIOS E INPUTS
+   ========================================== */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: var(--cor-card);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--borda-sutil);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+label {
+    font-size: 0.9rem;
+    color: var(--texto-principal);
+    font-weight: 500;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: #0a0a0a;
+    border: 1px solid var(--borda-sutil);
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: var(--cor-roxo);
+    box-shadow: 0 0 5px rgba(138, 43, 226, 0.3);
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    accent-color: var(--cor-roxo);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.checkbox-container label {
+    font-size: 0.85rem;
+    color: var(--texto-secundario);
+    cursor: pointer;
+}
+
+/* ==========================================
+   5. BOTÕES
+   ========================================== */
+.botao-principal,
+.btn-selecionar-plano {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--gradiente-neo);
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 10px;
+}
+
+.botao-principal:hover,
+.btn-selecionar-plano:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+}
+
+.botao-principal:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==========================================
+   6. CARDS DE PLANOS
+   ========================================== */
+.container-planos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.card-plano {
+    background: var(--cor-card);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--borda-sutil);
+    text-align: center;
+    transition: transform 0.3s, border-color 0.3s;
+}
+
+.card-plano:hover {
+    transform: translateY(-5px);
+    border-color: var(--cor-azul);
+}
+
+.card-plano h3 {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+    color: var(--cor-azul);
+}
+
+.preco {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.preco span {
+    font-size: 0.9rem;
+    color: var(--texto-secundario);
+    font-weight: normal;
+}
+
+/* ==========================================
+   7. TERMOS E PAGAMENTO
+   ========================================== */
+.caixa-termos {
+    background: var(--cor-card);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--borda-sutil);
+    max-height: 250px; /* Limita a altura */
+    overflow-y: auto; /* Adiciona barra de rolagem */
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--texto-secundario);
+}
+
+.caixa-termos h3 {
+    color: var(--texto-principal);
+    margin-bottom: 10px;
+}
+
+.caixa-termos p {
+    text-align: left; /* Termos alinhados à esquerda */
+    margin-bottom: 10px;
+}
+
+.destaque-aviso {
+    color: var(--cor-azul);
+    background: rgba(0, 210, 255, 0.1);
+    padding: 10px;
+    border-left: 4px solid var(--cor-azul);
+    border-radius: 4px;
+    margin-top: 15px;
+}
+
+.caixa-pagamento-simulada {
+    background: rgba(138, 43, 226, 0.1);
+    border: 1px dashed var(--cor-roxo);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.link-troca {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+
+.link-troca a {
+    color: var(--cor-azul);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.link-troca a:hover {
+    text-decoration: underline;
+}
+
+/* Mensagem de Status */
+.mensagem {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-weight: bold;
+}
+.mensagem.erro { background: rgba(255, 0, 0, 0.1); color: #ff4d4d; }
+.mensagem.sucesso { background: rgba(0, 255, 0, 0.1); color: #4dff4d; }
+.mensagem.info { background: rgba(0, 210, 255, 0.1); color: var(--cor-azul); }
+
+/* ==========================================
+   8. RESPONSIVIDADE (PC e Celular)
+   ========================================== */
+@media (min-width: 768px) {
+    /* Em telas grandes, os planos ficam lado a lado */
+    .container-planos {
+        flex-direction: row;
+        justify-content: center;
+    }
+    
+    .card-plano {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    main {
+        max-width: 800px; /* Aumenta a largura no PC */
+    }
+    
+    /* Formulários ficam mais largos, mas não esparramados */
+    form {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .caixa-termos {
+        max-height: 300px;
+    }
+}
