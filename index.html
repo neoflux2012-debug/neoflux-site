@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo Flux | Criamos sites que conectam</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <img src="logo.png" alt="Logo Neo Flux" class="logo">
+    </header>
+
+    <main>
+        <!-- TELA 1: BOAS-VINDAS -->
+        <section id="tela-boas-vindas" class="tela ativa">
+            <h2>Bem-vindo à Neo Flux</h2>
+            <p>O primeiro passo para ter um site incrível começa aqui.</p>
+            <button id="btn-comecar" class="botao-principal">Começar agora</button>
+            <p class="link-troca">Já tem uma conta? <a href="#" id="ir-para-login">Faça login</a></p>
+        </section>
+
+        <!-- TELA 2: ESCOLHA DE PLANOS -->
+        <section id="tela-planos" class="tela">
+            <h2>Escolha o plano ideal para você</h2>
+            <div class="container-planos">
+                <div class="card-plano" data-plano="start">
+                    <h3>Start</h3>
+                    <p class="preco">R$ 49,99 <span>/mês</span></p>
+                    <p>Ideal para começar.</p>
+                    <button class="btn-selecionar-plano">Selecionar</button>
+                </div>
+                <div class="card-plano" data-plano="pro">
+                    <h3>Pro</h3>
+                    <p class="preco">R$ 79,99 <span>/mês</span></p>
+                    <p>Para quem quer crescer.</p>
+                    <button class="btn-selecionar-plano">Selecionar</button>
+                </div>
+                <div class="card-plano" data-plano="elite">
+                    <h3>Elite</h3>
+                    <p class="preco">R$ 99,99 <span>/mês</span></p>
+                    <p>A experiência completa.</p>
+                    <button class="btn-selecionar-plano">Selecionar</button>
+                </div>
+            </div>
+            <p class="link-troca"><a href="#" id="voltar-inicio">Voltar</a></p>
+        </section>
+
+        <!-- TELA 3: TERMOS E DADOS BÁSICOS -->
+        <section id="tela-termos" class="tela">
+            <h2 id="titulo-termos">Termos e Condições</h2>
+            <div class="caixa-termos" id="texto-termos"></div>
+
+            <form id="form-termos">
+                <label for="nome-cliente">Nome Completo:</label>
+                <input type="text" id="nome-cliente" required>
+
+                <label for="doc-cliente">CPF ou CNPJ:</label>
+                <input type="text" id="doc-cliente" required>
+
+                <div class="checkbox-container">
+                    <input type="checkbox" id="aceite-termos" required>
+                    <label for="aceite-termos">Li e aceito os Termos e Condições do plano escolhido.</label>
+                </div>
+
+                <button type="submit" class="botao-principal">Aceitar e Criar Conta</button>
+            </form>
+        </section>
+
+        <!-- TELA 4: CRIAÇÃO DE CONTA -->
+        <section id="tela-criar-conta" class="tela">
+            <h2>Crie sua conta</h2>
+            <p>Plano selecionado: <strong id="resumo-plano-conta">...</strong></p>
+            <p>Crie sua senha para acessar sua área exclusiva.</p>
+            
+            <form id="form-cadastro-final">
+                <label for="email-cadastro">E-mail:</label>
+                <input type="email" id="email-cadastro" required>
+
+                <label for="senha-cadastro">Senha:</label>
+                <input type="password" id="senha-cadastro" minlength="6" required>
+
+                <button type="submit" class="botao-principal">Criar minha conta</button>
+            </form>
+        </section>
+
+        <!-- TELA 5: VERIFICAÇÃO DE E-MAIL -->
+        <section id="tela-verificacao" class="tela">
+            <h2>Verifique seu e-mail</h2>
+            <p>Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada (e o spam) para ativar sua conta.</p>
+            
+            <button id="btn-ja-verifiquei" class="botao-principal">Já verifiquei, entrar</button>
+            <p class="link-troca"><a href="#" id="btn-reenviar-email">Reenviar e-mail de confirmação</a></p>
+        </section>
+
+        <!-- TELA 6: LOGIN -->
+        <section id="tela-login" class="tela">
+            <h2>Bem-vindo de volta</h2>
+            <form id="form-login">
+                <label for="email-login">E-mail:</label>
+                <input type="email" id="email-login" required>
+
+                <label for="senha-login">Senha:</label>
+                <input type="password" id="senha-login" required>
+
+                <button type="submit" class="botao-principal">Entrar</button>
+            </form>
+            <p class="link-troca">
+                <a href="#" id="ir-para-recuperar">Esqueci minha senha</a> | 
+                <a href="#" id="voltar-para-cadastro">Criar conta</a>
+            </p>
+        </section>
+
+        <!-- TELA 7: RECUPERAÇÃO DE SENHA -->
+        <section id="tela-recuperar" class="tela">
+            <h2>Recuperar Senha</h2>
+            <p>Digite seu e-mail para receber um link de redefinição.</p>
+            <form id="form-recuperar">
+                <label for="email-recuperar">E-mail:</label>
+                <input type="email" id="email-recuperar" required>
+                <button type="submit" class="botao-principal">Enviar link</button>
+            </form>
+            <p class="link-troca"><a href="#" id="voltar-login-rec">Voltar para o login</a></p>
+        </section>
+
+        <!-- TELA 8: ÁREA DO CLIENTE -->
+        <section id="tela-cliente" class="tela">
+            <h2>Área do Cliente</h2>
+            <div class="caixa-termos" style="max-height: none;">
+                <p style="text-align: left;"><strong>Nome:</strong> <span id="cliente-nome">...</span></p>
+                <p style="text-align: left;"><strong>E-mail:</strong> <span id="cliente-email">...</span></p>
+                <p style="text-align: left;"><strong>Plano Preferido:</strong> <span id="cliente-plano">...</span></p>
+                <p style="text-align: left;"><strong>Status de Pagamento:</strong> <span id="cliente-status">...</span></p>
+            </div>
+            
+            <button id="btn-simular-pagamento" class="botao-principal" style="margin-bottom: 15px;">Simular Pagamento Aprovado</button>
+            <button id="btn-logout" class="botao-principal" style="background: #333;">Sair da Conta</button>
+        </section>
+
+        <div id="mensagem-status" class="mensagem"></div>
+    </main>
+
+    <script type="module" src="neo.js"></script>
+</body>
+</html>
