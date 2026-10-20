@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin | Neo Flux</title>
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+        /* Estilos exclusivos do painel admin */
+        .tabela-clientes { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .tabela-clientes th, .tabela-clientes td { padding: 12px; text-align: left; border-bottom: 1px solid var(--borda-sutil); }
+        .tabela-clientes th { color: var(--cor-azul); }
+        .btn-liberar { background: #00c853; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-liberar:hover { background: #00e676; }
+        .status-pendente { color: #ff9800; font-weight: bold; }
+        .status-ativo { color: #00c853; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="./logo.png" alt="Neo Flux" class="logo">
+        <h2 style="text-align:center; margin-top: 10px;">Painel do Administrador</h2>
+    </header>
+
+    <main style="max-width: 900px;">
+        <!-- TELA DE LOGIN DO ADMIN -->
+        <section id="tela-admin-login" class="tela ativa">
+            <h2>Acesso Restrito</h2>
+            <form id="form-admin-login">
+                <label for="admin-email">E-mail Admin:</label>
+                <input type="email" id="admin-email" required>
+
+                <label for="admin-senha">Senha:</label>
+                <input type="password" id="admin-senha" required>
+
+                <button type="submit" class="botao-principal">Entrar no Painel</button>
+            </form>
+        </section>
+
+        <!-- PAINEL DE CLIENTES -->
+        <section id="tela-admin-painel" class="tela">
+            <h2>Gerenciar Clientes</h2>
+            <p>Aqui você vê quem se cadastrou e libera o acesso de quem já pagou o Pix.</p>
+            
+            <button id="btn-admin-sair" class="botao-principal" style="background: #333; margin-bottom: 20px;">Sair do Painel</button>
+
+            <div style="overflow-x: auto;">
+                <table class="tabela-clientes">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Plano</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-clientes">
+                        <!-- O JavaScript vai preencher isso aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <div id="mensagem-status" class="mensagem"></div>
+    </main>
+
+    <!-- Chama o script do admin -->
+    <script type="module" src="./admin.js"></script>
+</body>
+</html>
