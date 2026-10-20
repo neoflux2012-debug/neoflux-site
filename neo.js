@@ -54,8 +54,11 @@ const msgStatus = document.getElementById('mensagem-status');
 function mostrarTela(idDaTela) {
     todasAsTelas.forEach(tela => tela.classList.remove('ativa'));
     const telaAlvo = document.getElementById(idDaTela);
-    if (telaAlvo) telaAlvo.classList.add('ativa');
+    if (telaAlvo) {
+        telaAlvo.classList.add('ativa');
+    }
     
+    // PROTEÇÃO AQUI: Só tenta limpar a mensagem se o elemento existir
     if (msgStatus) {
         msgStatus.textContent = "";
         msgStatus.className = "mensagem";
@@ -64,36 +67,14 @@ function mostrarTela(idDaTela) {
 }
 
 function mostrarMensagem(texto, tipo) {
+    // PROTEÇÃO AQUI TAMBÉM
     if (msgStatus) {
         msgStatus.textContent = texto;
         msgStatus.className = `mensagem ${tipo}`;
     } else {
-        console.warn("Elemento de mensagem não encontrado:", texto);
+        console.warn("Aviso: Elemento #mensagem-status não encontrado no HTML.");
     }
 }
-
-// Navegação (Protegida com verificação para não quebrar se o botão não existir)
-const btnComecar = document.getElementById('btn-comecar');
-if (btnComecar) btnComecar.addEventListener('click', () => mostrarTela('tela-planos'));
-
-const voltarInicio = document.getElementById('voltar-inicio');
-if (voltarInicio) voltarInicio.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
-
-const irParaLogin = document.getElementById('ir-para-login');
-if (irParaLogin) irParaLogin.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
-
-const voltarCadastro = document.getElementById('voltar-para-cadastro');
-if (voltarCadastro) voltarCadastro.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
-
-const irParaRecuperar = document.getElementById('ir-para-recuperar');
-if (irParaRecuperar) irParaRecuperar.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-recuperar'); });
-
-const voltarLoginRec = document.getElementById('voltar-login-rec');
-if (voltarLoginRec) voltarLoginRec.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
-
-const btnIrParaLogin = document.getElementById('btn-ir-para-login');
-if (btnIrParaLogin) btnIrParaLogin.addEventListener('click', () => mostrarTela('tela-login'));
-
 
 // ==========================================
 // 5. SELEÇÃO DE PLANO E TERMOS
