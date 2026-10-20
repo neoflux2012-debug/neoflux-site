@@ -7,11 +7,12 @@ import {
     signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
-    getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs 
+    getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs,
+    deleteDoc, updateDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
-// 2. CONFIGURAÇÃO
+// 2. CONFIGURAÇÃO DO FIREBASE (SUAS CHAVES)
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
@@ -19,7 +20,8 @@ const firebaseConfig = {
   projectId: "neo-flux-c91c8",
   storageBucket: "neo-flux-c91c8.firebasestorage.app",
   messagingSenderId: "6686219198",
-  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
+  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef",
+  measurementId: "G-FR4TF3VMBB"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -30,18 +32,18 @@ const db = getFirestore(app);
 // 3. TEXTOS DOS TERMOS
 // ==========================================
 const termosPlanos = {
-    start: `<h3>Plano Start</h3><p>...</p>`,
-    pro: `<h3>Plano Pro</h3><p>...</p>`,
-    elite: `<h3>Plano Elite</h3><p>...</p>`,
-    elite_premium: `<h3>Plano Elite Premium</h3><p>O plano definitivo com gerador de contratos...</p>`
+    start: `<h3>Plano Start — R$ 49,99 mensais</h3><p>A assinatura Start concede...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
+    pro: `<h3>Plano Pro — R$ 79,99 mensais</h3><p>O plano Pro disponibiliza...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
+    elite: `<h3>Plano Elite — R$ 99,99 mensais</h3><p>O plano Elite disponibiliza...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
+    elite_premium: `<h3>Plano Elite Premium — R$ 149,99 mensais</h3><p>O plano Elite Premium inclui todas as ferramentas do Elite, mais o Gerador de Contratos exclusivo...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`
 };
 
-// NOVO: Adicionando o Elite Premium
+// Limites de subsites por plano
 const limitesPlanos = {
     start: 1,
     pro: 1,
     elite: 999,
-    elite_premium: 9999 // Praticamente ilimitado
+    elite_premium: 9999 
 };
 
 // ==========================================
@@ -54,11 +56,8 @@ const msgStatus = document.getElementById('mensagem-status');
 function mostrarTela(idDaTela) {
     todasAsTelas.forEach(tela => tela.classList.remove('ativa'));
     const telaAlvo = document.getElementById(idDaTela);
-    if (telaAlvo) {
-        telaAlvo.classList.add('ativa');
-    }
+    if (telaAlvo) telaAlvo.classList.add('ativa');
     
-    // PROTEÇÃO AQUI: Só tenta limpar a mensagem se o elemento existir
     if (msgStatus) {
         msgStatus.textContent = "";
         msgStatus.className = "mensagem";
@@ -67,14 +66,36 @@ function mostrarTela(idDaTela) {
 }
 
 function mostrarMensagem(texto, tipo) {
-    // PROTEÇÃO AQUI TAMBÉM
     if (msgStatus) {
         msgStatus.textContent = texto;
         msgStatus.className = `mensagem ${tipo}`;
     } else {
-        console.warn("Aviso: Elemento #mensagem-status não encontrado no HTML.");
+        console.warn("Elemento #mensagem-status não encontrado.");
     }
 }
+
+// Navegação (Protegida com verificação para não quebrar se o botão não existir)
+const btnComecar = document.getElementById('btn-comecar');
+if (btnComecar) btnComecar.addEventListener('click', () => mostrarTela('tela-planos'));
+
+const voltarInicio = document.getElementById('voltar-inicio');
+if (voltarInicio) voltarInicio.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
+
+const irParaLogin = document.getElementById('ir-para-login');
+if (irParaLogin) irParaLogin.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
+
+const voltarCadastro = document.getElementById('voltar-para-cadastro');
+if (voltarCadastro) voltarCadastro.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
+
+const irParaRecuperar = document.getElementById('ir-para-recuperar');
+if (irParaRecuperar) irParaRecuperar.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-recuperar'); });
+
+const voltarLoginRec = document.getElementById('voltar-login-rec');
+if (voltarLoginRec) voltarLoginRec.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
+
+const btnIrParaLogin = document.getElementById('btn-ir-para-login');
+if (btnIrParaLogin) btnIrParaLogin.addEventListener('click', () => mostrarTela('tela-login'));
+
 
 // ==========================================
 // 5. SELEÇÃO DE PLANO E TERMOS
@@ -84,7 +105,6 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(botao => {
         const card = e.target.closest('.card-plano');
         dadosCliente.plano = card.getAttribute('data-plano');
         
-        // Pega o nome bonitinho
         const nomePlano = card.querySelector('h3').textContent;
         document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
         document.getElementById('texto-termos').innerHTML = termosPlanos[dadosCliente.plano] || "<p>Termos em atualização.</p>";
@@ -257,7 +277,6 @@ async function carregarSubsites(uidDono, limite) {
             const idSubsite = docSnap.id;
             const li = document.createElement('li');
             
-            // Deixando o layout do item da lista mais bonito
             li.style.border = "1px solid #333";
             li.style.borderRadius = "8px";
             li.style.padding = "15px";
@@ -267,16 +286,21 @@ async function carregarSubsites(uidDono, limite) {
             li.style.alignItems = "center";
             li.style.background = "#0a0a0a";
 
-            // Trocando emojis pelos ícones do Lucide
             li.innerHTML = `
                 <div>
                     <strong style="font-size: 1.1rem; color: var(--cor-azul);">${subsite.titulo}</strong> <br>
                     <small style="color: #888;">Criado em: ${subsite.criadoEm.toDate().toLocaleDateString()}</small>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <!-- BOTÃO ACESSAR -->
+                    <a href="./subsite.html?id=${idSubsite}" style="background: #00d2ff; color: #000; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Acessar Subsite">
+                        <i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
+                    </a>
+                    
                     <button class="btn-editar-subsite" data-id="${idSubsite}" data-titulo="${subsite.titulo}" style="background: #f39c12; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                         <i data-lucide="edit" style="width: 18px; height: 18px;"></i>
                     </button>
+                    
                     <button class="btn-apagar-subsite" data-id="${idSubsite}" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                         <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
                     </button>
@@ -291,7 +315,6 @@ async function carregarSubsites(uidDono, limite) {
 
         adicionarEventosBotoesSubsite(uidDono, limite);
 
-        // O SEGREDO: Manda o Lucide desenhar os ícones que acabamos de criar!
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
@@ -341,7 +364,6 @@ document.getElementById('btn-criar-subsite')?.addEventListener('click', async ()
 function adicionarEventosBotoesSubsite(uidDono, limite) {
     document.querySelectorAll('.btn-apagar-subsite').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            // Como o clique agora pode ser no ícone dentro do botão, usamos closest
             const botao = e.target.closest('.btn-apagar-subsite');
             const id = botao.getAttribute('data-id');
             
@@ -377,6 +399,7 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
         });
     });
 }
+
 // ==========================================
 // 9. OBSERVADOR DE ESTADO
 // ==========================================
