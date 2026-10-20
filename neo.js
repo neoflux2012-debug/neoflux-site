@@ -12,7 +12,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
-// 2. CONFIGURAÇÃO DO FIREBASE (SUAS CHAVES)
+// 2. CONFIGURAÇÃO DO FIREBASE
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
@@ -38,7 +38,6 @@ const termosPlanos = {
     elite_premium: `<h3>Plano Elite Premium — R$ 149,99 mensais</h3><p>O plano Elite Premium inclui todas as ferramentas do Elite, mais o Gerador de Contratos exclusivo...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`
 };
 
-// Limites de subsites por plano
 const limitesPlanos = {
     start: 1,
     pro: 1,
@@ -47,7 +46,7 @@ const limitesPlanos = {
 };
 
 // ==========================================
-// 4. VARIÁVEIS GLOBAIS E CONTROLE DE TELAS
+// 4. CONTROLE DE TELAS
 // ==========================================
 let dadosCliente = { nome: "", documento: "", aceitouTermos: false, plano: "" };
 const todasAsTelas = document.querySelectorAll('.tela');
@@ -57,45 +56,22 @@ function mostrarTela(idDaTela) {
     todasAsTelas.forEach(tela => tela.classList.remove('ativa'));
     const telaAlvo = document.getElementById(idDaTela);
     if (telaAlvo) telaAlvo.classList.add('ativa');
-    
-    if (msgStatus) {
-        msgStatus.textContent = "";
-        msgStatus.className = "mensagem";
-    }
+    if (msgStatus) { msgStatus.textContent = ""; msgStatus.className = "mensagem"; }
     window.scrollTo(0, 0);
 }
 
 function mostrarMensagem(texto, tipo) {
-    if (msgStatus) {
-        msgStatus.textContent = texto;
-        msgStatus.className = `mensagem ${tipo}`;
-    } else {
-        console.warn("Elemento #mensagem-status não encontrado.");
-    }
+    if (msgStatus) { msgStatus.textContent = texto; msgStatus.className = `mensagem ${tipo}`; }
 }
 
-// Navegação (Protegida com verificação para não quebrar se o botão não existir)
-const btnComecar = document.getElementById('btn-comecar');
-if (btnComecar) btnComecar.addEventListener('click', () => mostrarTela('tela-planos'));
-
-const voltarInicio = document.getElementById('voltar-inicio');
-if (voltarInicio) voltarInicio.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
-
-const irParaLogin = document.getElementById('ir-para-login');
-if (irParaLogin) irParaLogin.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
-
-const voltarCadastro = document.getElementById('voltar-para-cadastro');
-if (voltarCadastro) voltarCadastro.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
-
-const irParaRecuperar = document.getElementById('ir-para-recuperar');
-if (irParaRecuperar) irParaRecuperar.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-recuperar'); });
-
-const voltarLoginRec = document.getElementById('voltar-login-rec');
-if (voltarLoginRec) voltarLoginRec.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
-
-const btnIrParaLogin = document.getElementById('btn-ir-para-login');
-if (btnIrParaLogin) btnIrParaLogin.addEventListener('click', () => mostrarTela('tela-login'));
-
+// Navegação
+document.getElementById('btn-comecar')?.addEventListener('click', () => mostrarTela('tela-planos'));
+document.getElementById('voltar-inicio')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
+document.getElementById('ir-para-login')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
+document.getElementById('voltar-para-cadastro')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
+document.getElementById('ir-para-recuperar')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-recuperar'); });
+document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
+document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
 
 // ==========================================
 // 5. SELEÇÃO DE PLANO E TERMOS
@@ -104,11 +80,9 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(botao => {
     botao.addEventListener('click', (e) => {
         const card = e.target.closest('.card-plano');
         dadosCliente.plano = card.getAttribute('data-plano');
-        
         const nomePlano = card.querySelector('h3').textContent;
         document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
         document.getElementById('texto-termos').innerHTML = termosPlanos[dadosCliente.plano] || "<p>Termos em atualização.</p>";
-        
         mostrarTela('tela-termos');
     });
 });
@@ -118,7 +92,6 @@ document.getElementById('form-termos').addEventListener('submit', (e) => {
     dadosCliente.nome = document.getElementById('nome-cliente').value;
     dadosCliente.documento = document.getElementById('doc-cliente').value;
     dadosCliente.aceitouTermos = document.getElementById('aceite-termos').checked;
-
     document.getElementById('resumo-plano-conta').textContent = dadosCliente.plano.toUpperCase();
     mostrarTela('tela-criar-conta');
 });
@@ -175,19 +148,15 @@ document.getElementById('btn-ja-verifiquei')?.addEventListener('click', async ()
         if (auth.currentUser.emailVerified) {
             carregarDadosCliente(auth.currentUser.uid);
             mostrarTela('tela-cliente');
-        } else {
-            mostrarMensagem("E-mail ainda não verificado.", "erro");
-        }
+        } else { mostrarMensagem("E-mail ainda não verificado.", "erro"); }
     }
 });
 
 document.getElementById('btn-reenviar-email')?.addEventListener('click', async (e) => {
     e.preventDefault();
     if (auth.currentUser) {
-        try {
-            await sendEmailVerification(auth.currentUser);
-            mostrarMensagem("E-mail reenviado!", "sucesso");
-        } catch (error) { mostrarMensagem("Aguarde para reenviar.", "erro"); }
+        try { await sendEmailVerification(auth.currentUser); mostrarMensagem("E-mail reenviado!", "sucesso"); } 
+        catch (error) { mostrarMensagem("Aguarde para reenviar.", "erro"); }
     }
 });
 
@@ -205,9 +174,7 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
             carregarDadosCliente(userCredential.user.uid);
             mostrarTela('tela-cliente');
         }
-    } catch (error) {
-        mostrarMensagem("E-mail ou senha incorretos.", "erro");
-    }
+    } catch (error) { mostrarMensagem("E-mail ou senha incorretos.", "erro"); }
 });
 
 document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
@@ -219,7 +186,7 @@ document.getElementById('form-recuperar')?.addEventListener('submit', async (e) 
 });
 
 // ==========================================
-// 8. ÁREA DO CLIENTE E SUBSITES (CRUD COMPLETO)
+// 8. ÁREA DO CLIENTE E SUBSITES
 // ==========================================
 async function carregarDadosCliente(uid) {
     try {
@@ -229,12 +196,7 @@ async function carregarDadosCliente(uid) {
             document.getElementById('cliente-nome').textContent = dados.nome;
             document.getElementById('cliente-email').textContent = dados.email;
             document.getElementById('cliente-plano').textContent = dados.planoPreferido.toUpperCase();
-            
-            if (dados.statusPagamento === "pendente") {
-                document.getElementById('cliente-status').textContent = "Pendente (Aguardando Pagamento)";
-            } else {
-                document.getElementById('cliente-status').textContent = "Ativo (Pagamento Confirmado)";
-            }
+            document.getElementById('cliente-status').textContent = dados.statusPagamento === "pendente" ? "Pendente (Aguardando Pagamento)" : "Ativo (Pagamento Confirmado)";
 
             const limite = limitesPlanos[dados.planoPreferido] || 1;
             const labelLimite = document.getElementById('limite-subsites');
@@ -242,34 +204,26 @@ async function carregarDadosCliente(uid) {
 
             carregarSubsites(uid, limite);
         }
-    } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-    }
+    } catch (error) { console.error("Erro ao buscar dados:", error); }
 }
 
 async function carregarSubsites(uidDono, limite) {
     const lista = document.getElementById('lista-subsites');
     const btnCriar = document.getElementById('btn-criar-subsite');
     const inputTitulo = document.getElementById('titulo-subsite');
-    
     if (!lista) return;
     
     try {
         const q = query(collection(db, "subsites"), where("idDono", "==", uidDono));
         const querySnapshot = await getDocs(q);
-        
         lista.innerHTML = ""; 
 
         if (querySnapshot.size >= limite) {
-            btnCriar.disabled = true;
-            inputTitulo.disabled = true;
-            btnCriar.textContent = "Limite Atingido";
-            btnCriar.style.background = "#555";
+            if(btnCriar) { btnCriar.disabled = true; btnCriar.textContent = "Limite Atingido"; btnCriar.style.background = "#555"; }
+            if(inputTitulo) inputTitulo.disabled = true;
         } else {
-            btnCriar.disabled = false;
-            inputTitulo.disabled = false;
-            btnCriar.textContent = "Criar Subsite";
-            btnCriar.style.background = "";
+            if(btnCriar) { btnCriar.disabled = false; btnCriar.textContent = "Criar Subsite"; btnCriar.style.background = ""; }
+            if(inputTitulo) inputTitulo.disabled = false;
         }
 
         querySnapshot.forEach((docSnap) => {
@@ -277,14 +231,7 @@ async function carregarSubsites(uidDono, limite) {
             const idSubsite = docSnap.id;
             const li = document.createElement('li');
             
-            li.style.border = "1px solid #333";
-            li.style.borderRadius = "8px";
-            li.style.padding = "15px";
-            li.style.marginBottom = "10px";
-            li.style.display = "flex";
-            li.style.justifyContent = "space-between";
-            li.style.alignItems = "center";
-            li.style.background = "#0a0a0a";
+            li.style.cssText = "border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a;";
 
             li.innerHTML = `
                 <div>
@@ -292,7 +239,7 @@ async function carregarSubsites(uidDono, limite) {
                     <small style="color: #888;">Criado em: ${subsite.criadoEm.toDate().toLocaleDateString()}</small>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <!-- BOTÃO ACESSAR -->
+                    <!-- LINK PARA ACESSAR O SUBSITE -->
                     <a href="./subsite.html?id=${idSubsite}" style="background: #00d2ff; color: #000; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Acessar Subsite">
                         <i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
                     </a>
@@ -314,10 +261,7 @@ async function carregarSubsites(uidDono, limite) {
         }
 
         adicionarEventosBotoesSubsite(uidDono, limite);
-
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
 
     } catch (error) {
         console.error("Erro ao carregar subsites:", error);
@@ -330,11 +274,7 @@ document.getElementById('btn-criar-subsite')?.addEventListener('click', async ()
     const inputTitulo = document.getElementById('titulo-subsite');
     const titulo = inputTitulo ? inputTitulo.value.trim() : "";
 
-    if (!user) return;
-    if (titulo === "") {
-        alert("Digite um título para o subsite!");
-        return;
-    }
+    if (!user || titulo === "") return;
 
     const btn = document.getElementById('btn-criar-subsite');
     btn.textContent = "Criando...";
@@ -342,8 +282,7 @@ document.getElementById('btn-criar-subsite')?.addEventListener('click', async ()
 
     try {
         const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-        const plano = userDoc.data().planoPreferido;
-        const limite = limitesPlanos[plano] || 1;
+        const limite = limitesPlanos[userDoc.data().planoPreferido] || 1;
 
         await addDoc(collection(db, "subsites"), {
             idDono: user.uid,
@@ -366,14 +305,11 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
         btn.addEventListener('click', async (e) => {
             const botao = e.target.closest('.btn-apagar-subsite');
             const id = botao.getAttribute('data-id');
-            
-            if (confirm("Tem certeza que deseja apagar este subsite? Essa ação não pode ser desfeita.")) {
+            if (confirm("Tem certeza que deseja apagar este subsite?")) {
                 try {
                     await deleteDoc(doc(db, "subsites", id));
                     carregarSubsites(uidDono, limite);
-                } catch (error) {
-                    alert("Erro ao apagar: " + error.message);
-                }
+                } catch (error) { alert("Erro ao apagar: " + error.message); }
             }
         });
     });
@@ -383,18 +319,13 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
             const botao = e.target.closest('.btn-editar-subsite');
             const id = botao.getAttribute('data-id');
             const tituloAtual = botao.getAttribute('data-titulo');
-            
             const novoTitulo = prompt("Edite o título do subsite:", tituloAtual);
             
             if (novoTitulo && novoTitulo.trim() !== "" && novoTitulo !== tituloAtual) {
                 try {
-                    await updateDoc(doc(db, "subsites", id), {
-                        titulo: novoTitulo.trim()
-                    });
+                    await updateDoc(doc(db, "subsites", id), { titulo: novoTitulo.trim() });
                     carregarSubsites(uidDono, limite);
-                } catch (error) {
-                    alert("Erro ao editar: " + error.message);
-                }
+                } catch (error) { alert("Erro ao editar: " + error.message); }
             }
         });
     });
@@ -405,12 +336,8 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        if (!user.emailVerified) {
-            mostrarTela('tela-verificacao');
-        } else {
-            carregarDadosCliente(user.uid);
-            mostrarTela('tela-cliente');
-        }
+        if (!user.emailVerified) mostrarTela('tela-verificacao');
+        else { carregarDadosCliente(user.uid); mostrarTela('tela-cliente'); }
     } else {
         mostrarTela('tela-boas-vindas');
     }
