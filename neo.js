@@ -16,8 +16,7 @@ import {
     getFirestore, 
     doc, 
     setDoc,
-    getDoc,
-    updateDoc
+    getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
@@ -73,6 +72,7 @@ document.getElementById('ir-para-login').addEventListener('click', (e) => { e.pr
 document.getElementById('voltar-para-cadastro').addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
 document.getElementById('ir-para-recuperar').addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-recuperar'); });
 document.getElementById('voltar-login-rec').addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
+document.getElementById('btn-ir-para-login').addEventListener('click', () => mostrarTela('tela-login'));
 
 // ==========================================
 // 5. LÓGICA DE SELEÇÃO DE PLANO
@@ -130,7 +130,11 @@ document.getElementById('form-cadastro-final').addEventListener('submit', async 
             criadoEm: new Date()
         });
 
-        mostrarTela('tela-verificacao');
+        // Preenche os dados na tela de pagamento e vai para ela
+        const nomePlanoCapitalizado = dadosCliente.plano.charAt(0).toUpperCase() + dadosCliente.plano.slice(1);
+        document.getElementById('resumo-plano-pagamento').textContent = nomePlanoCapitalizado;
+        document.getElementById('resumo-nome-pagamento').textContent = dadosCliente.nome;
+        mostrarTela('tela-pagamento');
 
     } catch (error) {
         console.error(error);
@@ -221,7 +225,7 @@ document.getElementById('form-recuperar').addEventListener('submit', async (e) =
 });
 
 // ==========================================
-// 10. ÁREA DO CLIENTE, LOGOUT E PAGAMENTO SIMULADO
+// 10. ÁREA DO CLIENTE E LOGOUT
 // ==========================================
 async function carregarDadosCliente(uid) {
     try {
@@ -234,14 +238,10 @@ async function carregarDadosCliente(uid) {
             document.getElementById('cliente-email').textContent = dados.email;
             document.getElementById('cliente-plano').textContent = dados.planoPreferido.toUpperCase();
             
-            // Verifica o status e mostra/esconde o botão
-            const btnPagamento = document.getElementById('btn-simular-pagamento');
             if (dados.statusPagamento === "pendente") {
                 document.getElementById('cliente-status').textContent = "Pendente (Aguardando Pagamento)";
-                btnPagamento.style.display = "block"; 
             } else {
                 document.getElementById('cliente-status').textContent = "Ativo (Pagamento Confirmado)";
-                btnPagamento.style.display = "none"; 
             }
         }
     } catch (error) {
@@ -252,35 +252,6 @@ async function carregarDadosCliente(uid) {
 document.getElementById('btn-logout').addEventListener('click', async () => {
     await signOut(auth);
     mostrarTela('tela-boas-vindas');
-});
-
-// O Botão que altera o banco de dados de verdade!
-document.getElementById('btn-simular-pagamento').addEventListener('click', async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const btn = document.getElementById('btn-simular-pagamento');
-    btn.textContent = "Processando...";
-    btn.disabled = true;
-
-    try {
-        // Atualiza APENAS o campo statusPagamento no Firestore
-        await updateDoc(doc(db, "usuarios", user.uid), {
-            statusPagamento: "ativo"
-        });
-
-        alert("Pagamento simulado com sucesso! Seu plano está ativo.");
-        
-        // Recarrega os dados na tela para mostrar o status novo
-        carregarDadosCliente(user.uid);
-
-    } catch (error) {
-        console.error(error);
-        alert("Erro ao simular pagamento: " + error.message);
-    } finally {
-        btn.textContent = "Simular Pagamento Aprovado";
-        btn.disabled = false;
-    }
 });
 
 // ==========================================
