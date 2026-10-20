@@ -1,76 +1,20 @@
-// ==========================================
-// 1. IMPORTAÇÕES E CONFIGURAÇÃO
-// ==========================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// SUAS CHAVES DO FIREBASE
-const firebaseConfig = {
-  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
-  authDomain: "neo-flux-c91c8.firebaseapp.com",
-  projectId: "neo-flux-c91c8",
-  storageBucket: "neo-flux-c91c8.firebasestorage.app",
-  messagingSenderId: "6686219198",
-  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// ==========================================
-// 2. CONTROLE DE TELAS
-// ==========================================
-const todasAsTelas = document.querySelectorAll('.tela');
-const msgStatus = document.getElementById('mensagem-status');
-
-function mostrarTela(idDaTela) {
-    todasAsTelas.forEach(tela => tela.classList.remove('ativa'));
-    document.getElementById(idDaTela).classList.add('ativa');
-    msgStatus.textContent = "";
-}
-
-function mostrarMensagem(texto, tipo) {
-    msgStatus.textContent = texto;
-    msgStatus.className = `mensagem ${tipo}`;
-}
-
-// ==========================================
-// 3. LOGIN DO ADMIN
-// ==========================================
-document.getElementById('form-admin-login').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('admin-email').value;
-    const senha = document.getElementById('admin-senha').value;
-
-    try {
-        await signInWithEmailAndPassword(auth, email, senha);
-        // O onAuthStateChanged vai cuidar de mudar a tela
-    } catch (error) {
-        mostrarMensagem("Erro ao logar. Verifique o e-mail e senha.", "erro");
-    }
-});
-
-document.getElementById('btn-admin-sair').addEventListener('click', async () => {
-    await signOut(auth);
-});
-
-// ==========================================
-// 4. BUSCAR CLIENTES NO FIREBASE
-// ==========================================
 async function carregarClientes() {
     const tabela = document.getElementById('lista-clientes');
+    const tabelaUpgrades = document.getElementById('lista-upgrades');
+    if(!tabela || !tabelaUpgrades) return;
+
     tabela.innerHTML = '<tr><td colspan="5">Buscando clientes...</td></tr>';
+    tabelaUpgrades.innerHTML = '<tr><td colspan="4">Buscando pedidos de upgrade...</td></tr>';
 
     try {
-        // Pega todos os documentos da coleção "usuarios"
         const querySnapshot = await getDocs(collection(db, "usuarios"));
         
-        tabela.innerHTML = ""; // Limpa a tabela
+        tabela.innerHTML = ""; 
+        tabelaUpgrades.innerHTML = "";
+        let temUpgrade = false;
 
         if (querySnapshot.empty) {
-            tabela.innerHTML = '<tr><td colspan="5">Nenhum cliente cadastrado ainda.</td></tr>';
+            tabela.innerHTML = '<tr><td colspan="5">Nenhum cliente.</td></tr>';
             return;
         }
 
@@ -78,15 +22,20 @@ async function carregarClientes() {
             const cliente = docSnap.data();
             const idCliente = docSnap.id;
             
+            // ---- 1. LISTA NORMAL DE CLIENTES ----
             const tr = document.createElement('tr');
-            
-            // Define o status e o botão
             const statusClass = cliente.statusPagamento === "pendente" ? "status-pendente" : "status-ativo";
-            const statusTexto = cliente.statusPagamento === "pendente" ? "Pendente" : "Ativo";
-            
-            const botaoAcao = cliente.statusPagamento === "pendente" 
-                ? `<button class="btn-liberar" data-id="${idCliente}">Liberar Acesso</button>` 
-                : "Já liberado";
+            let statusTexto = cliente.statusPagamento === "pendente" ? "Pendente" : (cliente.statusPagamento === "ativo" ? "Ativo" : cliente.statusPagamento);
+
+            // Botão de Liberar normal (se não for upgrade pendente)
+            let botaoAcao = "";
+            if (cliente.statusPagamento === "pendente") {
+                botaoAcao = `<button class="btn-liberar" data-id="${idCliente}">Liberar Acesso</button>`;
+            } else if (cliente.statusPagamento === "upgrade_pendente") {
+                botaoAcao = `<span style="color:#00d2ff; font-weight:bold;">Aguardando Aprovação</span>`;
+            } else {
+                botaoAcao = "Já liberado";
+            }
 
             tr.innerHTML = `
                 <td>${cliente.nome}</td>
@@ -95,51 +44,56 @@ async function carregarClientes() {
                 <td class="${statusClass}">${statusTexto}</td>
                 <td>${botaoAcao}</td>
             `;
-            
             tabela.appendChild(tr);
+
+            // ---- 2. LISTA DE UPGRADES ----
+            if (cliente.statusPagamento === "upgrade_pendente") {
+                temUpgrade = true;
+                const trUp = document.createElement('tr');
+                trUp.innerHTML = `
+                    <td>${cliente.nome}</td>
+                    <td>${cliente.email}</td>
+                    <td>${cliente.planoPreferido.toUpperCase()}</td>
+                    <td><button class="btn-aprovar-upgrade" data-id="${idCliente}" style="background: #00c853; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">✅ Aprovar Upgrade</button></td>
+                `;
+                tabelaUpgrades.appendChild(trUp);
+            }
         });
 
-        // Adiciona o evento de clique nos botões "Liberar Acesso"
+        if (!temUpgrade) {
+            tabelaUpgrades.innerHTML = '<tr><td colspan="4">Nenhum pedido de upgrade no momento.</td></tr>';
+        }
+
+        // Eventos de Liberar Normal
         document.querySelectorAll('.btn-liberar').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.getAttribute('data-id');
-                e.target.textContent = "Liberando...";
-                e.target.disabled = true;
+                await updateDoc(doc(db, "usuarios", id), { statusPagamento: "ativo" });
+                carregarClientes(); // Recarrega
+            });
+        });
 
-                try {
-                    // Atualiza o status para ativo no banco de dados
-                    await updateDoc(doc(db, "usuarios", id), {
-                        statusPagamento: "ativo"
+        // Eventos de Aprovar Upgrade
+        document.querySelectorAll('.btn-aprovar-upgrade').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                const confirmar = confirm("Confirmar que o cliente pagou a diferença e deseja mudar de plano?");
+                
+                if (confirmar) {
+                    // Aqui você pode mudar o plano dele para Elite Premium (ou o que ele pediu)
+                    // Para simplificar, vamos mudar para o status "ativo" e o plano para "elite_premium"
+                    await updateDoc(doc(db, "usuarios", id), { 
+                        statusPagamento: "ativo",
+                        planoPreferido: "elite_premium" 
                     });
-                    // Recarrega a tabela para mostrar o novo status
-                    carregarClientes();
-                } catch (error) {
-                    alert("Erro ao liberar: " + error.message);
+                    alert("Upgrade aprovado!");
+                    carregarClientes(); // Recarrega a lista
                 }
             });
         });
 
     } catch (error) {
         console.error(error);
-        tabela.innerHTML = '<tr><td colspan="5" style="color:red;">Erro ao carregar dados (Verifique se você é o admin).</td></tr>';
+        tabela.innerHTML = '<tr><td colspan="5" style="color:red;">Erro ao carregar dados.</td></tr>';
     }
 }
-
-// ==========================================
-// 5. OBSERVADOR DE ESTADO (MANTÉM LOGADO)
-// ==========================================
-onAuthStateChanged(auth, (user) => {
-    // ⚠️ TROQUE AQUI PELO SEU E-MAIL DE ADMINISTRADOR ⚠️
-    const emailAdmin = "neoflux2012@gmail.com"; 
-
-    if (user && user.email === emailAdmin) {
-        mostrarTela('tela-admin-painel');
-        carregarClientes();
-    } else if (user) {
-        // Se logar com um e-mail que não é o admin, desloga
-        signOut(auth);
-        mostrarMensagem("Acesso negado. Você não é o administrador.", "erro");
-    } else {
-        mostrarTela('tela-admin-login');
-    }
-});
