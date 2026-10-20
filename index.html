@@ -59,19 +59,15 @@
         <section id="tela-termos" class="tela">
             <h2 id="titulo-termos">Termos e Condições</h2>
             <div class="caixa-termos" id="texto-termos"></div>
-
             <form id="form-termos">
                 <label for="nome-cliente">Nome Completo:</label>
                 <input type="text" id="nome-cliente" required>
-
                 <label for="doc-cliente">CPF ou CNPJ:</label>
                 <input type="text" id="doc-cliente" required>
-
                 <div class="checkbox-container">
                     <input type="checkbox" id="aceite-termos" required>
                     <label for="aceite-termos">Li e aceito os Termos e Condições do plano escolhido.</label>
                 </div>
-
                 <button type="submit" class="botao-principal">Aceitar e Criar Conta</button>
             </form>
         </section>
@@ -80,15 +76,11 @@
         <section id="tela-criar-conta" class="tela">
             <h2>Crie sua conta</h2>
             <p>Plano selecionado: <strong id="resumo-plano-conta">...</strong></p>
-            <p>Crie sua senha para acessar sua área exclusiva.</p>
-            
             <form id="form-cadastro-final">
                 <label for="email-cadastro">E-mail:</label>
                 <input type="email" id="email-cadastro" required>
-
                 <label for="senha-cadastro">Senha:</label>
                 <input type="password" id="senha-cadastro" minlength="6" required>
-
                 <button type="submit" class="botao-principal">Criar minha conta</button>
             </form>
         </section>
@@ -96,8 +88,7 @@
         <!-- TELA 5: VERIFICAÇÃO DE E-MAIL -->
         <section id="tela-verificacao" class="tela">
             <h2>Verifique seu e-mail</h2>
-            <p>Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada (e o spam) para ativar sua conta.</p>
-            
+            <p>Enviamos um link de confirmação para o seu e-mail.</p>
             <button id="btn-ja-verifiquei" class="botao-principal">Já verifiquei, entrar</button>
             <p class="link-troca"><a href="#" id="btn-reenviar-email">Reenviar e-mail de confirmação</a></p>
         </section>
@@ -108,22 +99,16 @@
             <form id="form-login">
                 <label for="email-login">E-mail:</label>
                 <input type="email" id="email-login" required>
-
                 <label for="senha-login">Senha:</label>
                 <input type="password" id="senha-login" required>
-
                 <button type="submit" class="botao-principal">Entrar</button>
             </form>
-            <p class="link-troca">
-                <a href="#" id="ir-para-recuperar">Esqueci minha senha</a> | 
-                <a href="#" id="voltar-para-cadastro">Criar conta</a>
-            </p>
+            <p class="link-troca"><a href="#" id="ir-para-recuperar">Esqueci a senha</a> | <a href="#" id="voltar-para-cadastro">Criar conta</a></p>
         </section>
 
         <!-- TELA 7: RECUPERAÇÃO DE SENHA -->
         <section id="tela-recuperar" class="tela">
             <h2>Recuperar Senha</h2>
-            <p>Digite seu e-mail para receber um link de redefinição.</p>
             <form id="form-recuperar">
                 <label for="email-recuperar">E-mail:</label>
                 <input type="email" id="email-recuperar" required>
@@ -137,23 +122,26 @@
             <h2>Ative seu plano</h2>
             <p>Sua conta foi criada, <strong id="resumo-nome-pagamento">...</strong>!</p>
             <p>Para liberar o plano <strong id="resumo-plano-pagamento">...</strong>, realize o pagamento via Pix.</p>
-            
             <div class="caixa-pagamento-simulada" style="text-align: center;">
-                <p>Escaneie o QR Code abaixo no app do seu banco:</p>
                 <img src="./qrcode.png" alt="QR Code Pix Neo Flux" style="max-width: 200px; width: 100%; border-radius: 8px; margin: 15px 0;">
                 <p>Ou use a chave Pix: <strong>(61) 99161-4509</strong></p>
             </div>
-
             <div class="mensagem info" style="margin-bottom: 20px;">
-                Após o pagamento, envie o comprovante para o nosso WhatsApp (61) 99161-4509. A liberação do acesso será feita pela nossa equipe.
+                Após o pagamento, envie o comprovante para o WhatsApp (61) 99161-4509.
             </div>
-
             <button id="btn-ir-para-login" class="botao-principal">Já paguei, ir para o login</button>
         </section>
 
         <!-- TELA 9: ÁREA DO CLIENTE -->
         <section id="tela-cliente" class="tela">
-            <h2>Área do Cliente</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Área do Cliente</h2>
+                <button id="btn-pedir-upgrade" class="botao-principal" style="width: auto; margin-top: 0; padding: 10px 15px; font-size: 0.9rem; background: var(--gradiente-neo);">
+                    <i data-lucide="crown" style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;"></i>
+                    Fazer Upgrade
+                </button>
+            </div>
+            
             <div class="caixa-termos" style="max-height: none; margin-bottom: 20px;">
                 <p style="text-align: left;"><strong>Nome:</strong> <span id="cliente-nome">...</span></p>
                 <p style="text-align: left;"><strong>E-mail:</strong> <span id="cliente-email">...</span></p>
@@ -163,31 +151,33 @@
             
             <div class="caixa-termos" style="max-height: none; margin-bottom: 20px;">
                 <h3>Meus Subsites</h3>
-                <p style="text-align: left; font-size: 0.9rem;">Você pode criar até <span id="limite-subsites">...</span> subsites com o seu plano.</p>
-                
+                <p style="text-align: left; font-size: 0.9rem;">Você pode criar até <span id="limite-subsites">...</span> subsites.</p>
                 <div id="area-criar-subsite" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                    <input type="text" id="titulo-subsite" placeholder="Título do subsite (ex: Eu amo Lunala)" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #000; color: white;">
+                    <input type="text" id="titulo-subsite" placeholder="Título do subsite" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #000; color: white;">
                     <button id="btn-criar-subsite" class="botao-principal" style="width: auto; margin-top: 0;">Criar Subsite</button>
                 </div>
-
-                <ul id="lista-subsites" style="margin-top: 20px; list-style: none; padding: 0; text-align: left;">
-                    <!-- O JavaScript vai preencher aqui -->
-                </ul>
+                <ul id="lista-subsites" style="margin-top: 20px; list-style: none; padding: 0; text-align: left;"></ul>
             </div>
-
             <button id="btn-logout" class="botao-principal" style="background: #333;">Sair da Conta</button>
         </section>
 
-        <!-- TELA 10: VISUALIZAÇÃO DO SUBSITE (Nova Tela) -->
+        <!-- TELA 10: VISUALIZAÇÃO DO SUBSITE (O "site filho") -->
         <section id="tela-subsite" class="tela">
             <h2 id="titulo-subsite-visualizacao">Carregando...</h2>
-            
-            <div class="caixa-termos" style="text-align: center; padding: 50px 20px; border: 1px solid var(--cor-roxo);">
-                <h1 id="nome-do-subsite" style="color: var(--cor-azul); font-size: 2rem; margin-bottom: 20px;">...</h1>
-                <p style="color: var(--texto-secundario);">Este é o seu site criado na Neo Flux.</p>
-                <p>Aqui você poderá colocar fotos, catálogo e informações para os seus clientes.</p>
+            <div class="caixa-termos" style="text-align: center; padding: 30px 20px; border: 1px solid var(--cor-roxo);">
+                <h1 id="nome-do-subsite" style="color: var(--cor-azul); font-size: 2rem; margin-bottom: 10px;">...</h1>
+                <p style="color: var(--texto-secundario); margin-bottom: 30px;">Este é o seu site criado na Neo Flux.</p>
+                
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <div id="card-gerador-contrato" style="background: #121212; border: 1px solid #333; border-radius: 8px; padding: 20px; width: 250px; text-align: left;">
+                        <h3 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="file-text"></i> Contratos
+                        </h3>
+                        <p style="font-size: 0.85rem; color: #888;">Gere contratos de aluguel automaticamente.</p>
+                        <button id="btn-gerador-contrato" class="botao-principal" style="width: 100%; margin-top: 10px;">Acessar Ferramenta</button>
+                    </div>
+                </div>
             </div>
-
             <button id="btn-voltar-cliente" class="botao-principal" style="background: #333; margin-top: 20px;">Voltar para Meus Subsites</button>
         </section>
 
