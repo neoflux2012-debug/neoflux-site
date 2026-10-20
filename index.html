@@ -43,6 +43,13 @@
                     <p>A experiência completa.</p>
                     <button class="btn-selecionar-plano">Selecionar</button>
                 </div>
+                <!-- NOVO PLANO: ELITE PREMIUM -->
+                <div class="card-plano" data-plano="elite_premium">
+                    <h3>Elite Premium</h3>
+                    <p class="preco">R$ 149,99 <span>/mês</span></p>
+                    <p>Com gerador de contratos.</p>
+                    <button class="btn-selecionar-plano">Selecionar</button>
+                </div>
             </div>
             <p class="link-troca"><a href="#" id="voltar-inicio">Voltar</a></p>
         </section>
@@ -134,6 +141,7 @@
                 <p>Escaneie o QR Code abaixo no app do seu banco:</p>
                 <!-- Certifique-se de que a imagem qrcode.png está no GitHub -->
                 <img src="./qrcode.png" alt="QR Code Pix Neo Flux" style="max-width: 200px; width: 100%; border-radius: 8px; margin: 15px 0;">
+                <!-- LINHA CORRIGIDA AQUI: O </strong> estava faltando o sinal de menor -->
                 <p>Ou use a chave Pix: <strong>(61) 99161-4509</strong></p>
             </div>
 
@@ -144,7 +152,7 @@
             <button id="btn-ir-para-login" class="botao-principal">Já paguei, ir para o login</button>
         </section>
 
-               <!-- TELA 9: ÁREA DO CLIENTE -->
+        <!-- TELA 9: ÁREA DO CLIENTE -->
         <section id="tela-cliente" class="tela">
             <h2>Área do Cliente</h2>
             <div class="caixa-termos" style="max-height: none; margin-bottom: 20px;">
@@ -160,9 +168,9 @@
                 <p style="text-align: left; font-size: 0.9rem;">Você pode criar até <span id="limite-subsites">...</span> subsites com o seu plano.</p>
                 
                 <!-- Formulário para criar -->
-                <div id="area-criar-subsite" style="margin-top: 15px;">
-                    <input type="text" id="titulo-subsite" placeholder="Título do subsite (ex: sistema x)" style="margin-bottom: 10px;">
-                    <button id="btn-criar-subsite" class="botao-principal">Criar Subsite</button>
+                <div id="area-criar-subsite" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="text" id="titulo-subsite" placeholder="Título do subsite (ex: Eu amo Lunala)" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #000; color: white;">
+                    <button id="btn-criar-subsite" class="botao-principal" style="width: auto; margin-top: 0;">Criar Subsite</button>
                 </div>
 
                 <!-- Lista de subsites criados -->
@@ -173,6 +181,11 @@
 
             <button id="btn-logout" class="botao-principal" style="background: #333;">Sair da Conta</button>
         </section>
+
+        <!-- DIV DE MENSAGENS -->
+        <div id="mensagem-status" class="mensagem"></div>
+    </main>
+
     <script type="module" src="./neo.js"></script>
 </body>
 </html>
