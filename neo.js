@@ -199,7 +199,7 @@ document.getElementById('form-recuperar')?.addEventListener('submit', async (e) 
 });
 
 // ==========================================
-// 8. ÁREA DO CLIENTE E SUBSITES
+// 8. ÁREA DO CLIENTE E SUBSITES (CRUD COMPLETO)
 // ==========================================
 async function carregarDadosCliente(uid) {
     try {
@@ -217,8 +217,7 @@ async function carregarDadosCliente(uid) {
             }
 
             const limite = limitesPlanos[dados.planoPreferido] || 1;
-            const labelLimite = document.getElementById('limite-subsites');
-            if (labelLimite) labelLimite.textContent = limite === 9999 ? "ilimitados" : limite;
+            document.getElementById('limite-subsites').textContent = limite === 9999 ? "ilimitados" : limite;
 
             carregarSubsites(uid, limite);
         }
@@ -231,7 +230,8 @@ async function carregarSubsites(uidDono, limite) {
     const lista = document.getElementById('lista-subsites');
     const btnCriar = document.getElementById('btn-criar-subsite');
     const inputTitulo = document.getElementById('titulo-subsite');
-    if(!lista) return;
+    
+    if (!lista) return;
     
     try {
         const q = query(collection(db, "subsites"), where("idDono", "==", uidDono));
@@ -239,6 +239,7 @@ async function carregarSubsites(uidDono, limite) {
         
         lista.innerHTML = ""; 
 
+        // Verifica o limite
         if (querySnapshot.size >= limite) {
             btnCriar.disabled = true;
             inputTitulo.disabled = true;
@@ -251,12 +252,27 @@ async function carregarSubsites(uidDono, limite) {
             btnCriar.style.background = "";
         }
 
+        // Renderiza a lista com os botões de Editar e Apagar
         querySnapshot.forEach((docSnap) => {
             const subsite = docSnap.data();
+            const idSubsite = docSnap.id;
             const li = document.createElement('li');
             li.style.borderBottom = "1px solid #333";
             li.style.padding = "10px 0";
-            li.innerHTML = `<strong>${subsite.titulo}</strong> <br><small>Criado em: ${subsite.criadoEm.toDate().toLocaleDateString()}</small>`;
+            li.style.display = "flex";
+            li.style.justifyContent = "space-between";
+            li.style.alignItems = "center";
+
+            li.innerHTML = `
+                <div>
+                    <strong style="font-size: 1.1rem; color: var(--cor-azul);">${subsite.titulo}</strong> <br>
+                    <small style="color: #888;">Criado em: ${subsite.criadoEm.toDate().toLocaleDateString()}</small>
+                </div>
+                <div>
+                    <button class="btn-editar-subsite" data-id="${idSubsite}" data-titulo="${subsite.titulo}" style="background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px;">✏️</button>
+                    <button class="btn-apagar-subsite" data-id="${idSubsite}" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">🗑️</button>
+                </div>
+            `;
             lista.appendChild(li);
         });
 
@@ -264,12 +280,16 @@ async function carregarSubsites(uidDono, limite) {
             lista.innerHTML = "<li>Você ainda não criou nenhum subsite.</li>";
         }
 
+        // Adiciona os eventos nos botões que acabamos de criar
+        adicionarEventosBotoesSubsite(uidDono, limite);
+
     } catch (error) {
         console.error("Erro ao carregar subsites:", error);
         lista.innerHTML = "<li>Erro ao carregar subsites.</li>";
     }
 }
 
+// Evento para Criar
 document.getElementById('btn-criar-subsite')?.addEventListener('click', async () => {
     const user = auth.currentUser;
     const inputTitulo = document.getElementById('titulo-subsite');
@@ -290,6 +310,7 @@ document.getElementById('btn-criar-subsite')?.addEventListener('click', async ()
         const plano = userDoc.data().planoPreferido;
         const limite = limitesPlanos[plano] || 1;
 
+        // Adiciona no Firestore
         await addDoc(collection(db, "subsites"), {
             idDono: user.uid,
             titulo: titulo,
@@ -306,11 +327,47 @@ document.getElementById('btn-criar-subsite')?.addEventListener('click', async ()
     }
 });
 
-document.getElementById('btn-logout')?.addEventListener('click', async () => {
-    await signOut(auth);
-    mostrarTela('tela-boas-vindas');
-});
+// Função para adicionar os eventos de Editar e Apagar
+function adicionarEventosBotoesSubsite(uidDono, limite) {
+    // Botões de Apagar
+    document.querySelectorAll('.btn-apagar-subsite').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (confirm("Tem certeza que deseja apagar este subsite? Essa ação não pode ser desfeita.")) {
+                try {
+                    // Importa o deleteDoc dinamicamente para não sobrecarregar o topo
+                    const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+                    await deleteDoc(doc(db, "subsites", id));
+                    carregarSubsites(uidDono, limite); // Recarrega a lista
+                } catch (error) {
+                    alert("Erro ao apagar: " + error.message);
+                }
+            }
+        });
+    });
 
+    // Botões de Editar
+    document.querySelectorAll('.btn-editar-subsite').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            const tituloAtual = e.target.getAttribute('data-titulo');
+            
+            const novoTitulo = prompt("Edite o título do subsite:", tituloAtual);
+            
+            if (novoTitulo && novoTitulo.trim() !== "" && novoTitulo !== tituloAtual) {
+                try {
+                    const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+                    await updateDoc(doc(db, "subsites", id), {
+                        titulo: novoTitulo.trim()
+                    });
+                    carregarSubsites(uidDono, limite); // Recarrega a lista
+                } catch (error) {
+                    alert("Erro ao editar: " + error.message);
+                }
+            }
+        });
+    });
+}
 // ==========================================
 // 9. OBSERVADOR DE ESTADO
 // ==========================================
