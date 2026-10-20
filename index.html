@@ -144,22 +144,35 @@
             <button id="btn-ir-para-login" class="botao-principal">Já paguei, ir para o login</button>
         </section>
 
-        <!-- TELA 9: ÁREA DO CLIENTE -->
+               <!-- TELA 9: ÁREA DO CLIENTE -->
         <section id="tela-cliente" class="tela">
             <h2>Área do Cliente</h2>
-            <div class="caixa-termos" style="max-height: none;">
+            <div class="caixa-termos" style="max-height: none; margin-bottom: 20px;">
                 <p style="text-align: left;"><strong>Nome:</strong> <span id="cliente-nome">...</span></p>
                 <p style="text-align: left;"><strong>E-mail:</strong> <span id="cliente-email">...</span></p>
                 <p style="text-align: left;"><strong>Plano Preferido:</strong> <span id="cliente-plano">...</span></p>
                 <p style="text-align: left;"><strong>Status de Pagamento:</strong> <span id="cliente-status">...</span></p>
             </div>
             
+            <!-- NOVA ÁREA: SUBSITES -->
+            <div class="caixa-termos" style="max-height: none; margin-bottom: 20px;">
+                <h3>Meus Subsites</h3>
+                <p style="text-align: left; font-size: 0.9rem;">Você pode criar até <span id="limite-subsites">...</span> subsites com o seu plano.</p>
+                
+                <!-- Formulário para criar -->
+                <div id="area-criar-subsite" style="margin-top: 15px;">
+                    <input type="text" id="titulo-subsite" placeholder="Título do subsite (ex: Eu amo Lunala)" style="margin-bottom: 10px;">
+                    <button id="btn-criar-subsite" class="botao-principal">Criar Subsite</button>
+                </div>
+
+                <!-- Lista de subsites criados -->
+                <ul id="lista-subsites" style="margin-top: 20px; list-style: none; padding: 0; text-align: left;">
+                    <!-- O JavaScript vai preencher aqui -->
+                </ul>
+            </div>
+
             <button id="btn-logout" class="botao-principal" style="background: #333;">Sair da Conta</button>
         </section>
-
-        <div id="mensagem-status" class="mensagem"></div>
-    </main>
-
     <script type="module" src="./neo.js"></script>
 </body>
 </html>
