@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neo Flux | Criamos sites que conectam</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
     <header>
-        <img src="logo.png" alt="Logo Neo Flux" class="logo">
+        <img src="./logo.png" alt="Logo Neo Flux" class="logo">
     </header>
 
     <main>
@@ -124,7 +124,27 @@
             <p class="link-troca"><a href="#" id="voltar-login-rec">Voltar para o login</a></p>
         </section>
 
-        <!-- TELA 8: ÁREA DO CLIENTE -->
+        <!-- TELA 8: PAGAMENTO VIA PIX -->
+        <section id="tela-pagamento" class="tela">
+            <h2>Ative seu plano</h2>
+            <p>Sua conta foi criada, <strong id="resumo-nome-pagamento">...</strong>!</p>
+            <p>Para liberar o plano <strong id="resumo-plano-pagamento">...</strong>, realize o pagamento via Pix.</p>
+            
+            <div class="caixa-pagamento-simulada" style="text-align: center;">
+                <p>Escaneie o QR Code abaixo no app do seu banco:</p>
+                <!-- Certifique-se de que a imagem qrcode.png está no GitHub -->
+                <img src="./qrcode.png" alt="QR Code Pix Neo Flux" style="max-width: 200px; width: 100%; border-radius: 8px; margin: 15px 0;">
+                <p>Ou use a chave Pix: <strong>neoflux2012@gmail.com</strong></p>
+            </div>
+
+            <div class="mensagem info" style="margin-bottom: 20px;">
+                Após o pagamento, envie o comprovante para o nosso WhatsApp (61) 99161-4509. A liberação do acesso será feita pela nossa equipe.
+            </div>
+
+            <button id="btn-ir-para-login" class="botao-principal">Já paguei, ir para o login</button>
+        </section>
+
+        <!-- TELA 9: ÁREA DO CLIENTE -->
         <section id="tela-cliente" class="tela">
             <h2>Área do Cliente</h2>
             <div class="caixa-termos" style="max-height: none;">
@@ -134,13 +154,12 @@
                 <p style="text-align: left;"><strong>Status de Pagamento:</strong> <span id="cliente-status">...</span></p>
             </div>
             
-            <button id="btn-simular-pagamento" class="botao-principal" style="margin-bottom: 15px;">Simular Pagamento Aprovado</button>
             <button id="btn-logout" class="botao-principal" style="background: #333;">Sair da Conta</button>
         </section>
 
         <div id="mensagem-status" class="mensagem"></div>
     </main>
 
-    <script type="module" src="neo.js"></script>
+    <script type="module" src="./neo.js"></script>
 </body>
 </html>
