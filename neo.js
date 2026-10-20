@@ -64,7 +64,7 @@ function mostrarMensagem(texto, tipo) {
     if (msgStatus) { msgStatus.textContent = texto; msgStatus.className = `mensagem ${tipo}`; }
 }
 
-// Navegação
+// Navegação Básica
 document.getElementById('btn-comecar')?.addEventListener('click', () => mostrarTela('tela-planos'));
 document.getElementById('voltar-inicio')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
 document.getElementById('ir-para-login')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
@@ -239,10 +239,10 @@ async function carregarSubsites(uidDono, limite) {
                     <small style="color: #888;">Criado em: ${subsite.criadoEm.toDate().toLocaleDateString()}</small>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <!-- LINK PARA ACESSAR O SUBSITE -->
-                    <a href="./subsite.html?id=${idSubsite}" style="background: #00d2ff; color: #000; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Acessar Subsite">
+                    <!-- BOTÃO ACESSAR (Sem link, agora é botão) -->
+                    <button class="btn-acessar-subsite" data-id="${idSubsite}" style="background: #00d2ff; color: #000; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Acessar Subsite">
                         <i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
-                    </a>
+                    </button>
                     
                     <button class="btn-editar-subsite" data-id="${idSubsite}" data-titulo="${subsite.titulo}" style="background: #f39c12; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                         <i data-lucide="edit" style="width: 18px; height: 18px;"></i>
@@ -301,6 +301,7 @@ document.getElementById('btn-criar-subsite')?.addEventListener('click', async ()
 });
 
 function adicionarEventosBotoesSubsite(uidDono, limite) {
+    // Evento Apagar
     document.querySelectorAll('.btn-apagar-subsite').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const botao = e.target.closest('.btn-apagar-subsite');
@@ -314,6 +315,7 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
         });
     });
 
+    // Evento Editar
     document.querySelectorAll('.btn-editar-subsite').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const botao = e.target.closest('.btn-editar-subsite');
@@ -329,7 +331,39 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
             }
         });
     });
+
+    // Evento Acessar (NOVO)
+    document.querySelectorAll('.btn-acessar-subsite').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const botao = e.target.closest('.btn-acessar-subsite');
+            const id = botao.getAttribute('data-id');
+
+            try {
+                // Busca no Firebase os dados do subsite
+                const docRef = doc(db, "subsites", id);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const dados = docSnap.data();
+                    
+                    // Preenche os dados na nova tela e faz a transição
+                    document.getElementById('titulo-subsite-visualizacao').textContent = `Visualizando: ${dados.titulo}`;
+                    document.getElementById('nome-do-subsite').textContent = dados.titulo;
+                    
+                    mostrarTela('tela-subsite');
+                }
+            } catch (error) {
+                console.error("Erro ao acessar subsite:", error);
+                alert("Não foi possível carregar este subsite.");
+            }
+        });
+    });
 }
+
+// Botão de voltar da Tela do Subsite para a lista
+document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => {
+    mostrarTela('tela-cliente');
+});
 
 // ==========================================
 // 9. OBSERVADOR DE ESTADO
