@@ -34,10 +34,10 @@ let festasGlobais = [];
 // 3. REGRAS E TEXTOS
 // ==========================================
 const termosPlanos = {
-    start: `<h3>Plano Start</h3><p>...</p>`,
-    pro: `<h3>Plano Pro</h3><p>...</p>`,
-    elite: `<h3>Plano Elite</h3><p>...</p>`,
-    elite_premium: `<h3>Elite Premium</h3><p>...</p>`
+    start: `<h3>Plano Start</h3><p>Ideal para começar. Inclui 1 subsite, 1 login por subsite e armazenamento local.</p>`,
+    pro: `<h3>Plano Pro</h3><p>Para quem quer crescer. Inclui 1 subsite, até 2 logins, armazenamento em nuvem e agendamento de reuniões.</p>`,
+    elite: `<h3>Plano Elite</h3><p>A experiência completa. Múltiplos subsites, múltiplos logins, nuvem completa e reuniões ilimitadas.</p>`,
+    elite_premium: `<h3>Elite Premium</h3><p>Todas as ferramentas do Elite + Gerador de Contratos exclusivo.</p>`
 };
 
 const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
@@ -88,9 +88,10 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
         const card = e.target.closest('.card-plano');
         planoAtual = card.getAttribute('data-plano');
         
-        // Atualiza o título da tela de termos para mostrar o plano escolhido
+        // Atualiza o título e o TEXTO DO PLANO
         const nomePlano = card.querySelector('h3').textContent;
         document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
+        document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual] || "";
         
         mostrarTela('tela-termos');
     });
@@ -708,6 +709,7 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
     finally { carregar(false); }
 });
 
+// CARREGAR CONTRATOS COM BOTÃO DE APAGAR
 async function carregarContratos() {
     const lista = document.getElementById('lista-contratos');
     if(!lista) return;
@@ -720,11 +722,21 @@ async function carregarContratos() {
         const item = doc.data();
         const li = document.createElement('li');
         li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;";
-        li.innerHTML = `<span><i data-lucide="file" style="width: 16px; vertical-align: middle; margin-right: 5px;"></i> ${item.nome}</span>`;
+        li.innerHTML = `
+            <span><i data-lucide="file" style="width: 16px; vertical-align: middle; margin-right: 5px;"></i> ${item.nome}</span>
+            <button onclick="window.apagarContrato('${doc.id}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><i data-lucide="trash-2" style="width: 14px;"></i></button>
+        `;
         lista.appendChild(li);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
+
+window.apagarContrato = async function(id) {
+    if(confirm("Tem certeza que deseja apagar este modelo de contrato?")) {
+        await deleteDoc(doc(db, "contratos", id));
+        carregarContratos();
+    }
+};
 
 // ==========================================
 // 9. BOTÕES DE FECHAR MODAIS E NEO WAVE
