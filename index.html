@@ -172,50 +172,108 @@
             </div>
 
             <!-- Grid de Ferramentas -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%; margin-bottom: 30px;">
                 
-                <!-- FERRAMENTA 1: CONTRATOS -->
+                <!-- FERRAMENTA: AGENDAR FESTA -->
+                <div id="card-festas" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <i data-lucide="party-popper" style="color: #f39c12; width: 28px; height: 28px;"></i>
+                        <h3 style="color: white; margin: 0; font-size: 1.3rem;">Festas</h3>
+                    </div>
+                    <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px; height: 40px;">Gerencie seus eventos e festas.</p>
+                    <button id="btn-agendar-festa" class="botao-principal" style="width: 100%; background: #f39c12;">Agendar Festa</button>
+                </div>
+
+                <!-- FERRAMENTA: CATÁLOGO -->
+                <div id="card-catalogo" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <i data-lucide="package" style="color: #00d2ff; width: 28px; height: 28px;"></i>
+                        <h3 style="color: white; margin: 0; font-size: 1.3rem;">Catálogo</h3>
+                    </div>
+                    <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px; height: 40px;">Seus itens e categorias.</p>
+                    <button id="btn-abrir-catalogo" class="botao-principal" style="width: 100%; background: #00d2ff; color: #000;">Gerenciar Catálogo</button>
+                </div>
+
+                <!-- FERRAMENTA: RELATÓRIOS (Pro pra cima) -->
+                <div id="card-relatorios" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <i data-lucide="bar-chart-2" style="color: #27ae60; width: 28px; height: 28px;"></i>
+                        <h3 style="color: white; margin: 0; font-size: 1.3rem;">Relatórios</h3>
+                    </div>
+                    <p id="txt-relatorio" style="font-size: 0.9rem; color: #888; margin-bottom: 20px; height: 40px;">Vendas mensais.</p>
+                    <button id="btn-relatorios" class="botao-principal" style="width: 100%;">Ver Relatório</button>
+                </div>
+
+                <!-- FERRAMENTA: CONTRATOS -->
                 <div id="card-gerador-contrato" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px; text-align: left;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                        <i data-lucide="file-text" style="color: var(--cor-azul); width: 28px; height: 28px;"></i>
+                        <i data-lucide="file-text" style="color: #9b59b6; width: 28px; height: 28px;"></i>
                         <h3 style="color: white; margin: 0; font-size: 1.3rem;">Contratos</h3>
                     </div>
                     <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px; height: 40px;">Gere contratos automaticamente.</p>
                     <button id="btn-gerador-contrato" class="botao-principal" style="width: 100%;">Acessar</button>
                 </div>
-
-                <!-- FERRAMENTA 2: REUNIÕES -->
-                <div id="card-reunioes" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px; text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                        <i data-lucide="calendar" style="color: #27ae60; width: 28px; height: 28px;"></i>
-                        <h3 style="color: white; margin: 0; font-size: 1.3rem;">Reuniões</h3>
-                    </div>
-                    <p id="txt-reunioes" style="font-size: 0.9rem; color: #888; margin-bottom: 20px; height: 40px;">Agende reuniões com clientes.</p>
-                    <button id="btn-reunioes" class="botao-principal" style="width: 100%;">Acessar</button>
-                </div>
-
-                <!-- FERRAMENTA 3: HISTÓRICO -->
-                <div id="card-pontos" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px; text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                        <i data-lucide="clock" style="color: #9b59b6; width: 28px; height: 28px;"></i>
-                        <h3 style="color: white; margin: 0; font-size: 1.3rem;">Histórico</h3>
-                    </div>
-                    <p id="txt-pontos" style="font-size: 0.9rem; color: #888; margin-bottom: 20px; height: 40px;">Veja o histórico de pontos.</p>
-                    <button id="btn-pontos" class="botao-principal" style="width: 100%;">Acessar</button>
-                </div>
-
-                <!-- FERRAMENTA 4: ARMAZENAMENTO -->
-                <div id="card-armazenamento" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px; text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                        <i data-lucide="database" style="color: #f39c12; width: 28px; height: 28px;"></i>
-                        <h3 style="color: white; margin: 0; font-size: 1.3rem;">Armazenamento</h3>
-                    </div>
-                    <p id="txt-armazenamento" style="font-size: 0.9rem; color: #888; margin-bottom: 20px; height: 40px;">Seus dados estão seguros.</p>
-                    <button class="botao-principal" style="width: 100%; background: #333; cursor: default;">Ativo</button>
-                </div>
-
             </div>
+
+            <!-- ÁREA DE LISTAGEM DAS FESTAS -->
+            <h3 style="color: white; text-align: left; width: 100%; margin-bottom: 15px;">Próximas Festas</h3>
+            <div id="lista-festas-criadas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%;"></div>
         </section>
+
+        <!-- ========================================== -->
+        <!-- MODAIS -->
+        <!-- ========================================== -->
+
+        <!-- MODAL: AGENDAR FESTA -->
+        <div id="modal-agendar-festa" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+                <h2 style="color: white; margin-top: 0;">Agendar Nova Festa</h2>
+                <form id="form-agendar-festa">
+                    <label style="color: #ccc;">Nome do Cliente:</label>
+                    <input type="text" id="festa-nome" required style="width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;">
+                    
+                    <label style="color: #ccc;">CPF:</label>
+                    <input type="text" id="festa-cpf" required style="width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;">
+                    
+                    <label style="color: #ccc;">Telefone:</label>
+                    <input type="tel" id="festa-telefone" required style="width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;">
+                    
+                    <label style="color: #ccc;">Data do Evento:</label>
+                    <input type="date" id="festa-data" required style="width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;">
+                    
+                    <label style="color: #ccc;">Tema:</label>
+                    <input type="text" id="festa-tema" required style="width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;">
+                    
+                    <label style="color: #ccc;">Localização:</label>
+                    <input type="text" id="festa-local" required style="width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;">
+                    
+                    <label style="color: #ccc;">Observações:</label>
+                    <textarea id="festa-obs" rows="2" style="width: 100%; margin-bottom: 20px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;"></textarea>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-fechar-modal-festa" class="botao-principal" style="background: #333;">Cancelar</button>
+                        <button type="submit" class="botao-principal">Agendar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL: CATÁLOGO -->
+        <div id="modal-catalogo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                <h2 style="color: white; margin-top: 0;">Catálogo de Itens</h2>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text" id="cat-nome" placeholder="Nome do item" style="flex: 1; min-width: 150px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;">
+                    <input type="text" id="cat-categoria" placeholder="Categoria (ex: Mesas)" style="flex: 1; min-width: 150px; padding: 10px; border-radius: 6px; background: #000; border: 1px solid #333; color: white;">
+                    <button id="btn-add-item" class="botao-principal" style="width: auto; margin-top: 0;">Adicionar</button>
+                </div>
+
+                <ul id="lista-catalogo" style="list-style: none; padding: 0; text-align: left; margin-bottom: 20px; max-height: 300px; overflow-y: auto;"></ul>
+
+                <button type="button" id="btn-fechar-modal-catalogo" class="botao-principal" style="background: #333;">Fechar Catálogo</button>
+            </div>
+        </div>
 
         <!-- DIV DE MENSAGENS -->
         <div id="mensagem-status" class="mensagem"></div>
