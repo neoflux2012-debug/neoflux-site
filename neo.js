@@ -237,32 +237,9 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
-    const datalist = document.getElementById('lista-kits-salvos');
-    if(datalist) {
-        datalist.innerHTML = "";
-        const snapKits = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", id)));
-        snapKits.forEach(k => {
-            const opt = document.createElement('option');
-            opt.value = k.data().nome;
-            datalist.appendChild(opt);
-        });
-    }
-
-    const selectPecas = document.getElementById('festa-pecas');
-    if(selectPecas) {
-        selectPecas.innerHTML = "";
-        const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", id)));
-        snapCat.forEach(c => {
-            const item = c.data();
-            const opt = document.createElement('option');
-            opt.value = item.nome;
-            opt.textContent = `${item.nome} (${item.categoria}) - Disp: ${item.qtdDisponivel}`;
-            selectPecas.appendChild(opt);
-        });
-    }
-
     carregarFestas(id);
     carregarContratos();
+    carregarPonto();
     mostrarTela('tela-subsite');
 }
 
@@ -421,14 +398,17 @@ window.editarFesta = function(id) {
     document.getElementById('festa-total').value = festa.total || "0.00";
     document.getElementById('festa-sinal').value = festa.sinal || "0.00";
     
+    document.getElementById('btn-agendar-festa').dispatchEvent(new Event('click')); // Recarrega as peças
+    document.getElementById('modal-agendar-festa').style.display = 'flex';
+
     const selectPecas = document.getElementById('festa-pecas');
     if (selectPecas && festa.pecas) {
-        for (let i = 0; i < selectPecas.options.length; i++) {
-            selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value);
-        }
+        setTimeout(() => {
+            for (let i = 0; i < selectPecas.options.length; i++) {
+                selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value);
+            }
+        }, 500);
     }
-
-    document.getElementById('modal-agendar-festa').style.display = 'flex';
 };
 
 window.gerarContrato = async function(idFesta) {
@@ -495,7 +475,6 @@ window.gerarContrato = async function(idFesta) {
     `);
 };
 
-// Registrar Devolução
 window.registrarDevolucao = async function(idFesta) {
     if(!confirm("Registrar devolução de todas as peças desta festa?")) return;
     const festa = festasGlobais.find(f => f.id === idFesta);
@@ -503,10 +482,8 @@ window.registrarDevolucao = async function(idFesta) {
 
     carregar(true);
     try {
-        // 1. Marca a festa como devolvida
         await updateDoc(doc(db, "festas", idFesta), { status: "devolvido" });
 
-        // 2. Devolve ao estoque no catálogo
         if (festa.pecas && festa.pecas.length > 0) {
             for (const nomePeca of festa.pecas) {
                 const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId), where("nome", "==", nomePeca)));
@@ -520,7 +497,6 @@ window.registrarDevolucao = async function(idFesta) {
 
         alert("Devolução registrada! Estoque atualizado.");
         carregarFestas(subsiteAtualId);
-        abrirSubsite(subsiteAtualId); // Recarrega o select de peças
     } catch (error) {
         console.error(error);
         alert("Erro ao registrar devolução.");
@@ -570,12 +546,12 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
         total: document.getElementById('festa-total').value,
         sinal: document.getElementById('festa-sinal').value,
         pecas: pecasSelecionadas,
-        status: idEdicao ? undefined : "pendente" // Mantém o status se for edição
+        status: idEdicao ? undefined : "pendente" 
     };
 
     try {
         if (idEdicao) {
-            delete dadosFesta.status; // Não sobrescreve o status se estiver editando
+            delete dadosFesta.status;
             await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
             alert("Festa atualizada!");
         } else {
@@ -646,9 +622,34 @@ async function carregarCatalogo() {
 }
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
-document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
+document.getElementById('btn-agendar-festa')?.addEventListener('click', async () => {
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
     document.getElementById('area-financeira-festa').style.display = regras.valores ? 'block' : 'none';
+    
+    const selectPecas = document.getElementById('festa-pecas');
+    if(selectPecas) {
+        selectPecas.innerHTML = "";
+        const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
+        snapCat.forEach(c => {
+            const item = c.data();
+            const opt = document.createElement('option');
+            opt.value = item.nome;
+            opt.textContent = `${item.nome} (${item.categoria}) - Disp: ${item.qtdDisponivel || 0}`;
+            selectPecas.appendChild(opt);
+        });
+    }
+
+    const datalist = document.getElementById('lista-kits-salvos');
+    if(datalist) {
+        datalist.innerHTML = "";
+        const snapKits = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", subsiteAtualId)));
+        snapKits.forEach(k => {
+            const opt = document.createElement('option');
+            opt.value = k.data().nome;
+            datalist.appendChild(opt);
+        });
+    }
+
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 });
 
@@ -805,6 +806,44 @@ window.apagarContrato = async function(id) {
         carregarContratos();
     }
 };
+
+// ==========================================
+// REGISTRO DE PONTO (Entrada/Saída)
+// ==========================================
+async function carregarPonto() {
+    const user = auth.currentUser;
+    if(!user) return;
+    
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const docRef = doc(db, "pontos", `${subsiteAtualId}_${hoje}`);
+    const docSnap = await getDoc(docRef);
+    
+    const txtPonto = document.getElementById('txt-ponto-hoje');
+    if(docSnap.exists()) {
+        const dados = docSnap.data();
+        txtPonto.innerHTML = `Entrada: <b style="color:#00c853">${dados.entrada || '--:--'}</b> | Saída: <b style="color:#e74c3c">${dados.saida || '--:--'}</b>`;
+    } else {
+        txtPonto.textContent = "Nenhum registro hoje.";
+    }
+}
+
+document.getElementById('btn-bater-entrada')?.addEventListener('click', async () => {
+    const horaAtual = new Date().toLocaleTimeString('pt-BR');
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    
+    await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { entrada: horaAtual }, { merge: true });
+    alert("Entrada registrada às " + horaAtual);
+    carregarPonto();
+});
+
+document.getElementById('btn-bater-saida')?.addEventListener('click', async () => {
+    const horaAtual = new Date().toLocaleTimeString('pt-BR');
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    
+    await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { saida: horaAtual }, { merge: true });
+    alert("Saída registrada às " + horaAtual);
+    carregarPonto();
+});
 
 // ==========================================
 // 9. BOTÕES DE FECHAR MODAIS E NEO WAVE
