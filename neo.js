@@ -247,50 +247,77 @@ document.getElementById('btn-relatorios')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 8. MODAIS DE CATÁLOGO E KITS
+// 8. MODAIS DE CATÁLOGO E KITS (SALVANDO NO FIREBASE)
 // ==========================================
-document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => document.getElementById('modal-catalogo').style.display = 'flex');
-document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
-document.getElementById('btn-agendar-festa')?.addEventListener('click', () => document.getElementById('modal-agendar-festa').style.display = 'flex');
-
-document.getElementById('btn-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'flex');
-document.getElementById('btn-fechar-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'none');
-
-document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => {
-    const input = document.getElementById('neo-wave-input');
-    const body = document.getElementById('neo-wave-body');
-    if(!input.value) return;
-
-    body.innerHTML += `<div class="msg-user">${input.value}</div>`;
-    const msg = input.value.toLowerCase();
-    input.value = "";
-
-    setTimeout(() => {
-        let resposta = "Ainda estou aprendendo a responder isso. Tente falar sobre 'agendar', 'kits' ou 'catálogo'.";
-        if (msg.includes('agendar') || msg.includes('festa')) resposta = "Para agendar, clique no botão 'Agendar Festa'. Lá você preenche os dados e a calculadora de frete já faz o cálculo!";
-        if (msg.includes('kit')) resposta = "O Gerador de Kits está disponível para planos Pro pra cima. Clique no card 'Kits'!";
-        if (msg.includes('relatorio') || msg.includes('relatório')) resposta = "A planilha de relatórios fica no card 'Relatórios' e mostra todas as festas do mês.";
-        
-        body.innerHTML += `<div class="msg-bot">${resposta}</div>`;
-        body.scrollTop = body.scrollHeight;
-    }, 800);
+document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => {
+    document.getElementById('modal-catalogo').style.display = 'flex';
+    carregarCatalogo();
 });
 
-document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.target.closest('[id^="modal-"]').style.display = 'none';
+document.getElementById('btn-add-item')?.addEventListener('click', async () => {
+    const nome = document.getElementById('cat-nome').value;
+    const cat = document.getElementById('cat-categoria').value;
+    if (!nome) return alert("Digite o nome do item.");
+
+    await addDoc(collection(db, "catalogo"), { idSubsite: subsiteAtualId, nome: nome, categoria: cat });
+    document.getElementById('cat-nome').value = "";
+    document.getElementById('cat-categoria').value = "";
+    carregarCatalogo();
+});
+
+async function carregarCatalogo() {
+    const lista = document.getElementById('lista-catalogo');
+    lista.innerHTML = "<li>Carregando...</li>";
+    const snap = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
+    
+    lista.innerHTML = "";
+    if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum item adicionado.</li>";
+    
+    snap.forEach(doc => {
+        const item = doc.data();
+        const li = document.createElement('li');
+        li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between;";
+        li.innerHTML = `<span>${item.nome} <small style="color:#888;">(${item.categoria})</small></span>`;
+        lista.appendChild(li);
     });
-});
-document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
+}
 
-// ==========================================
-// 9. OBSERVADOR DE ESTADO
-// ==========================================
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        if (!user.emailVerified) mostrarTela('tela-verificacao');
-        else { carregarDadosCliente(user.uid); mostrarTela('tela-cliente'); }
-    } else {
-        mostrarTela('tela-boas-vindas');
+// Lógica do Gerador de Kits (Upload de Imagem)
+document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
+
+document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    carregar(true); // Mostra tela de loading
+
+    const nome = document.getElementById('kit-nome').value;
+    const modelo = document.getElementById('kit-modelo').value;
+    const fileInput = document.getElementById('kit-imagem');
+
+    let base64Imagem = "";
+
+    // Se o usuário escolheu uma imagem, converte para texto (Base64)
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        base64Imagem = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    try {
+        await addDoc(collection(db, "kits"), { 
+            idSubsite: subsiteAtualId, 
+            nome: nome, 
+            modelo: modelo, 
+            imagem: base64Imagem 
+        });
+        alert("Kit salvo com sucesso!");
+        document.getElementById('form-kit').reset();
+        document.getElementById('modal-kits').style.display = 'none';
+    } catch (error) {
+        alert("Erro ao salvar o kit.");
+    } finally {
+        carregar(false);
     }
 });
