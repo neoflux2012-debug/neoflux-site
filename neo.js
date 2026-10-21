@@ -30,9 +30,6 @@ let subsiteAtualId = "";
 let planoAtual = "";
 let festasGlobais = [];
 
-// CONTROLE DE FLUXO: Evita que o observador mude de tela durante cadastro ou login
-let processoEmAndamento = false; 
-
 // ==========================================
 // 3. REGRAS E TEXTOS
 // ==========================================
@@ -117,7 +114,6 @@ document.getElementById('form-termos')?.addEventListener('submit', (e) => {
 document.getElementById('form-cadastro-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
-    processoEmAndamento = true; 
     
     try {
         const email = document.getElementById('email-cadastro').value;
@@ -139,19 +135,16 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         mostrarTela('tela-pagamento');
         
     } catch (error) { 
-        alert("Erro: " + error.message); 
-        processoEmAndamento = false; 
+        alert("Erro ao cadastrar: " + error.message); 
+    } finally { 
+        carregar(false); 
     }
-    finally { carregar(false); }
 });
 
-// --- LOGIN (CORRIGIDO) ---
+// --- LOGIN ---
 document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
-    
-    // Ativa a trava para o observador NÃO mudar a tela enquanto processa
-    processoEmAndamento = true; 
     
     try {
         await signInWithEmailAndPassword(
@@ -159,17 +152,13 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
             document.getElementById('email-login').value, 
             document.getElementById('senha-login').value
         );
-        
-        // Se o login der certo, o observador onAuthStateChanged vai cuidar de mudar a tela.
-        // Mas só vamos liberar a trava depois que o observador agir.
-        // Para garantir, adicionamos um pequeno delay.
-        setTimeout(() => { processoEmAndamento = false; }, 1000);
-        
+        // O onAuthStateChanged vai detectar e mudar a tela. 
+        // Mas para garantir que o loading suma, fechamos no finally.
     } catch (error) { 
         alert("E-mail ou senha incorretos."); 
-        processoEmAndamento = false; // Libera a trava se der erro
+    } finally { 
+        carregar(false); 
     }
-    finally { carregar(false); }
 });
 
 document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
@@ -197,7 +186,7 @@ async function carregarDadosCliente(uid) {
             document.getElementById('cliente-status').textContent = dados.statusPagamento;
             
             const limite = limitesPlanos[planoAtual] || 1;
-            carregarSubsites(uid, limite);
+            await carregarSubsites(uid, limite);
         }
     } catch (error) { console.error(error); }
     finally { carregar(false); }
@@ -811,27 +800,20 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 });
 
 // ==========================================
-// 10. OBSERVADOR DE ESTADO (CORRIGIDO PARA LOGIN E CADASTRO)
+// 10. OBSERVADOR DE ESTADO (DEFINITIVO)
 // ==========================================
 onAuthStateChanged(auth, (user) => {
-    // Se um processo de cadastro ou login estiver rodando, ignora o observador
-    if (processoEmAndamento) {
-        return;
-    }
-
     if (user) {
-        // Se o usuário está logado mas não verificou o e-mail
         if (!user.emailVerified) {
             mostrarTela('tela-verificacao');
         } else {
-            // Se está tudo certo, carrega os dados e vai para a área do cliente
             carregarDadosCliente(user.uid);
             mostrarTela('tela-cliente');
         }
     } else {
-        // Se não há usuário logado, mostra a tela de boas-vindas
+        // Só volta para o início se não estiver em uma tela de formulário
         const telaAtual = document.querySelector('.tela.ativa');
-        if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas'].includes(telaAtual.id)) {
+        if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas', 'tela-termos', 'tela-pagamento'].includes(telaAtual.id)) {
             mostrarTela('tela-boas-vindas');
         }
     }
