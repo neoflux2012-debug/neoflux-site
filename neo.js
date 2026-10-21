@@ -1,3 +1,6 @@
+
+alert("O arquivo neo.js novo carregou!");
+
 // ==========================================
 // 1. IMPORTAÇÕES
 // ==========================================
@@ -11,6 +14,7 @@ import {
     deleteDoc, updateDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ... o resto do código continua igual ...
 // ==========================================
 // 2. CONFIGURAÇÃO
 // ==========================================
