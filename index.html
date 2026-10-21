@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neo Flux | Criamos sites que conectam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -206,6 +209,12 @@
                     <label style="color: #ccc; margin-top: 10px; display: block;">Localização:</label>
                     <input type="text" id="festa-local" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
                     
+                    <!-- NOVO: SELEÇÃO DE PEÇAS -->
+                    <label style="color: #ccc; margin-top: 10px; display: block;">Peças (Selecione no Catálogo):</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="festa-pecas" multiple style="flex: 1; padding: 10px; background: #000; border: 1px solid #333; color: white; height: 80px;"></select>
+                    </div>
+
                     <div id="area-financeira-festa" style="display: none; background: #0a0a0a; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px dashed #555;">
                         <h4 style="color: white; margin: 0 0 10px 0;">Calculadora de Frete</h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
@@ -266,7 +275,7 @@
             </div>
         </div>
 
-        <!-- MODAL GERENCIAR CONTRATOS (SOMENTE PDF e LOGO) -->
+        <!-- MODAL GERENCIAR CONTRATOS -->
         <div id="modal-contratos" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
                 <h2 style="color: white; margin-top: 0;">Modelos de Contrato</h2>
