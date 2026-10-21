@@ -34,10 +34,10 @@ let festasGlobais = [];
 // 3. REGRAS E TEXTOS
 // ==========================================
 const termosPlanos = {
-    start: `<h3>Termos - Plano Start</h3><p>O plano Start permite 1 subsite e 1 login por subsite. Armazenamento local.</p>`,
-    pro: `<h3>Termos - Plano Pro</h3><p>O plano Pro permite 1 subsite e 2 logins por subsite. Armazenamento em nuvem, até 10 reuniões.</p>`,
-    elite: `<h3>Termos - Plano Elite</h3><p>O plano Elite permite múltiplos subsites e múltiplos logins. Reuniões ilimitadas.</p>`,
-    elite_premium: `<h3>Termos - Elite Premium</h3><p>Todas as ferramentas do Elite + Gerador de Contratos.</p>`
+    start: `<h3>Plano Start</h3><p>...</p>`,
+    pro: `<h3>Plano Pro</h3><p>...</p>`,
+    elite: `<h3>Plano Elite</h3><p>...</p>`,
+    elite_premium: `<h3>Elite Premium</h3><p>...</p>`
 };
 
 const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
@@ -78,7 +78,6 @@ document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { 
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
 document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
 
-// BOTÃO DE SAIR DA CONTA (LOGOUT)
 document.getElementById('btn-logout')?.addEventListener('click', async () => {
     await signOut(auth);
     mostrarTela('tela-boas-vindas');
@@ -88,7 +87,11 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const card = e.target.closest('.card-plano');
         planoAtual = card.getAttribute('data-plano');
-        document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual] || "";
+        
+        // Atualiza o título da tela de termos para mostrar o plano escolhido
+        const nomePlano = card.querySelector('h3').textContent;
+        document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
+        
         mostrarTela('tela-termos');
     });
 });
@@ -245,7 +248,6 @@ async function abrirSubsite(id) {
         });
     }
 
-    // Carrega o catálogo no select de peças
     const selectPecas = document.getElementById('festa-pecas');
     if(selectPecas) {
         selectPecas.innerHTML = "";
@@ -306,7 +308,6 @@ async function carregarFestas(id) {
         const botaoContrato = regras.contratos ? 
             `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
 
-        // Exibe as peças selecionadas
         const pecasStr = festa.pecas && festa.pecas.length > 0 ? festa.pecas.join(", ") : "Nenhuma";
         const blocoPecas = festa.pecas && festa.pecas.length > 0 ? 
             `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;">
@@ -407,7 +408,6 @@ window.editarFesta = function(id) {
     document.getElementById('festa-total').value = festa.total || "0.00";
     document.getElementById('festa-sinal').value = festa.sinal || "0.00";
     
-    // Seleciona as peças no select
     const selectPecas = document.getElementById('festa-pecas');
     if (selectPecas && festa.pecas) {
         for (let i = 0; i < selectPecas.options.length; i++) {
@@ -501,7 +501,6 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     carregar(true);
     const idEdicao = document.getElementById('festa-id-edicao').value;
     
-    // Pega as peças selecionadas no select
     const selectPecas = document.getElementById('festa-pecas');
     const pecasSelecionadas = [];
     if (selectPecas) {
@@ -522,7 +521,7 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
         frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
         total: document.getElementById('festa-total').value,
         sinal: document.getElementById('festa-sinal').value,
-        pecas: pecasSelecionadas // <-- SALVANDO AS PEÇAS
+        pecas: pecasSelecionadas
     };
 
     try {
@@ -583,7 +582,6 @@ document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 });
 
-// EVENTO DO BOTÃO DE RELATÓRIOS
 document.getElementById('btn-relatorios')?.addEventListener('click', () => {
     document.getElementById('modal-relatorios').style.display = 'flex';
     const tbody = document.getElementById('tabela-relatorio');
