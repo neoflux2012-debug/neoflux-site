@@ -50,7 +50,7 @@ const recursosPlanos = {
 };
 
 // ==========================================
-// 4. CONTROLE DE TELAS E LOADING (RESTAURADO)
+// 4. CONTROLE DE TELAS E LOADING
 // ==========================================
 const todasAsTelas = document.querySelectorAll('.tela');
 
@@ -338,6 +338,9 @@ async function carregarCatalogo() {
 }
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
+
+// AQUI ESTÁ A CORREÇÃO DO BOTÃO DE AGENDAR FESTA
+document.getElementById('btn-agendar-festa')?.addEventListener('click', () => document.getElementById('modal-agendar-festa').style.display = 'flex');
 
 document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
     e.preventDefault();
