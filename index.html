@@ -63,10 +63,8 @@
             <h2 id="titulo-termos">Termos e Condições</h2>
             
             <div class="caixa-termos" style="max-height: none;">
-                <!-- O TEXTO DO PLANO VAI AQUI -->
                 <div id="texto-termos" style="margin-bottom: 20px;"></div>
                 
-                <!-- O FORMULÁRIO E O AVISO VÃO AQUI EMBAIXO, PARA TODOS OS PLANOS -->
                 <div style="background: rgba(138, 43, 226, 0.1); border: 1px solid var(--cor-roxo); padding: 15px; border-radius: 8px;">
                     <p style="text-align: left; margin-bottom: 10px; color: var(--texto-principal);">
                         <i data-lucide="external-link" style="width: 16px; vertical-align: middle; color: var(--cor-azul);"></i>
@@ -228,6 +226,7 @@
                         <div><label style="color: #ccc;">CPF:</label><input type="text" id="festa-cpf" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
                         <div><label style="color: #ccc;">Telefone:</label><input type="tel" id="festa-telefone" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
                         <div><label style="color: #ccc;">Data:</label><input type="date" id="festa-data" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
+                        <div><label style="color: #ccc;">Horário:</label><input type="time" id="festa-horario" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
                     </div>
                     <label style="color: #ccc; margin-top: 10px; display: block;">Tema (ou escolha um Kit salvo):</label>
                     <input type="text" id="festa-tema" required list="lista-kits-salvos" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
@@ -273,11 +272,13 @@
         <div id="modal-catalogo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px;">
                 <h2 style="color: white; margin-top: 0;">Meu Catálogo</h2>
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                     <input type="text" id="cat-nome" placeholder="Nome do item" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    <input type="text" id="cat-categoria" placeholder="Categoria" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    <button id="btn-add-item" class="botao-principal" style="width: auto; margin-top: 0;">Adicionar ao Catálogo</button>
+                    <input type="text" id="cat-categoria" placeholder="Categoria (ex: Mesas)" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                    <input type="text" id="cat-modelo" placeholder="Modelo (ex: Rústica)" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                    <input type="number" id="cat-quantidade" placeholder="Quantidade" value="1" min="1" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
                 </div>
+                <button id="btn-add-item" class="botao-principal" style="width: 100%; margin-bottom: 20px;">Adicionar ao Catálogo</button>
                 <ul id="lista-catalogo" style="list-style: none; padding: 0; max-height: 250px; overflow-y: auto;"></ul>
                 <button type="button" id="btn-fechar-modal-catalogo" class="botao-principal" style="background: #333; margin-top: 20px;">Fechar</button>
             </div>
