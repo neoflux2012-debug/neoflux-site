@@ -43,10 +43,10 @@ const termosPlanos = {
 const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
 
 const recursosPlanos = {
-    start: { kits: false, relatorios: false, assistente: false },
-    pro: { kits: true, relatorios: true, assistente: false },
-    elite: { kits: true, relatorios: true, assistente: true },
-    elite_premium: { kits: true, relatorios: true, assistente: true }
+    start: { kits: false, relatorios: false, assistente: false, valores: false },
+    pro: { kits: true, relatorios: true, assistente: false, valores: true },
+    elite: { kits: true, relatorios: true, assistente: true, valores: true },
+    elite_premium: { kits: true, relatorios: true, assistente: true, valores: true }
 };
 
 // ==========================================
@@ -117,16 +117,6 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     try {
         await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
     } catch (error) { alert("E-mail ou senha incorretos."); }
-    finally { carregar(false); }
-});
-
-document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    carregar(true);
-    try {
-        await sendPasswordResetEmail(auth, document.getElementById('email-recuperar').value);
-        alert("Link de recuperação enviado!");
-    } catch (error) { alert("Erro ao enviar e-mail."); }
     finally { carregar(false); }
 });
 
@@ -221,6 +211,18 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
+    // Carrega os kits no Datalist do form
+    const datalist = document.getElementById('lista-kits-salvos');
+    if(datalist) {
+        datalist.innerHTML = "";
+        const snapKits = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", id)));
+        snapKits.forEach(k => {
+            const opt = document.createElement('option');
+            opt.value = k.data().nome;
+            datalist.appendChild(opt);
+        });
+    }
+
     carregarFestas(id);
     mostrarTela('tela-subsite');
 }
@@ -242,22 +244,33 @@ async function carregarFestas(id) {
         festa.id = doc.id;
         festasGlobais.push(festa);
 
-        // Cálculos para o card
         const total = parseFloat(festa.total) || 0;
         const sinal = parseFloat(festa.sinal) || 0;
         const falta = total - sinal;
-        
         const valorFaltaFormatado = falta > 0 ? `R$ ${falta.toFixed(2).replace('.', ',')}` : 'Pago';
-
-        // Botão de contrato (só aparece se o plano permitir)
-        const botaoContrato = regras.contratos ? 
-            `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 2; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
+        
+        // Só mostra valores se o plano permitir
+        const blocoValores = regras.valores ? `
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="truck" style="width: 16px;"></i> Frete</p>
+                    <p style="color: #00c853; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.frete || '0,00'}</p>
+                </div>
+                <div>
+                    <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="dollar-sign" style="width: 16px;"></i> Total</p>
+                    <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.total || '0,00'}</p>
+                </div>
+                <div>
+                    <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="wallet" style="width: 16px;"></i> Sinal</p>
+                    <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.sinal || '0,00'}</p>
+                </div>
+            </div>
+        ` : `<div><p style="color: #888; font-size: 0.8rem;">Valores disponíveis apenas no plano Pro ou superior.</p></div>`;
 
         const card = document.createElement('div');
-        card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 15px; position: relative;";
+        card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative;";
         
         card.innerHTML = `
-            <!-- CABEÇALHO DO CARD -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;">
@@ -271,50 +284,35 @@ async function carregarFestas(id) {
                 <span style="background: rgba(255, 152, 0, 0.2); color: #ff9800; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ff9800;">PENDENTE</span>
             </div>
 
-            <!-- INFORMAÇÕES EM DUAS COLUNAS -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <!-- COLUNA ESQUERDA -->
+                <!-- COLUNA ESQUERDA (AUMENTADO) -->
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div>
-                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 12px;"></i> Data</p>
-                        <p style="color: white; font-weight: bold; margin: 0; font-size: 0.9rem;">${festa.data.split('-').reverse().join('/')}</p>
+                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data</p>
+                        <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')}</p>
                     </div>
                     <div>
-                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 12px;"></i> CPF</p>
-                        <p style="color: white; font-weight: bold; margin: 0; font-size: 0.9rem;">${festa.cpf || '—'}</p>
+                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 16px;"></i> CPF</p>
+                        <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.cpf || '—'}</p>
                     </div>
                     <div>
-                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="palette" style="width: 12px;"></i> Tema</p>
-                        <p style="color: #00d2ff; font-weight: bold; margin: 0; font-size: 0.9rem;">${festa.tema}</p>
+                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="palette" style="width: 16px;"></i> Tema</p>
+                        <p style="color: #00d2ff; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.tema}</p>
                     </div>
                 </div>
                 
                 <!-- COLUNA DIREITA -->
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div>
-                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="truck" style="width: 12px;"></i> Frete</p>
-                        <p style="color: #00c853; font-weight: bold; margin: 0; font-size: 0.9rem;">R$ ${festa.frete || '0,00'}</p>
-                    </div>
-                    <div>
-                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="dollar-sign" style="width: 12px;"></i> Total</p>
-                        <p style="color: white; font-weight: bold; margin: 0; font-size: 0.9rem;">R$ ${festa.total || '0,00'}</p>
-                    </div>
-                    <div>
-                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="wallet" style="width: 12px;"></i> Sinal</p>
-                        <p style="color: white; font-weight: bold; margin: 0; font-size: 0.9rem;">R$ ${festa.sinal || '0,00'}</p>
-                    </div>
-                </div>
+                ${blocoValores}
             </div>
 
             <!-- FALTA PAGAR -->
+            ${regras.valores ? `
             <div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-bottom: 15px;">
                 <span style="color: #888; font-size: 0.8rem;">Falta Pagar: </span>
                 <span style="color: #e74c3c; font-weight: bold; font-size: 1rem;">${valorFaltaFormatado}</span>
-            </div>
+            </div>` : ''}
 
-            <!-- BOTÕES DE AÇÃO -->
             <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px;">
-                ${botaoContrato}
                 <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;">
                     <i data-lucide="edit" style="width: 16px;"></i> Editar
                 </button>
@@ -326,10 +324,9 @@ async function carregarFestas(id) {
         container.appendChild(card);
     });
     
-    // Inicializa os ícones Lucide nos cards recém-criados
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    // Filtro de pesquisa em tempo real
+    // Filtro de pesquisa
     const inputPesquisa = document.getElementById('pesquisa-festas');
     if (inputPesquisa) {
         inputPesquisa.addEventListener('input', (e) => {
@@ -352,7 +349,22 @@ window.apagarFesta = async function(id) {
 };
 
 window.editarFesta = function(id) {
-    alert("Função de editar festa será implementada em breve!");
+    const festa = festasGlobais.find(f => f.id === id);
+    if(!festa) return;
+
+    document.getElementById('festa-id-edicao').value = id;
+    document.getElementById('titulo-modal-festa').textContent = "Editar Festa";
+    document.getElementById('festa-nome').value = festa.nome || "";
+    document.getElementById('festa-cpf').value = festa.cpf || "";
+    document.getElementById('festa-telefone').value = festa.telefone || "";
+    document.getElementById('festa-data').value = festa.data || "";
+    document.getElementById('festa-tema').value = festa.tema || "";
+    document.getElementById('festa-local').value = festa.local || "";
+    document.getElementById('festa-obs').value = festa.obs || "";
+    document.getElementById('festa-total').value = festa.total || "0.00";
+    document.getElementById('festa-sinal').value = festa.sinal || "0.00";
+
+    document.getElementById('modal-agendar-festa').style.display = 'flex';
 };
 
 window.gerarContrato = function(id) {
@@ -365,11 +377,9 @@ function calcularFrete() {
     const preco = parseFloat(document.getElementById('frete-preco').value) || 0;
     const consumo = parseFloat(document.getElementById('frete-consumo').value) || 1; 
     const multiplicador = parseFloat(document.getElementById('frete-ida-volta').value) || 2; 
-
     const kmTotal = km * multiplicador;
     const litros = kmTotal / consumo;
     const total = litros * preco;
-
     document.getElementById('total-frete').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
 }
 
@@ -378,39 +388,41 @@ function calcularFrete() {
 });
 document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
 
-// Salvar Festa
+// Salvar / Editar Festa
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
+    const idEdicao = document.getElementById('festa-id-edicao').value;
+    
+    const dadosFesta = {
+        idSubsite: subsiteAtualId,
+        nome: document.getElementById('festa-nome').value,
+        cpf: document.getElementById('festa-cpf').value,
+        telefone: document.getElementById('festa-telefone').value,
+        data: document.getElementById('festa-data').value,
+        tema: document.getElementById('festa-tema').value,
+        local: document.getElementById('festa-local').value,
+        obs: document.getElementById('festa-obs').value,
+        frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
+        total: document.getElementById('festa-total').value,
+        sinal: document.getElementById('festa-sinal').value
+    };
+
     try {
-        await addDoc(collection(db, "festas"), {
-            idSubsite: subsiteAtualId,
-            nome: document.getElementById('festa-nome').value,
-            cpf: document.getElementById('festa-cpf').value,
-            telefone: document.getElementById('festa-telefone').value,
-            data: document.getElementById('festa-data').value,
-            tema: document.getElementById('festa-tema').value,
-            local: document.getElementById('festa-local').value,
-            obs: document.getElementById('festa-obs').value,
-            frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
-            total: document.getElementById('festa-total').value,
-            sinal: document.getElementById('festa-sinal').value
-        });
+        if (idEdicao) {
+            await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
+            alert("Festa atualizada com sucesso!");
+        } else {
+            await addDoc(collection(db, "festas"), dadosFesta);
+            alert("Festa agendada com sucesso!");
+        }
         document.getElementById('form-agendar-festa').reset();
+        document.getElementById('festa-id-edicao').value = "";
+        document.getElementById('titulo-modal-festa').textContent = "Agendar Nova Festa";
         document.getElementById('modal-agendar-festa').style.display = 'none';
         carregarFestas(subsiteAtualId);
-    } catch (error) { alert("Erro ao salvar."); }
+    } catch (error) { alert("Erro ao salvar: " + error.message); }
     finally { carregar(false); }
-});
-
-// Relatórios
-document.getElementById('btn-relatorios')?.addEventListener('click', () => {
-    document.getElementById('modal-relatorios').style.display = 'flex';
-    const tbody = document.getElementById('tabela-relatorio');
-    tbody.innerHTML = "";
-    festasGlobais.forEach(f => {
-        tbody.innerHTML += `<tr style="border-bottom: 1px solid #222;"><td style="padding: 10px;">${f.nome}</td><td style="padding: 10px;">${f.tema}</td><td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td></tr>`;
-    });
 });
 
 // ==========================================
@@ -425,7 +437,6 @@ document.getElementById('btn-add-item')?.addEventListener('click', async () => {
     const nome = document.getElementById('cat-nome').value;
     const cat = document.getElementById('cat-categoria').value;
     if (!nome) return alert("Digite o nome do item.");
-
     await addDoc(collection(db, "catalogo"), { idSubsite: subsiteAtualId, nome: nome, categoria: cat });
     document.getElementById('cat-nome').value = "";
     document.getElementById('cat-categoria').value = "";
@@ -437,10 +448,8 @@ async function carregarCatalogo() {
     if(!lista) return;
     lista.innerHTML = "<li>Carregando...</li>";
     const snap = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
-    
     lista.innerHTML = "";
     if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum item adicionado.</li>";
-    
     snap.forEach(doc => {
         const item = doc.data();
         const li = document.createElement('li');
@@ -451,12 +460,15 @@ async function carregarCatalogo() {
 }
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
-document.getElementById('btn-agendar-festa')?.addEventListener('click', () => document.getElementById('modal-agendar-festa').style.display = 'flex');
+document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
+    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+    document.getElementById('area-financeira-festa').style.display = regras.valores ? 'block' : 'none';
+    document.getElementById('modal-agendar-festa').style.display = 'flex';
+});
 
 document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
-
     const nome = document.getElementById('kit-nome').value;
     const modelo = document.getElementById('kit-modelo').value;
     const fileInput = document.getElementById('kit-imagem');
@@ -465,22 +477,35 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
 
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
+        // Redimensiona a imagem para não dar erro de tamanho
         base64Imagem = await new Promise((resolve) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 500;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // Qualidade 70%
+                };
+                img.src = ev.target.result;
+            };
             reader.readAsDataURL(file);
         });
     }
 
     try {
-        await addDoc(collection(db, "kits"), { 
-            idSubsite: subsiteAtualId, nome: nome, modelo: modelo, imagem: base64Imagem 
-        });
+        await addDoc(collection(db, "kits"), { idSubsite: subsiteAtualId, nome: nome, modelo: modelo, imagem: base64Imagem });
         alert("Kit salvo com sucesso!");
         document.getElementById('form-kit').reset();
         document.getElementById('modal-kits').style.display = 'none';
+        abrirSubsite(subsiteAtualId); // Recarrega para atualizar o Datalist
     } catch (error) {
-        alert("Erro ao salvar o kit.");
+        alert("Erro ao salvar o kit: " + error.message);
     } finally {
         carregar(false);
     }
