@@ -12,11 +12,17 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
-// 2. CONFIGURAÇÃO
+// 2. CONFIGURAÇÃO DO FIREBASE
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU", authDomain: "neo-flux-c91c8.firebaseapp.com", projectId: "neo-flux-c91c8", storageBucket: "neo-flux-c91c8.firebasestorage.app", messagingSenderId: "6686219198", appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
+  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
+  authDomain: "neo-flux-c91c8.firebaseapp.com",
+  projectId: "neo-flux-c91c8",
+  storageBucket: "neo-flux-c91c8.firebasestorage.app",
+  messagingSenderId: "6686219198",
+  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -29,7 +35,10 @@ let festasGlobais = [];
 // 3. REGRAS E TEXTOS
 // ==========================================
 const termosPlanos = {
-    start: `<h3>Plano Start</h3><p>...</p>`, pro: `<h3>Plano Pro</h3><p>...</p>`, elite: `<h3>Plano Elite</h3><p>...</p>`, elite_premium: `<h3>Elite Premium</h3><p>...</p>`
+    start: `<h3>Plano Start</h3><p>...</p>`,
+    pro: `<h3>Plano Pro</h3><p>...</p>`,
+    elite: `<h3>Plano Elite</h3><p>...</p>`,
+    elite_premium: `<h3>Elite Premium</h3><p>...</p>`
 };
 
 const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
@@ -42,17 +51,20 @@ const recursosPlanos = {
 };
 
 // ==========================================
-// 4. CONTROLE DE TELAS
+// 4. CONTROLE DE TELAS (AQUI ESTAVA O ERRO)
 // ==========================================
 const todasAsTelas = document.querySelectorAll('.tela');
+
 function mostrarTela(id) {
     todasAsTelas.forEach(t => t.classList.remove('ativa'));
     const tela = document.getElementById(id);
     if (tela) tela.classList.add('ativa');
     window.scrollTo(0, 0);
 }
+
 function carregar(ativo) {
-    document.getElementById('loading-overlay').style.display = ativo ? 'flex' : 'none';
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.style.display = ativo ? 'flex' : 'none';
 }
 
 // ==========================================
@@ -62,6 +74,7 @@ document.getElementById('btn-comecar')?.addEventListener('click', () => mostrarT
 document.getElementById('voltar-inicio')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
 document.getElementById('ir-para-login')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
+document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
 
 document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -95,7 +108,7 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     carregar(true);
     try {
         await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
-    } catch (error) { alert("Erro ao logar."); }
+    } catch (error) { alert("E-mail ou senha incorretos."); }
     finally { carregar(false); }
 });
 
@@ -122,15 +135,19 @@ async function carregarDadosCliente(uid) {
 
 async function carregarSubsites(uid, limite) {
     const lista = document.getElementById('lista-subsites');
+    if(!lista) return;
     lista.innerHTML = "";
     const snap = await getDocs(query(collection(db, "subsites"), where("idDono", "==", uid)));
     
-    if (snap.size >= limite) {
-        document.getElementById('btn-criar-subsite').disabled = true;
-        document.getElementById('titulo-subsite').disabled = true;
-    } else {
-        document.getElementById('btn-criar-subsite').disabled = false;
-        document.getElementById('titulo-subsite').disabled = false;
+    const btnCriar = document.getElementById('btn-criar-subsite');
+    const inputTitulo = document.getElementById('titulo-subsite');
+    
+    if (btnCriar && inputTitulo) {
+        if (snap.size >= limite) {
+            btnCriar.disabled = true; inputTitulo.disabled = true;
+        } else {
+            btnCriar.disabled = false; inputTitulo.disabled = false;
+        }
     }
 
     snap.forEach(doc => {
@@ -168,13 +185,20 @@ async function abrirSubsite(id) {
 
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
 
-    document.getElementById('btn-abrir-kits').disabled = !regras.kits;
-    document.getElementById('btn-abrir-kits').style.background = regras.kits ? "var(--gradiente-neo)" : "#333";
+    const btnKits = document.getElementById('btn-abrir-kits');
+    if(btnKits) {
+        btnKits.disabled = !regras.kits;
+        btnKits.style.background = regras.kits ? "var(--gradiente-neo)" : "#333";
+    }
     
-    document.getElementById('btn-relatorios').disabled = !regras.relatorios;
-    document.getElementById('btn-relatorios').style.background = regras.relatorios ? "var(--gradiente-neo)" : "#333";
+    const btnRel = document.getElementById('btn-relatorios');
+    if(btnRel) {
+        btnRel.disabled = !regras.relatorios;
+        btnRel.style.background = regras.relatorios ? "var(--gradiente-neo)" : "#333";
+    }
 
-    document.getElementById('btn-neo-wave').style.display = regras.assistente ? 'flex' : 'none';
+    const btnNeo = document.getElementById('btn-neo-wave');
+    if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
     carregarFestas(id);
     mostrarTela('tela-subsite');
@@ -185,6 +209,7 @@ async function abrirSubsite(id) {
 // ==========================================
 async function carregarFestas(id) {
     const container = document.getElementById('lista-festas-criadas');
+    if(!container) return;
     container.innerHTML = "";
     festasGlobais = [];
     
@@ -205,15 +230,23 @@ async function carregarFestas(id) {
     });
 }
 
-document.getElementById('frete-km')?.addEventListener('input', () => {
+function calcularFrete() {
     const km = parseFloat(document.getElementById('frete-km').value) || 0;
-    const preco = parseFloat(document.getElementById('frete-preco').value) || 8.00;
-    const total = (km * 2 / 9) * preco;
-    document.getElementById('total-frete').textContent = `R$ ${total.toFixed(2)}`;
+    const preco = parseFloat(document.getElementById('frete-preco').value) || 0;
+    const consumo = parseFloat(document.getElementById('frete-consumo').value) || 1; 
+    const multiplicador = parseFloat(document.getElementById('frete-ida-volta').value) || 2; 
+
+    const kmTotal = km * multiplicador;
+    const litros = kmTotal / consumo;
+    const total = litros * preco;
+
+    document.getElementById('total-frete').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+}
+
+['frete-km', 'frete-preco', 'frete-consumo', 'frete-ida-volta'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', calcularFrete);
 });
-document.getElementById('frete-preco')?.addEventListener('input', () => {
-    document.getElementById('frete-km').dispatchEvent(new Event('input'));
-});
+document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
 
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -247,7 +280,7 @@ document.getElementById('btn-relatorios')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 8. MODAIS DE CATÁLOGO E KITS (SALVANDO NO FIREBASE)
+// 8. MODAIS DE CATÁLOGO E KITS
 // ==========================================
 document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => {
     document.getElementById('modal-catalogo').style.display = 'flex';
@@ -267,6 +300,7 @@ document.getElementById('btn-add-item')?.addEventListener('click', async () => {
 
 async function carregarCatalogo() {
     const lista = document.getElementById('lista-catalogo');
+    if(!lista) return;
     lista.innerHTML = "<li>Carregando...</li>";
     const snap = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
     
@@ -282,12 +316,11 @@ async function carregarCatalogo() {
     });
 }
 
-// Lógica do Gerador de Kits (Upload de Imagem)
 document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
 
 document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    carregar(true); // Mostra tela de loading
+    carregar(true);
 
     const nome = document.getElementById('kit-nome').value;
     const modelo = document.getElementById('kit-modelo').value;
@@ -295,7 +328,6 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
 
     let base64Imagem = "";
 
-    // Se o usuário escolheu uma imagem, converte para texto (Base64)
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
         base64Imagem = await new Promise((resolve) => {
@@ -307,10 +339,7 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
 
     try {
         await addDoc(collection(db, "kits"), { 
-            idSubsite: subsiteAtualId, 
-            nome: nome, 
-            modelo: modelo, 
-            imagem: base64Imagem 
+            idSubsite: subsiteAtualId, nome: nome, modelo: modelo, imagem: base64Imagem 
         });
         alert("Kit salvo com sucesso!");
         document.getElementById('form-kit').reset();
@@ -319,5 +348,49 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
         alert("Erro ao salvar o kit.");
     } finally {
         carregar(false);
+    }
+});
+
+// ==========================================
+// 9. BOTÕES DE FECHAR MODAIS E NEO WAVE
+// ==========================================
+document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.target.closest('[id^="modal-"]').style.display = 'none';
+    });
+});
+document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
+
+document.getElementById('btn-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'flex');
+document.getElementById('btn-fechar-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'none');
+
+document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => {
+    const input = document.getElementById('neo-wave-input');
+    const body = document.getElementById('neo-wave-body');
+    if(!input.value) return;
+
+    body.innerHTML += `<div class="msg-user">${input.value}</div>`;
+    const msg = input.value.toLowerCase();
+    input.value = "";
+
+    setTimeout(() => {
+        let resposta = "Ainda estou aprendendo. Tente falar sobre 'agendar', 'kits' ou 'relatórios'.";
+        if (msg.includes('agendar')) resposta = "Clique em 'Agendar Festa' para abrir o formulário!";
+        if (msg.includes('kit')) resposta = "O gerador de kits está no card roxo.";
+        if (msg.includes('relatorio')) resposta = "Clique em 'Ver Planilha' para ver suas vendas.";
+        body.innerHTML += `<div class="msg-bot">${resposta}</div>`;
+        body.scrollTop = body.scrollHeight;
+    }, 600);
+});
+
+// ==========================================
+// 10. OBSERVADOR DE ESTADO
+// ==========================================
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        if (!user.emailVerified) mostrarTela('tela-verificacao');
+        else { carregarDadosCliente(user.uid); mostrarTela('tela-cliente'); }
+    } else {
+        mostrarTela('tela-boas-vindas');
     }
 });
