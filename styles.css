@@ -2,16 +2,13 @@
    1. RESET E CONFIGURAÇÕES GERAIS
    ========================================== */
 :root {
-    --cor-fundo: #050505; /* Preto quase absoluto */
-    --cor-card: #121212; /* Preto um pouco mais claro para os cards */
-    --cor-azul: #00d2ff; /* Azul da logo */
-    --cor-roxo: #8a2be2; /* Roxo da logo */
-    --cor-roxo-escuro: #4b0082;
+    --cor-fundo: #050505;
+    --cor-card: #121212;
+    --cor-azul: #00d2ff;
+    --cor-roxo: #8a2be2;
     --texto-principal: #ffffff;
     --texto-secundario: #a0a0a0;
     --borda-sutil: #2a2a2a;
-    
-    /* Gradiente da logo para botões e detalhes */
     --gradiente-neo: linear-gradient(135deg, var(--cor-azul) 0%, var(--cor-roxo) 100%);
 }
 
@@ -31,44 +28,46 @@ body {
     align-items: center;
 }
 
-/* ==========================================
-   2. CABEÇALHO E LOGO
-   ========================================== */
 header {
     width: 100%;
     padding: 30px 20px;
     display: flex;
     justify-content: center;
-    align-items: center;
 }
 
 .logo {
-    max-width: 200px; /* Ajuste conforme o tamanho da sua imagem */
-    height: auto;
-    /* Um leve brilho na logo */
+    max-width: 150px;
     filter: drop-shadow(0 0 10px rgba(138, 43, 226, 0.3));
 }
 
 /* ==========================================
-   3. CONTROLE DE TELAS (O Segredo do SPA)
+   2. CONTROLE DE TELAS
    ========================================== */
 main {
     width: 100%;
-    max-width: 500px; /* Largura máxima para telas de celular e desktop */
+    max-width: 800px;
     padding: 20px;
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+}
+
+/* A MÁGICA AQUI: Quando a tela do subsite ou admin estiver ativa, o espaço aumenta */
+main:has(#tela-subsite.ativa) {
+    max-width: 1200px !important;
+}
+main:has(#tela-admin-painel.ativa) {
+    max-width: 1000px !important;
 }
 
 .tela {
-    display: none; /* Esconde todas as telas por padrão */
+    display: none;
     animation: fadeIn 0.4s ease-in-out;
+    width: 100%;
 }
 
 .tela.ativa {
-    display: block; /* Mostra apenas a que tem a classe .ativa */
+    display: block;
 }
 
 @keyframes fadeIn {
@@ -76,7 +75,6 @@ main {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Títulos e textos */
 h2 {
     text-align: center;
     margin-bottom: 20px;
@@ -89,22 +87,21 @@ h2 {
 p {
     text-align: center;
     color: var(--texto-secundario);
-    margin-bottom: 20px;
-    line-height: 1.5;
+    margin-bottom: 15px;
 }
 
 /* ==========================================
-   4. FORMULÁRIOS E INPUTS
+   3. FORMULÁRIOS E INPUTS
    ========================================== */
 form {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     background: var(--cor-card);
     padding: 25px;
     border-radius: 12px;
     border: 1px solid var(--borda-sutil);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 100%;
 }
 
 label {
@@ -113,50 +110,36 @@ label {
     font-weight: 500;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"] {
+input, select, textarea {
     width: 100%;
-    padding: 12px 15px;
+    padding: 12px;
     background-color: #0a0a0a;
     border: 1px solid var(--borda-sutil);
     border-radius: 8px;
     color: white;
     font-size: 1rem;
     outline: none;
-    transition: border-color 0.3s;
 }
 
-input:focus {
+input:focus, select:focus, textarea:focus {
     border-color: var(--cor-roxo);
-    box-shadow: 0 0 5px rgba(138, 43, 226, 0.3);
 }
 
 .checkbox-container {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 10px;
 }
 
-.checkbox-container input[type="checkbox"] {
-    accent-color: var(--cor-roxo);
+.checkbox-container input {
     width: 18px;
     height: 18px;
-    cursor: pointer;
-}
-
-.checkbox-container label {
-    font-size: 0.85rem;
-    color: var(--texto-secundario);
-    cursor: pointer;
 }
 
 /* ==========================================
-   5. BOTÕES
+   4. BOTÕES
    ========================================== */
-.botao-principal,
-.btn-selecionar-plano {
+.botao-principal {
     width: 100%;
     padding: 14px;
     border: none;
@@ -166,28 +149,24 @@ input:focus {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    margin-top: 10px;
+    transition: transform 0.2s;
 }
 
-.botao-principal:hover,
-.btn-selecionar-plano:hover {
+.botao-principal:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
 }
 
 .botao-principal:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
 }
 
 /* ==========================================
-   6. CARDS DE PLANOS
+   5. CARDS DE PLANOS E SUBSITES
    ========================================== */
 .container-planos {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
 }
 
@@ -197,131 +176,76 @@ input:focus {
     border-radius: 12px;
     border: 1px solid var(--borda-sutil);
     text-align: center;
-    transition: transform 0.3s, border-color 0.3s;
+    transition: 0.3s;
 }
 
 .card-plano:hover {
-    transform: translateY(-5px);
     border-color: var(--cor-azul);
+    transform: translateY(-5px);
 }
 
-.card-plano h3 {
-    font-size: 1.5rem;
-    margin-bottom: 5px;
-    color: var(--cor-azul);
-}
-
-.preco {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: white;
-    margin-bottom: 10px;
-}
-
-.preco span {
-    font-size: 0.9rem;
-    color: var(--texto-secundario);
-    font-weight: normal;
-}
+.card-plano h3 { color: var(--cor-azul); margin-bottom: 10px; }
+.preco { font-size: 1.5rem; font-weight: bold; color: white; }
 
 /* ==========================================
-   7. TERMOS E PAGAMENTO
+   6. PAINEL DO SUBSITE (TELA 10)
    ========================================== */
+#tela-subsite > div:nth-child(2) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
 .caixa-termos {
     background: var(--cor-card);
     padding: 20px;
     border-radius: 12px;
     border: 1px solid var(--borda-sutil);
-    max-height: 250px; /* Limita a altura */
-    overflow-y: auto; /* Adiciona barra de rolagem */
     margin-bottom: 20px;
-    font-size: 0.85rem;
-    line-height: 1.4;
-    color: var(--texto-secundario);
 }
-
-.caixa-termos h3 {
-    color: var(--texto-principal);
-    margin-bottom: 10px;
-}
-
 .caixa-termos p {
-    text-align: left; /* Termos alinhados à esquerda */
-    margin-bottom: 10px;
+    text-align: left;
+    margin-bottom: 8px;
 }
 
-.destaque-aviso {
-    color: var(--cor-azul);
-    background: rgba(0, 210, 255, 0.1);
-    padding: 10px;
-    border-left: 4px solid var(--cor-azul);
-    border-radius: 4px;
-    margin-top: 15px;
-}
-
-.caixa-pagamento-simulada {
-    background: rgba(138, 43, 226, 0.1);
-    border: 1px dashed var(--cor-roxo);
-    padding: 20px;
+/* ==========================================
+   7. PAINEL DE ADMIN (TABELAS)
+   ========================================== */
+#tela-admin-login {
+    max-width: 400px;
+    margin: 50px auto;
+    background: var(--cor-card);
+    padding: 30px;
     border-radius: 12px;
-    text-align: center;
-    margin-bottom: 20px;
+    border: 1px solid var(--borda-sutil);
 }
 
-.link-troca {
-    text-align: center;
-    margin-top: 20px;
+.tabela-clientes {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: var(--cor-card);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tabela-clientes th, .tabela-clientes td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--borda-sutil);
     font-size: 0.9rem;
 }
 
-.link-troca a {
+.tabela-clientes th {
+    background: #0a0a0a;
     color: var(--cor-azul);
-    text-decoration: none;
-    font-weight: bold;
 }
 
-.link-troca a:hover {
-    text-decoration: underline;
-}
+.status-pendente { color: #ff9800; font-weight: bold; }
+.status-ativo { color: #00c853; font-weight: bold; }
 
-/* Mensagem de Status */
-.mensagem {
-    text-align: center;
-    padding: 10px;
-    border-radius: 8px;
-    margin-top: 20px;
-    font-weight: bold;
-}
-.mensagem.erro { background: rgba(255, 0, 0, 0.1); color: #ff4d4d; }
-.mensagem.sucesso { background: rgba(0, 255, 0, 0.1); color: #4dff4d; }
-.mensagem.info { background: rgba(0, 210, 255, 0.1); color: var(--cor-azul); }
-
-/* ==========================================
-   8. RESPONSIVIDADE (PC e Celular)
-   ========================================== */
-@media (min-width: 768px) {
-    /* Em telas grandes, os planos ficam lado a lado */
-    .container-planos {
-        flex-direction: row;
-        justify-content: center;
-    }
-    
-    .card-plano {
-        flex: 1;
-        min-width: 150px;
-    }
-
-    main {
-        max-width: 800px; /* Aumenta a largura no PC */
-    }
-    
-    /* Formulários ficam mais largos, mas não esparramados */
-    form {
-        max-width: 500px;
-        margin: 0 auto;
-    }
-    
-    .caixa-termos {
-        max-height: 300px;
-    }
+@media (max-width: 600px) {
+    .container-planos { grid-template-columns: 1fr; }
+    h2 { font-size: 1.5rem; }
 }
