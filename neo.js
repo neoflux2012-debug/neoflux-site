@@ -379,7 +379,7 @@ window.editarFesta = function(id) {
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 };
 
-// FUNÇÃO DO CONTRATO (IMPRIMIR)
+// FUNÇÃO DO CONTRATO (VISUALIZADOR LIMPO DE PDF)
 window.gerarContrato = async function(idFesta) {
     const festa = festasGlobais.find(f => f.id === idFesta);
     if (!festa) return;
@@ -403,20 +403,20 @@ window.gerarContrato = async function(idFesta) {
     const contrato = contratos[indexEscolhido];
     const janela = window.open('', '_blank');
     
-    if (contrato.tipo === "application/pdf") {
-        janela.document.write(`
-            <html><head><title>Contrato - ${festa.nome}</title><style>body{margin:0;} iframe{width:100vw;height:100vh;border:none;} .btn{position:fixed;bottom:20px;right:20px;padding:15px 30px;background:#00c853;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.3);}</style></head>
-            <body><button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button><iframe src="${contrato.arquivo}"></iframe></body></html>
-        `);
-    } else {
-        const texto = atob(contrato.arquivo.split(',')[1]);
-        janela.document.write(`
-            <html><head><title>Contrato - ${festa.nome}</title><style>body{font-family:'Times New Roman',serif;padding:40px;line-height:1.5;max-width:800px;margin:0 auto;} .btn{position:fixed;top:20px;right:20px;padding:15px 30px;background:#00c853;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;} @media print{.btn{display:none;}}</style></head>
-            <body><button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-            ${contrato.logo ? `<div style="text-align:center;"><img src="${contrato.logo}" style="max-height:80px;margin-bottom:20px;"></div>` : ''}
-            <pre style="white-space:pre-wrap;font-family:inherit;">${texto}</pre></body></html>
-        `);
-    }
+    janela.document.write(`
+        <html>
+        <head>
+            <title>Contrato - ${festa.nome}</title>
+            <style>
+                body { margin: 0; padding: 0; background: #333; }
+                iframe { width: 100vw; height: 100vh; border: none; }
+            </style>
+        </head>
+        <body>
+            <iframe src="${contrato.arquivo}"></iframe>
+        </body>
+        </html>
+    `);
 };
 
 // Calculadora de Frete
