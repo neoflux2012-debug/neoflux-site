@@ -1,6 +1,3 @@
-
-alert("O arquivo neo.js novo carregou!");
-
 // ==========================================
 // 1. IMPORTAÇÕES
 // ==========================================
@@ -14,7 +11,6 @@ import {
     deleteDoc, updateDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ... o resto do código continua igual ...
 // ==========================================
 // 2. CONFIGURAÇÃO
 // ==========================================
@@ -402,7 +398,7 @@ window.editarFesta = function(id) {
     document.getElementById('festa-total').value = festa.total || "0.00";
     document.getElementById('festa-sinal').value = festa.sinal || "0.00";
     
-    document.getElementById('btn-agendar-festa').dispatchEvent(new Event('click')); // Recarrega as peças
+    document.getElementById('btn-agendar-festa').dispatchEvent(new Event('click'));
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 
     const selectPecas = document.getElementById('festa-pecas');
@@ -812,13 +808,20 @@ window.apagarContrato = async function(id) {
 };
 
 // ==========================================
-// REGISTRO DE PONTO (Entrada/Saída)
+// REGISTRO DE PONTO (Entrada/Saída) - CORRIGIDO
 // ==========================================
 async function carregarPonto() {
     const user = auth.currentUser;
     if(!user || !subsiteAtualId) return;
     
-    const hoje = new Date().toLocaleDateString('pt-BR');
+    // CORREÇÃO: Data formatada sem barras
+    const agora = new Date();
+    const hoje = [
+        agora.getFullYear(),
+        String(agora.getMonth() + 1).padStart(2, "0"),
+        String(agora.getDate()).padStart(2, "0")
+    ].join("-");
+    
     const docRef = doc(db, "pontos", `${subsiteAtualId}_${hoje}`);
     const docSnap = await getDoc(docRef);
     
@@ -837,8 +840,14 @@ document.getElementById('btn-bater-entrada')?.addEventListener('click', async ()
         return;
     }
 
-    const horaAtual = new Date().toLocaleTimeString('pt-BR');
-    const hoje = new Date().toLocaleDateString('pt-BR');
+    // CORREÇÃO: Data formatada sem barras
+    const agora = new Date();
+    const hoje = [
+        agora.getFullYear(),
+        String(agora.getMonth() + 1).padStart(2, "0"),
+        String(agora.getDate()).padStart(2, "0")
+    ].join("-");
+    const horaAtual = agora.toLocaleTimeString('pt-BR');
     
     try {
         await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { entrada: horaAtual }, { merge: true });
@@ -855,8 +864,14 @@ document.getElementById('btn-bater-saida')?.addEventListener('click', async () =
         return;
     }
 
-    const horaAtual = new Date().toLocaleTimeString('pt-BR');
-    const hoje = new Date().toLocaleDateString('pt-BR');
+    // CORREÇÃO: Data formatada sem barras
+    const agora = new Date();
+    const hoje = [
+        agora.getFullYear(),
+        String(agora.getMonth() + 1).padStart(2, "0"),
+        String(agora.getDate()).padStart(2, "0")
+    ].join("-");
+    const horaAtual = agora.toLocaleTimeString('pt-BR');
     
     try {
         await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { saida: horaAtual }, { merge: true });
