@@ -403,7 +403,7 @@ window.gerarContrato = async function(idFesta) {
     const contrato = contratos[indexEscolhido];
     const janela = window.open('', '_blank');
     
-    // URL da logo da Neo Flux (troque pelo link real da sua logo hospedada ou em Base64)
+    // URL da logo da Neo Flux
     const logoNeoFlux = "https://neoflux2012-debug.github.io/neoflux-site/logo.png";
 
     janela.document.write(`
@@ -538,6 +538,42 @@ document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
     document.getElementById('area-financeira-festa').style.display = regras.valores ? 'block' : 'none';
     document.getElementById('modal-agendar-festa').style.display = 'flex';
+});
+
+// EVENTO DO BOTÃO DE RELATÓRIOS (AQUI ESTAVA FALTANDO)
+document.getElementById('btn-relatorios')?.addEventListener('click', () => {
+    document.getElementById('modal-relatorios').style.display = 'flex';
+    const tbody = document.getElementById('tabela-relatorio');
+    tbody.innerHTML = "";
+    
+    // Pega o mês atual para o relatório
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+    let totalMes = 0;
+
+    festasGlobais.forEach(f => {
+        const dataFesta = new Date(f.data + 'T00:00:00');
+        // Se a festa for do mês e ano atual, adiciona na tabela
+        if (dataFesta.getMonth() === mesAtual && dataFesta.getFullYear() === anoAtual) {
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid #333;">
+                    <td style="padding: 10px;">${f.nome}</td>
+                    <td style="padding: 10px;">${f.tema}</td>
+                    <td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td>
+                </tr>`;
+            
+            // Soma o valor total da festa
+            totalMes += parseFloat(f.total) || 0;
+        }
+    });
+
+    if (tbody.innerHTML === "") {
+        tbody.innerHTML = "<tr><td colspan='3' style='padding: 10px; text-align: center; color: #888;'>Nenhuma festa agendada para este mês.</td></tr>";
+    }
+
+    // Atualiza o total do mês
+    document.getElementById('total-mes').textContent = `R$ ${totalMes.toFixed(2).replace('.', ',')}`;
 });
 
 document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
