@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neo Flux | Criamos sites que conectam</title>
     <link rel="stylesheet" href="./styles.css">
+    <!-- BIBLIOTECA DE ÍCONES LUCIDE -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
@@ -165,16 +166,37 @@
             <h2 id="titulo-subsite-visualizacao">Carregando...</h2>
             <div class="caixa-termos" style="text-align: center; padding: 30px 20px; border: 1px solid var(--cor-roxo);">
                 <h1 id="nome-do-subsite" style="color: var(--cor-azul); font-size: 2rem; margin-bottom: 10px;">...</h1>
-                <p style="color: var(--texto-secundario); margin-bottom: 30px;">Este é o seu site criado na Neo Flux.</p>
+                <p style="color: var(--texto-secundario); margin-bottom: 30px;">Painel de ferramentas do seu site.</p>
                 
                 <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    
+                    <!-- FERRAMENTA 1: CONTRATOS -->
                     <div id="card-gerador-contrato" style="background: #121212; border: 1px solid #333; border-radius: 8px; padding: 20px; width: 250px; text-align: left;">
                         <h3 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 8px;">
                             <i data-lucide="file-text"></i> Contratos
                         </h3>
-                        <p style="font-size: 0.85rem; color: #888;">Gere contratos de aluguel automaticamente.</p>
+                        <p style="font-size: 0.85rem; color: #888;">Gere contratos automaticamente.</p>
                         <button id="btn-gerador-contrato" class="botao-principal" style="width: 100%; margin-top: 10px;">Acessar Ferramenta</button>
                     </div>
+
+                    <!-- FERRAMENTA 2: REUNIÕES -->
+                    <div id="card-reunioes" style="background: #121212; border: 1px solid #333; border-radius: 8px; padding: 20px; width: 250px; text-align: left;">
+                        <h3 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="calendar"></i> Reuniões
+                        </h3>
+                        <p id="txt-reunioes" style="font-size: 0.85rem; color: #888;">Agende reuniões com clientes.</p>
+                        <button id="btn-reunioes" class="botao-principal" style="width: 100%; margin-top: 10px;">Acessar Ferramenta</button>
+                    </div>
+
+                    <!-- FERRAMENTA 3: HISTÓRICO -->
+                    <div id="card-pontos" style="background: #121212; border: 1px solid #333; border-radius: 8px; padding: 20px; width: 250px; text-align: left;">
+                        <h3 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="clock"></i> Histórico
+                        </h3>
+                        <p id="txt-pontos" style="font-size: 0.85rem; color: #888;">Veja o histórico de pontos.</p>
+                        <button id="btn-pontos" class="botao-principal" style="width: 100%; margin-top: 10px;">Acessar Ferramenta</button>
+                    </div>
+
                 </div>
             </div>
             <button id="btn-voltar-cliente" class="botao-principal" style="background: #333; margin-top: 20px;">Voltar para Meus Subsites</button>
