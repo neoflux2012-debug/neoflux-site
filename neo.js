@@ -88,7 +88,6 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
         const card = e.target.closest('.card-plano');
         planoAtual = card.getAttribute('data-plano');
         
-        // Atualiza o título e o TEXTO DO PLANO
         const nomePlano = card.querySelector('h3').textContent;
         document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
         document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual] || "";
@@ -257,7 +256,7 @@ async function abrirSubsite(id) {
             const item = c.data();
             const opt = document.createElement('option');
             opt.value = item.nome;
-            opt.textContent = `${item.nome} (${item.categoria})`;
+            opt.textContent = `${item.nome} (${item.categoria}) - Disp: ${item.qtdDisponivel}`;
             selectPecas.appendChild(opt);
         });
     }
@@ -283,6 +282,17 @@ async function carregarFestas(id) {
         const festa = doc.data();
         festa.id = doc.id;
         festasGlobais.push(festa);
+
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        const dataFesta = new Date(festa.data + 'T00:00:00');
+        const dataPassou = dataFesta < hoje;
+
+        const botaoDevolucao = (dataPassou && festa.status === "pendente") ? 
+            `<button onclick="window.registrarDevolucao('${festa.id}')" style="width: 100%; margin-bottom: 15px; padding: 10px; background: rgba(39, 174, 96, 0.2); color: #27ae60; border: 1px solid #27ae60; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                <i data-lucide="check-circle" style="width: 16px;"></i> Registrar Devolução
+             </button>` : 
+             (festa.status === "devolvido" ? `<div style="text-align: center; color: #27ae60; font-weight: bold; font-size: 0.8rem; margin-bottom: 15px;">✓ Itens Devolvidos</div>` : '');
 
         const total = parseFloat(festa.total) || 0;
         const sinal = parseFloat(festa.sinal) || 0;
@@ -320,6 +330,7 @@ async function carregarFestas(id) {
         card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative;";
         
         card.innerHTML = `
+            ${botaoDevolucao}
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;">
@@ -336,8 +347,8 @@ async function carregarFestas(id) {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div>
-                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data</p>
-                        <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')}</p>
+                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data / Hora</p>
+                        <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')} às ${festa.horario || '--:--'}</p>
                     </div>
                     <div>
                         <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 16px;"></i> CPF</p>
@@ -403,6 +414,7 @@ window.editarFesta = function(id) {
     document.getElementById('festa-cpf').value = festa.cpf || "";
     document.getElementById('festa-telefone').value = festa.telefone || "";
     document.getElementById('festa-data').value = festa.data || "";
+    document.getElementById('festa-horario').value = festa.horario || "";
     document.getElementById('festa-tema').value = festa.tema || "";
     document.getElementById('festa-local').value = festa.local || "";
     document.getElementById('festa-obs').value = festa.obs || "";
@@ -483,6 +495,40 @@ window.gerarContrato = async function(idFesta) {
     `);
 };
 
+// Registrar Devolução
+window.registrarDevolucao = async function(idFesta) {
+    if(!confirm("Registrar devolução de todas as peças desta festa?")) return;
+    const festa = festasGlobais.find(f => f.id === idFesta);
+    if(!festa) return;
+
+    carregar(true);
+    try {
+        // 1. Marca a festa como devolvida
+        await updateDoc(doc(db, "festas", idFesta), { status: "devolvido" });
+
+        // 2. Devolve ao estoque no catálogo
+        if (festa.pecas && festa.pecas.length > 0) {
+            for (const nomePeca of festa.pecas) {
+                const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId), where("nome", "==", nomePeca)));
+                snapCat.forEach(async (docCat) => {
+                    const peca = docCat.data();
+                    const novaQtd = (parseInt(peca.qtdDisponivel) || 0) + 1; 
+                    await updateDoc(doc(db, "catalogo", docCat.id), { qtdDisponivel: novaQtd });
+                });
+            }
+        }
+
+        alert("Devolução registrada! Estoque atualizado.");
+        carregarFestas(subsiteAtualId);
+        abrirSubsite(subsiteAtualId); // Recarrega o select de peças
+    } catch (error) {
+        console.error(error);
+        alert("Erro ao registrar devolução.");
+    } finally {
+        carregar(false);
+    }
+};
+
 function calcularFrete() {
     const km = parseFloat(document.getElementById('frete-km').value) || 0;
     const preco = parseFloat(document.getElementById('frete-preco').value) || 0;
@@ -516,17 +562,20 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
         cpf: document.getElementById('festa-cpf').value,
         telefone: document.getElementById('festa-telefone').value,
         data: document.getElementById('festa-data').value,
+        horario: document.getElementById('festa-horario').value,
         tema: document.getElementById('festa-tema').value,
         local: document.getElementById('festa-local').value,
         obs: document.getElementById('festa-obs').value,
         frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
         total: document.getElementById('festa-total').value,
         sinal: document.getElementById('festa-sinal').value,
-        pecas: pecasSelecionadas
+        pecas: pecasSelecionadas,
+        status: idEdicao ? undefined : "pendente" // Mantém o status se for edição
     };
 
     try {
         if (idEdicao) {
+            delete dadosFesta.status; // Não sobrescreve o status se estiver editando
             await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
             alert("Festa atualizada!");
         } else {
@@ -553,10 +602,24 @@ document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => {
 document.getElementById('btn-add-item')?.addEventListener('click', async () => {
     const nome = document.getElementById('cat-nome').value;
     const cat = document.getElementById('cat-categoria').value;
+    const modelo = document.getElementById('cat-modelo').value;
+    const qtd = parseInt(document.getElementById('cat-quantidade').value) || 1;
+    
     if (!nome) return alert("Digite o nome do item.");
-    await addDoc(collection(db, "catalogo"), { idSubsite: subsiteAtualId, nome: nome, categoria: cat });
+    
+    await addDoc(collection(db, "catalogo"), { 
+        idSubsite: subsiteAtualId, 
+        nome: nome, 
+        categoria: cat,
+        modelo: modelo,
+        quantidade: qtd,
+        qtdDisponivel: qtd 
+    });
+    
     document.getElementById('cat-nome').value = "";
     document.getElementById('cat-categoria').value = "";
+    document.getElementById('cat-modelo').value = "";
+    document.getElementById('cat-quantidade').value = "1";
     carregarCatalogo();
 });
 
@@ -567,11 +630,17 @@ async function carregarCatalogo() {
     const snap = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
     lista.innerHTML = "";
     if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum item adicionado.</li>";
+    
     snap.forEach(doc => {
         const item = doc.data();
         const li = document.createElement('li');
-        li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between;";
-        li.innerHTML = `<span>${item.nome} <small style="color:#888;">(${item.categoria})</small></span>`;
+        li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;";
+        li.innerHTML = `
+            <div>
+                <strong>${item.nome}</strong> <small style="color:#888;">(${item.categoria} - ${item.modelo})</small><br>
+                <small style="color: #00c853;">Disponível: ${item.qtdDisponivel} un.</small>
+            </div>
+        `;
         lista.appendChild(li);
     });
 }
@@ -709,7 +778,6 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
     finally { carregar(false); }
 });
 
-// CARREGAR CONTRATOS COM BOTÃO DE APAGAR
 async function carregarContratos() {
     const lista = document.getElementById('lista-contratos');
     if(!lista) return;
