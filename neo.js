@@ -58,6 +58,16 @@ function mostrarTela(id) {
     todasAsTelas.forEach(t => t.classList.remove('ativa'));
     const tela = document.getElementById(id);
     if (tela) tela.classList.add('ativa');
+    
+    // FORÇA O RECARREGAMENTO DA IMAGEM DO QR CODE QUANDO A TELA DE PAGAMENTO É ABERTA
+    if (id === 'tela-pagamento') {
+        const imgQr = document.getElementById('img-qrcode');
+        if (imgQr) {
+            // Adiciona um timestamp para evitar cache do navegador
+            imgQr.src = `./qrcode.png?t=${new Date().getTime()}`;
+        }
+    }
+    
     window.scrollTo(0, 0);
 }
 
@@ -107,17 +117,26 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
     try {
         const email = document.getElementById('email-cadastro').value;
         const senha = document.getElementById('senha-cadastro').value;
+        const nome = document.getElementById('nome-cliente').value;
+        
         const cred = await createUserWithEmailAndPassword(auth, email, senha);
-        await updateProfile(cred.user, { displayName: document.getElementById('nome-cliente').value });
+        await updateProfile(cred.user, { displayName: nome });
         await sendEmailVerification(cred.user);
+        
         await setDoc(doc(db, "usuarios", cred.user.uid), {
-            nome: document.getElementById('nome-cliente').value, 
+            nome: nome, 
             email: email, 
             planoPreferido: planoAtual, 
             statusPagamento: "pendente"
         });
+        
+        // Preenche o nome na tela de pagamento
+        document.getElementById('resumo-nome-pagamento').textContent = nome;
+        
         mostrarTela('tela-pagamento');
-    } catch (error) { alert("Erro: " + error.message); }
+    } catch (error) { 
+        alert("Erro: " + error.message); 
+    }
     finally { carregar(false); }
 });
 
@@ -126,7 +145,10 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     carregar(true);
     try {
         await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
-    } catch (error) { alert("E-mail ou senha incorretos."); }
+        // O onAuthStateChanged vai cuidar de mudar a tela
+    } catch (error) { 
+        alert("E-mail ou senha incorretos."); 
+    }
     finally { carregar(false); }
 });
 
@@ -237,9 +259,32 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
+    const datalist = document.getElementById('lista-kits-salvos');
+    if(datalist) {
+        datalist.innerHTML = "";
+        const snapKits = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", id)));
+        snapKits.forEach(k => {
+            const opt = document.createElement('option');
+            opt.value = k.data().nome;
+            datalist.appendChild(opt);
+        });
+    }
+
+    const selectPecas = document.getElementById('festa-pecas');
+    if(selectPecas) {
+        selectPecas.innerHTML = "";
+        const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", id)));
+        snapCat.forEach(c => {
+            const item = c.data();
+            const opt = document.createElement('option');
+            opt.value = item.nome;
+            opt.textContent = `${item.nome} (${item.categoria})`;
+            selectPecas.appendChild(opt);
+        });
+    }
+
     carregarFestas(id);
     carregarContratos();
-    carregarPonto();
     mostrarTela('tela-subsite');
 }
 
@@ -259,17 +304,6 @@ async function carregarFestas(id) {
         const festa = doc.data();
         festa.id = doc.id;
         festasGlobais.push(festa);
-
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-        const dataFesta = new Date(festa.data + 'T00:00:00');
-        const dataPassou = dataFesta < hoje;
-
-        const botaoDevolucao = (dataPassou && festa.status === "pendente") ? 
-            `<button onclick="window.registrarDevolucao('${festa.id}')" style="width: 100%; margin-bottom: 15px; padding: 10px; background: rgba(39, 174, 96, 0.2); color: #27ae60; border: 1px solid #27ae60; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px;">
-                <i data-lucide="check-circle" style="width: 16px;"></i> Registrar Devolução
-             </button>` : 
-             (festa.status === "devolvido" ? `<div style="text-align: center; color: #27ae60; font-weight: bold; font-size: 0.8rem; margin-bottom: 15px;">✓ Itens Devolvidos</div>` : '');
 
         const total = parseFloat(festa.total) || 0;
         const sinal = parseFloat(festa.sinal) || 0;
@@ -307,7 +341,6 @@ async function carregarFestas(id) {
         card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative;";
         
         card.innerHTML = `
-            ${botaoDevolucao}
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;">
@@ -324,8 +357,8 @@ async function carregarFestas(id) {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div>
-                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data / Hora</p>
-                        <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')} às ${festa.horario || '--:--'}</p>
+                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data</p>
+                        <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')}</p>
                     </div>
                     <div>
                         <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 16px;"></i> CPF</p>
@@ -391,24 +424,20 @@ window.editarFesta = function(id) {
     document.getElementById('festa-cpf').value = festa.cpf || "";
     document.getElementById('festa-telefone').value = festa.telefone || "";
     document.getElementById('festa-data').value = festa.data || "";
-    document.getElementById('festa-horario').value = festa.horario || "";
     document.getElementById('festa-tema').value = festa.tema || "";
     document.getElementById('festa-local').value = festa.local || "";
     document.getElementById('festa-obs').value = festa.obs || "";
     document.getElementById('festa-total').value = festa.total || "0.00";
     document.getElementById('festa-sinal').value = festa.sinal || "0.00";
     
-    document.getElementById('btn-agendar-festa').dispatchEvent(new Event('click'));
-    document.getElementById('modal-agendar-festa').style.display = 'flex';
-
     const selectPecas = document.getElementById('festa-pecas');
     if (selectPecas && festa.pecas) {
-        setTimeout(() => {
-            for (let i = 0; i < selectPecas.options.length; i++) {
-                selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value);
-            }
-        }, 500);
+        for (let i = 0; i < selectPecas.options.length; i++) {
+            selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value);
+        }
     }
+
+    document.getElementById('modal-agendar-festa').style.display = 'flex';
 };
 
 window.gerarContrato = async function(idFesta) {
@@ -475,36 +504,6 @@ window.gerarContrato = async function(idFesta) {
     `);
 };
 
-window.registrarDevolucao = async function(idFesta) {
-    if(!confirm("Registrar devolução de todas as peças desta festa?")) return;
-    const festa = festasGlobais.find(f => f.id === idFesta);
-    if(!festa) return;
-
-    carregar(true);
-    try {
-        await updateDoc(doc(db, "festas", idFesta), { status: "devolvido" });
-
-        if (festa.pecas && festa.pecas.length > 0) {
-            for (const nomePeca of festa.pecas) {
-                const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId), where("nome", "==", nomePeca)));
-                snapCat.forEach(async (docCat) => {
-                    const peca = docCat.data();
-                    const novaQtd = (parseInt(peca.qtdDisponivel) || 0) + 1; 
-                    await updateDoc(doc(db, "catalogo", docCat.id), { qtdDisponivel: novaQtd });
-                });
-            }
-        }
-
-        alert("Devolução registrada! Estoque atualizado.");
-        carregarFestas(subsiteAtualId);
-    } catch (error) {
-        console.error(error);
-        alert("Erro ao registrar devolução.");
-    } finally {
-        carregar(false);
-    }
-};
-
 function calcularFrete() {
     const km = parseFloat(document.getElementById('frete-km').value) || 0;
     const preco = parseFloat(document.getElementById('frete-preco').value) || 0;
@@ -538,20 +537,17 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
         cpf: document.getElementById('festa-cpf').value,
         telefone: document.getElementById('festa-telefone').value,
         data: document.getElementById('festa-data').value,
-        horario: document.getElementById('festa-horario').value,
         tema: document.getElementById('festa-tema').value,
         local: document.getElementById('festa-local').value,
         obs: document.getElementById('festa-obs').value,
         frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
         total: document.getElementById('festa-total').value,
         sinal: document.getElementById('festa-sinal').value,
-        pecas: pecasSelecionadas,
-        status: idEdicao ? undefined : "pendente" 
+        pecas: pecasSelecionadas
     };
 
     try {
         if (idEdicao) {
-            delete dadosFesta.status;
             await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
             alert("Festa atualizada!");
         } else {
@@ -578,24 +574,10 @@ document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => {
 document.getElementById('btn-add-item')?.addEventListener('click', async () => {
     const nome = document.getElementById('cat-nome').value;
     const cat = document.getElementById('cat-categoria').value;
-    const modelo = document.getElementById('cat-modelo').value;
-    const qtd = parseInt(document.getElementById('cat-quantidade').value) || 1;
-    
     if (!nome) return alert("Digite o nome do item.");
-    
-    await addDoc(collection(db, "catalogo"), { 
-        idSubsite: subsiteAtualId, 
-        nome: nome, 
-        categoria: cat,
-        modelo: modelo,
-        quantidade: qtd,
-        qtdDisponivel: qtd 
-    });
-    
+    await addDoc(collection(db, "catalogo"), { idSubsite: subsiteAtualId, nome: nome, categoria: cat });
     document.getElementById('cat-nome').value = "";
     document.getElementById('cat-categoria').value = "";
-    document.getElementById('cat-modelo').value = "";
-    document.getElementById('cat-quantidade').value = "1";
     carregarCatalogo();
 });
 
@@ -606,50 +588,19 @@ async function carregarCatalogo() {
     const snap = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
     lista.innerHTML = "";
     if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum item adicionado.</li>";
-    
     snap.forEach(doc => {
         const item = doc.data();
         const li = document.createElement('li');
-        li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;";
-        li.innerHTML = `
-            <div>
-                <strong>${item.nome}</strong> <small style="color:#888;">(${item.categoria} - ${item.modelo})</small><br>
-                <small style="color: #00c853;">Disponível: ${item.qtdDisponivel} un.</small>
-            </div>
-        `;
+        li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between;";
+        li.innerHTML = `<span>${item.nome} <small style="color:#888;">(${item.categoria})</small></span>`;
         lista.appendChild(li);
     });
 }
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
-document.getElementById('btn-agendar-festa')?.addEventListener('click', async () => {
+document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
     document.getElementById('area-financeira-festa').style.display = regras.valores ? 'block' : 'none';
-    
-    const selectPecas = document.getElementById('festa-pecas');
-    if(selectPecas) {
-        selectPecas.innerHTML = "";
-        const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
-        snapCat.forEach(c => {
-            const item = c.data();
-            const opt = document.createElement('option');
-            opt.value = item.nome;
-            opt.textContent = `${item.nome} (${item.categoria}) - Disp: ${item.qtdDisponivel || 0}`;
-            selectPecas.appendChild(opt);
-        });
-    }
-
-    const datalist = document.getElementById('lista-kits-salvos');
-    if(datalist) {
-        datalist.innerHTML = "";
-        const snapKits = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", subsiteAtualId)));
-        snapKits.forEach(k => {
-            const opt = document.createElement('option');
-            opt.value = k.data().nome;
-            datalist.appendChild(opt);
-        });
-    }
-
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 });
 
@@ -779,6 +730,7 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
     finally { carregar(false); }
 });
 
+// CARREGAR CONTRATOS COM BOTÃO DE APAGAR
 async function carregarContratos() {
     const lista = document.getElementById('lista-contratos');
     if(!lista) return;
@@ -806,81 +758,6 @@ window.apagarContrato = async function(id) {
         carregarContratos();
     }
 };
-
-// ==========================================
-// REGISTRO DE PONTO (Entrada/Saída) - CORRIGIDO
-// ==========================================
-async function carregarPonto() {
-    const user = auth.currentUser;
-    if(!user || !subsiteAtualId) return;
-    
-    // CORREÇÃO: Data formatada sem barras
-    const agora = new Date();
-    const hoje = [
-        agora.getFullYear(),
-        String(agora.getMonth() + 1).padStart(2, "0"),
-        String(agora.getDate()).padStart(2, "0")
-    ].join("-");
-    
-    const docRef = doc(db, "pontos", `${subsiteAtualId}_${hoje}`);
-    const docSnap = await getDoc(docRef);
-    
-    const txtPonto = document.getElementById('txt-ponto-hoje');
-    if(docSnap.exists()) {
-        const dados = docSnap.data();
-        txtPonto.innerHTML = `Entrada: <b style="color:#00c853">${dados.entrada || '--:--'}</b> | Saída: <b style="color:#e74c3c">${dados.saida || '--:--'}</b>`;
-    } else {
-        txtPonto.textContent = "Nenhum registro hoje.";
-    }
-}
-
-document.getElementById('btn-bater-entrada')?.addEventListener('click', async () => {
-    if (!subsiteAtualId) {
-        alert("Erro: O subsite não foi carregado corretamente. Volte e acesse o subsite novamente.");
-        return;
-    }
-
-    // CORREÇÃO: Data formatada sem barras
-    const agora = new Date();
-    const hoje = [
-        agora.getFullYear(),
-        String(agora.getMonth() + 1).padStart(2, "0"),
-        String(agora.getDate()).padStart(2, "0")
-    ].join("-");
-    const horaAtual = agora.toLocaleTimeString('pt-BR');
-    
-    try {
-        await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { entrada: horaAtual }, { merge: true });
-        alert("Entrada registrada às " + horaAtual);
-        carregarPonto();
-    } catch (error) {
-        alert("Erro ao registrar ponto: " + error.message);
-    }
-});
-
-document.getElementById('btn-bater-saida')?.addEventListener('click', async () => {
-    if (!subsiteAtualId) {
-        alert("Erro: O subsite não foi carregado corretamente. Volte e acesse o subsite novamente.");
-        return;
-    }
-
-    // CORREÇÃO: Data formatada sem barras
-    const agora = new Date();
-    const hoje = [
-        agora.getFullYear(),
-        String(agora.getMonth() + 1).padStart(2, "0"),
-        String(agora.getDate()).padStart(2, "0")
-    ].join("-");
-    const horaAtual = agora.toLocaleTimeString('pt-BR');
-    
-    try {
-        await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { saida: horaAtual }, { merge: true });
-        alert("Saída registrada às " + horaAtual);
-        carregarPonto();
-    } catch (error) {
-        alert("Erro ao registrar ponto: " + error.message);
-    }
-});
 
 // ==========================================
 // 9. BOTÕES DE FECHAR MODAIS E NEO WAVE
@@ -914,13 +791,24 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 });
 
 // ==========================================
-// 10. OBSERVADOR DE ESTADO
+// 10. OBSERVADOR DE ESTADO (CORRIGIDO)
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        if (!user.emailVerified) mostrarTela('tela-verificacao');
-        else { carregarDadosCliente(user.uid); mostrarTela('tela-cliente'); }
+        // Se o usuário está logado mas o e-mail não foi verificado
+        if (!user.emailVerified) {
+            mostrarTela('tela-verificacao');
+        } else {
+            // Se está tudo certo, carrega os dados e vai para a área do cliente
+            carregarDadosCliente(user.uid);
+            mostrarTela('tela-cliente');
+        }
     } else {
-        mostrarTela('tela-boas-vindas');
+        // Se não há usuário logado, mostra a tela de boas-vindas
+        // MAS SÓ SE não estivermos em uma tela de cadastro/login
+        const telaAtual = document.querySelector('.tela.ativa');
+        if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas'].includes(telaAtual.id)) {
+            mostrarTela('tela-boas-vindas');
+        }
     }
 });
