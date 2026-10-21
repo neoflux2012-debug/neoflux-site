@@ -234,23 +234,79 @@ async function carregarFestas(id) {
     container.innerHTML = "";
     festasGlobais = [];
     
+    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
     const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
+    
     snap.forEach(doc => {
         const festa = doc.data();
+        festa.id = doc.id;
         festasGlobais.push(festa);
+
+        const botaoContrato = regras.contratos ? 
+            `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 2; padding: 11px; background: #e67e22; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">📝 Gerar Contrato</button>` : '';
+
         const card = document.createElement('div');
-        card.style.cssText = "background: #121212; border-left: 4px solid var(--cor-azul); border-radius: 8px; padding: 20px; text-align: left;";
+        // Estilo do card inspirado no que você mostrou
+        card.style.cssText = "background: #ffffff; border: 1px solid #ddd; border-left: 6px solid var(--cor-azul); border-radius: 12px; padding: 22px; text-align: left; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #333;";
+        
         card.innerHTML = `
-            <h4 style="color: white; margin: 0 0 10px 0;">${festa.nome}</h4>
-            <p style="font-size: 0.85rem; color: #aaa; margin: 5px 0;"><b>Data:</b> ${festa.data.split('-').reverse().join('/')}</p>
-            <p style="font-size: 0.85rem; color: #aaa; margin: 5px 0;"><b>Tema:</b> ${festa.tema}</p>
-            <p style="font-size: 0.85rem; color: #aaa; margin: 5px 0;"><b>Local:</b> ${festa.local}</p>
-            <p style="font-size: 0.85rem; color: #00c853; margin: 5px 0;"><b>Frete:</b> R$ ${festa.frete || "0,00"}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                <h4 style="color: #333; margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                    👶 ${festa.nome}
+                </h4>
+                <span style="background: #e67e22; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">PENDENTE</span>
+            </div>
+            
+            <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">📅 <b>Data:</b> ${festa.data.split('-').reverse().join('/')}</p>
+            <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">🆔 <b>CPF:</b> ${festa.cpf || '—'}</p>
+            <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">🎨 <b>Tema:</b> <span style="color: var(--cor-azul); font-weight: bold;">${festa.tema}</span></p>
+            <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">🚚 <b>Frete:</b> R$ ${festa.frete || '0,00'}</p>
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc;">
+                <p style="font-size: 0.9rem; color: #333; margin-bottom: 5px;">💰 <b>Total:</b> R$ ${festa.total || '0,00'}</p>
+                <p style="font-size: 0.9rem; color: #333; margin-bottom: 5px;">💵 <b>Sinal:</b> R$ ${festa.sinal || '0,00'}</p>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 20px;">
+                ${botaoContrato}
+                <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 11px; background: #3498db; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">✏️ Editar</button>
+                <button onclick="window.apagarFesta('${festa.id}')" style="flex: 1; padding: 11px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">🗑️</button>
+            </div>
         `;
         container.appendChild(card);
     });
+    
+    // Filtro de pesquisa em tempo real
+    const inputPesquisa = document.getElementById('pesquisa-festas');
+    if (inputPesquisa) {
+        inputPesquisa.addEventListener('input', (e) => {
+            const termo = e.target.value.toLowerCase();
+            const cards = container.querySelectorAll('div');
+            cards.forEach(card => {
+                const texto = card.innerText.toLowerCase();
+                card.style.display = texto.includes(termo) ? 'block' : 'none';
+            });
+        });
+    }
 }
 
+// Ações dos botões do card
+window.apagarFesta = async function(id) {
+    if(confirm("Tem certeza que deseja apagar esta festa?")) {
+        await deleteDoc(doc(db, "festas", id));
+        carregarFestas(subsiteAtualId);
+    }
+};
+
+window.editarFesta = function(id) {
+    alert("Função de editar festa será implementada em breve!");
+};
+
+window.gerarContrato = function(id) {
+    alert("O Gerador de Contrato (Elite Premium) será implementado aqui!");
+};
+
+// Calculadora de Frete
 function calcularFrete() {
     const km = parseFloat(document.getElementById('frete-km').value) || 0;
     const preco = parseFloat(document.getElementById('frete-preco').value) || 0;
@@ -269,6 +325,7 @@ function calcularFrete() {
 });
 document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
 
+// Salvar Festa
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
@@ -282,7 +339,9 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
             tema: document.getElementById('festa-tema').value,
             local: document.getElementById('festa-local').value,
             obs: document.getElementById('festa-obs').value,
-            frete: document.getElementById('total-frete').textContent.replace('R$ ', '')
+            frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
+            total: document.getElementById('festa-total').value,
+            sinal: document.getElementById('festa-sinal').value
         });
         document.getElementById('form-agendar-festa').reset();
         document.getElementById('modal-agendar-festa').style.display = 'none';
@@ -291,6 +350,7 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     finally { carregar(false); }
 });
 
+// Relatórios
 document.getElementById('btn-relatorios')?.addEventListener('click', () => {
     document.getElementById('modal-relatorios').style.display = 'flex';
     const tbody = document.getElementById('tabela-relatorio');
@@ -338,8 +398,6 @@ async function carregarCatalogo() {
 }
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
-
-// AQUI ESTÁ A CORREÇÃO DO BOTÃO DE AGENDAR FESTA
 document.getElementById('btn-agendar-festa')?.addEventListener('click', () => document.getElementById('modal-agendar-festa').style.display = 'flex');
 
 document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
