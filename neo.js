@@ -12,7 +12,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
-// 2. CONFIGURAÇÃO DO FIREBASE
+// 2. CONFIGURAÇÃO
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
@@ -22,7 +22,6 @@ const firebaseConfig = {
   messagingSenderId: "6686219198",
   appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -51,7 +50,7 @@ const recursosPlanos = {
 };
 
 // ==========================================
-// 4. CONTROLE DE TELAS (AQUI ESTAVA O ERRO)
+// 4. CONTROLE DE TELAS E LOADING (RESTAURADO)
 // ==========================================
 const todasAsTelas = document.querySelectorAll('.tela');
 
@@ -73,6 +72,9 @@ function carregar(ativo) {
 document.getElementById('btn-comecar')?.addEventListener('click', () => mostrarTela('tela-planos'));
 document.getElementById('voltar-inicio')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
 document.getElementById('ir-para-login')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
+document.getElementById('voltar-para-cadastro')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
+document.getElementById('ir-para-recuperar')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-recuperar'); });
+document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
 document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
 
@@ -85,7 +87,10 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
     });
 });
 
-document.getElementById('form-termos')?.addEventListener('submit', (e) => { e.preventDefault(); mostrarTela('tela-criar-conta'); });
+document.getElementById('form-termos')?.addEventListener('submit', (e) => { 
+    e.preventDefault(); 
+    mostrarTela('tela-criar-conta'); 
+});
 
 document.getElementById('form-cadastro-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -96,7 +101,10 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         const cred = await createUserWithEmailAndPassword(auth, email, senha);
         await sendEmailVerification(cred.user);
         await setDoc(doc(db, "usuarios", cred.user.uid), {
-            nome: document.getElementById('nome-cliente').value, email: email, planoPreferido: planoAtual, statusPagamento: "pendente"
+            nome: document.getElementById('nome-cliente').value, 
+            email: email, 
+            planoPreferido: planoAtual, 
+            statusPagamento: "pendente"
         });
         mostrarTela('tela-pagamento');
     } catch (error) { alert("Erro: " + error.message); }
@@ -109,6 +117,16 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     try {
         await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
     } catch (error) { alert("E-mail ou senha incorretos."); }
+    finally { carregar(false); }
+});
+
+document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    carregar(true);
+    try {
+        await sendPasswordResetEmail(auth, document.getElementById('email-recuperar').value);
+        alert("Link de recuperação enviado!");
+    } catch (error) { alert("Erro ao enviar e-mail."); }
     finally { carregar(false); }
 });
 
@@ -166,7 +184,10 @@ async function carregarSubsites(uid, limite) {
 
     document.querySelectorAll('.btn-acessar').forEach(btn => btn.addEventListener('click', (e) => abrirSubsite(e.target.getAttribute('data-id'))));
     document.querySelectorAll('.btn-apagar').forEach(btn => btn.addEventListener('click', async (e) => {
-        if(confirm("Apagar?")) { await deleteDoc(doc(db, "subsites", e.target.getAttribute('data-id'))); carregarDadosCliente(auth.currentUser.uid); }
+        if(confirm("Apagar?")) { 
+            await deleteDoc(doc(db, "subsites", e.target.getAttribute('data-id'))); 
+            carregarDadosCliente(auth.currentUser.uid); 
+        }
     }));
 }
 
