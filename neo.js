@@ -1,366 +1,222 @@
 // ==========================================
-// 1. IMPORTAÇÕES DO FIREBASE
+// 1. IMPORTAÇÕES
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-    getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification,
-    signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { 
-    getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs,
-    deleteDoc, updateDoc 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
-// 2. CONFIGURAÇÃO DO FIREBASE
+// 2. CONFIGURAÇÃO
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
-  authDomain: "neo-flux-c91c8.firebaseapp.com",
-  projectId: "neo-flux-c91c8",
-  storageBucket: "neo-flux-c91c8.firebasestorage.app",
-  messagingSenderId: "6686219198",
-  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef",
-  measurementId: "G-FR4TF3VMBB"
+  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU", authDomain: "neo-flux-c91c8.firebaseapp.com", projectId: "neo-flux-c91c8", storageBucket: "neo-flux-c91c8.firebasestorage.app", messagingSenderId: "6686219198", appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Variável global para guardar qual subsite está aberto no momento
 let subsiteAtualId = "";
+let planoAtual = "";
+let festasGlobais = [];
 
 // ==========================================
-// 3. REGRAS DE NEGÓCIO E TEXTOS
+// 3. REGRAS E TEXTOS
 // ==========================================
 const termosPlanos = {
-    start: `<h3>Plano Start — R$ 49,99 mensais</h3><p>A assinatura Start concede...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
-    pro: `<h3>Plano Pro — R$ 79,99 mensais</h3><p>O plano Pro disponibiliza...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
-    elite: `<h3>Plano Elite — R$ 99,99 mensais</h3><p>O plano Elite disponibiliza...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
-    elite_premium: `<h3>Plano Elite Premium — R$ 149,99 mensais</h3><p>O plano Elite Premium inclui todas as ferramentas do Elite, mais o Gerador de Contratos exclusivo...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`
+    start: `<h3>Plano Start</h3>`, pro: `<h3>Plano Pro</h3>`, elite: `<h3>Plano Elite</h3>`, elite_premium: `<h3>Elite Premium</h3>`
 };
 
-const limitesPlanos = {
-    start: 1, pro: 1, elite: 999, elite_premium: 9999 
-};
+const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
 
 const recursosPlanos = {
-    start: { contratos: false, relatorios: false },
-    pro: { contratos: false, relatorios: true },
-    elite: { contratos: false, relatorios: true },
-    elite_premium: { contratos: true, relatorios: true }
+    start: { kits: false, relatorios: false, assistente: false },
+    pro: { kits: true, relatorios: true, assistente: false },
+    elite: { kits: true, relatorios: true, assistente: true },
+    elite_premium: { kits: true, relatorios: true, assistente: true }
 };
 
 // ==========================================
-// 4. CONTROLE DE TELAS
+// 4. CONTROLE DE TELAS E LOADING
 // ==========================================
-let dadosCliente = { nome: "", documento: "", aceitouTermos: false, plano: "" };
 const todasAsTelas = document.querySelectorAll('.tela');
-const msgStatus = document.getElementById('mensagem-status');
-
-function mostrarTela(idDaTela) {
-    todasAsTelas.forEach(tela => tela.classList.remove('ativa'));
-    const telaAlvo = document.getElementById(idDaTela);
-    if (telaAlvo) telaAlvo.classList.add('ativa');
-    if (msgStatus) { msgStatus.textContent = ""; msgStatus.className = "mensagem"; }
+function mostrarTela(id) {
+    todasAsTelas.forEach(t => t.classList.remove('ativa'));
+    const tela = document.getElementById(id);
+    if (tela) tela.classList.add('ativa');
     window.scrollTo(0, 0);
 }
+function carregar(ativo) {
+    document.getElementById('loading-overlay').style.display = ativo ? 'flex' : 'none';
+}
 
-// Navegação Básica
+// ==========================================
+// 5. NAVEGAÇÃO E CADASTRO
+// ==========================================
 document.getElementById('btn-comecar')?.addEventListener('click', () => mostrarTela('tela-planos'));
 document.getElementById('voltar-inicio')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
 document.getElementById('ir-para-login')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
-document.getElementById('voltar-para-cadastro')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
-document.getElementById('ir-para-recuperar')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-recuperar'); });
-document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
-document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
 
-// ==========================================
-// 5. SELEÇÃO DE PLANO, TERMOS E CADASTRO
-// ==========================================
-document.querySelectorAll('.btn-selecionar-plano').forEach(botao => {
-    botao.addEventListener('click', (e) => {
+document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
+    btn.addEventListener('click', (e) => {
         const card = e.target.closest('.card-plano');
-        dadosCliente.plano = card.getAttribute('data-plano');
-        const nomePlano = card.querySelector('h3').textContent;
-        document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
-        document.getElementById('texto-termos').innerHTML = termosPlanos[dadosCliente.plano] || "<p>Termos em atualização.</p>";
+        planoAtual = card.getAttribute('data-plano');
+        document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual];
         mostrarTela('tela-termos');
     });
 });
 
-document.getElementById('form-termos')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    dadosCliente.nome = document.getElementById('nome-cliente').value;
-    dadosCliente.documento = document.getElementById('doc-cliente').value;
-    dadosCliente.aceitouTermos = document.getElementById('aceite-termos').checked;
-    document.getElementById('resumo-plano-conta').textContent = dadosCliente.plano.toUpperCase();
-    mostrarTela('tela-criar-conta');
-});
+document.getElementById('form-termos')?.addEventListener('submit', (e) => { e.preventDefault(); mostrarTela('tela-criar-conta'); });
 
 document.getElementById('form-cadastro-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('email-cadastro').value;
-    const senha = document.getElementById('senha-cadastro').value;
-    const btn = e.target.querySelector('button');
-
+    carregar(true);
     try {
-        btn.textContent = "Criando...";
-        btn.disabled = true;
-        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-        await updateProfile(userCredential.user, { displayName: dadosCliente.nome });
-        await sendEmailVerification(userCredential.user);
-        await setDoc(doc(db, "usuarios", userCredential.user.uid), {
-            nome: dadosCliente.nome, documento: dadosCliente.documento, email: email,
-            planoPreferido: dadosCliente.plano, aceitouTermos: dadosCliente.aceitouTermos,
-            statusPagamento: "pendente", criadoEm: new Date()
+        const email = document.getElementById('email-cadastro').value;
+        const senha = document.getElementById('senha-cadastro').value;
+        const cred = await createUserWithEmailAndPassword(auth, email, senha);
+        await sendEmailVerification(cred.user);
+        await setDoc(doc(db, "usuarios", cred.user.uid), {
+            nome: document.getElementById('nome-cliente').value, email: email, planoPreferido: planoAtual, statusPagamento: "pendente"
         });
-        document.getElementById('resumo-plano-pagamento').textContent = dadosCliente.plano.toUpperCase();
-        document.getElementById('resumo-nome-pagamento').textContent = dadosCliente.nome;
         mostrarTela('tela-pagamento');
-    } catch (error) {
-        alert("Erro ao cadastrar: " + error.message);
-    } finally {
-        btn.textContent = "Criar minha conta";
-        btn.disabled = false;
-    }
-});
-
-// Login e Recuperação
-document.getElementById('btn-ja-verifiquei')?.addEventListener('click', async () => {
-    if (auth.currentUser) {
-        await auth.currentUser.reload(); 
-        if (auth.currentUser.emailVerified) {
-            carregarDadosCliente(auth.currentUser.uid);
-            mostrarTela('tela-cliente');
-        } else { alert("E-mail ainda não verificado."); }
-    }
-});
-
-document.getElementById('btn-reenviar-email')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    if (auth.currentUser) {
-        try { await sendEmailVerification(auth.currentUser); alert("E-mail reenviado!"); } 
-        catch (error) { alert("Aguarde para reenviar."); }
-    }
+    } catch (error) { alert("Erro: " + error.message); }
+    finally { carregar(false); }
 });
 
 document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    carregar(true);
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
-        if (!userCredential.user.emailVerified) {
-            mostrarTela('tela-verificacao');
-            alert("Verifique seu e-mail antes de entrar.");
-        } else {
-            carregarDadosCliente(userCredential.user.uid);
-            mostrarTela('tela-cliente');
-        }
-    } catch (error) { alert("E-mail ou senha incorretos."); }
-});
-
-document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-        await sendPasswordResetEmail(auth, document.getElementById('email-recuperar').value);
-        alert("Link de recuperação enviado!");
-    } catch (error) { alert("Erro ao enviar."); }
+        await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
+    } catch (error) { alert("Erro ao logar."); }
+    finally { carregar(false); }
 });
 
 // ==========================================
 // 6. ÁREA DO CLIENTE E SUBSITES
 // ==========================================
 async function carregarDadosCliente(uid) {
+    carregar(true);
     try {
-        const docSnap = await getDoc(doc(db, "usuarios", uid));
-        if (docSnap.exists()) {
-            const dados = docSnap.data();
+        const snap = await getDoc(doc(db, "usuarios", uid));
+        if (snap.exists()) {
+            const dados = snap.data();
+            planoAtual = dados.planoPreferido;
             document.getElementById('cliente-nome').textContent = dados.nome;
-            document.getElementById('cliente-email').textContent = dados.email;
             document.getElementById('cliente-plano').textContent = dados.planoPreferido.toUpperCase();
+            document.getElementById('cliente-status').textContent = dados.statusPagamento;
             
-            const statusEl = document.getElementById('cliente-status');
-            if (dados.statusPagamento === "pendente") { statusEl.textContent = "Pendente (Aguardando Pagamento)"; statusEl.style.color = "#ff9800"; }
-            else if (dados.statusPagamento === "upgrade_pendente") { statusEl.textContent = "Upgrade em Análise"; statusEl.style.color = "#00d2ff"; }
-            else { statusEl.textContent = "Ativo (Pagamento Confirmado)"; statusEl.style.color = "#00c853"; }
-
-            const limite = limitesPlanos[dados.planoPreferido] || 1;
-            document.getElementById('limite-subsites').textContent = limite === 9999 ? "ilimitados" : limite;
-
+            const limite = limitesPlanos[planoAtual] || 1;
             carregarSubsites(uid, limite);
         }
     } catch (error) { console.error(error); }
+    finally { carregar(false); }
 }
 
-document.getElementById('btn-pedir-upgrade')?.addEventListener('click', async () => {
-    if (!auth.currentUser) return;
-    if (confirm("Você deseja solicitar um upgrade de plano?\n\nNossa equipe verificará o pagamento.")) {
-        await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { statusPagamento: "upgrade_pendente" });
-        alert("Solicitação enviada!");
-        carregarDadosCliente(auth.currentUser.uid);
-    }
-});
-
-async function carregarSubsites(uidDono, limite) {
+async function carregarSubsites(uid, limite) {
     const lista = document.getElementById('lista-subsites');
-    const btnCriar = document.getElementById('btn-criar-subsite');
-    const inputTitulo = document.getElementById('titulo-subsite');
-    if (!lista) return;
+    lista.innerHTML = "";
+    const snap = await getDocs(query(collection(db, "subsites"), where("idDono", "==", uid)));
     
-    try {
-        const querySnapshot = await getDocs(query(collection(db, "subsites"), where("idDono", "==", uidDono)));
-        lista.innerHTML = ""; 
+    if (snap.size >= limite) {
+        document.getElementById('btn-criar-subsite').disabled = true;
+        document.getElementById('titulo-subsite').disabled = true;
+    } else {
+        document.getElementById('btn-criar-subsite').disabled = false;
+        document.getElementById('titulo-subsite').disabled = false;
+    }
 
-        if (querySnapshot.size >= limite) {
-            btnCriar.disabled = true; btnCriar.textContent = "Limite Atingido"; btnCriar.style.background = "#555";
-            inputTitulo.disabled = true;
-        } else {
-            btnCriar.disabled = false; btnCriar.textContent = "Criar Subsite"; btnCriar.style.background = "";
-            inputTitulo.disabled = false;
-        }
+    snap.forEach(doc => {
+        const sub = doc.data();
+        const li = document.createElement('li');
+        li.style.cssText = "border: 1px solid #333; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; background: #0a0a0a;";
+        li.innerHTML = `
+            <strong>${sub.titulo}</strong>
+            <div>
+                <button class="btn-acessar" data-id="${doc.id}" style="background: #00d2ff; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">Acessar</button>
+                <button class="btn-apagar" data-id="${doc.id}" style="background: #e74c3c; padding: 5px 10px; border: none; border-radius: 4px; color: white; cursor: pointer;">X</button>
+            </div>
+        `;
+        lista.appendChild(li);
+    });
 
-        querySnapshot.forEach((docSnap) => {
-            const subsite = docSnap.data();
-            const li = document.createElement('li');
-            li.style.cssText = "border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a;";
-
-            li.innerHTML = `
-                <div>
-                    <strong style="font-size: 1.1rem; color: var(--cor-azul);">${subsite.titulo}</strong> <br>
-                    <small style="color: #888;">Criado em: ${subsite.criadoEm.toDate().toLocaleDateString()}</small>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="btn-acessar-subsite" data-id="${docSnap.id}" style="background: #00d2ff; color: #000; border: none; padding: 8px; border-radius: 6px; cursor: pointer;"><i data-lucide="external-link" style="width: 18px; height: 18px;"></i></button>
-                    <button class="btn-editar-subsite" data-id="${docSnap.id}" data-titulo="${subsite.titulo}" style="background: #f39c12; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer;"><i data-lucide="edit" style="width: 18px; height: 18px;"></i></button>
-                    <button class="btn-apagar-subsite" data-id="${docSnap.id}" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer;"><i data-lucide="trash-2" style="width: 18px; height: 18px;"></i></button>
-                </div>
-            `;
-            lista.appendChild(li);
-        });
-
-        if (querySnapshot.size === 0) lista.innerHTML = "<li>Você ainda não criou nenhum subsite.</li>";
-        
-        adicionarEventosSubsite(uidDono, limite);
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-
-    } catch (error) { console.error(error); }
+    // Eventos
+    document.querySelectorAll('.btn-acessar').forEach(btn => btn.addEventListener('click', (e) => abrirSubsite(e.target.getAttribute('data-id'))));
+    document.querySelectorAll('.btn-apagar').forEach(btn => btn.addEventListener('click', async (e) => {
+        if(confirm("Apagar?")) { await deleteDoc(doc(db, "subsites", e.target.getAttribute('data-id'))); carregarDadosCliente(auth.currentUser.uid); }
+    }));
 }
 
 document.getElementById('btn-criar-subsite')?.addEventListener('click', async () => {
-    const user = auth.currentUser;
-    const input = document.getElementById('titulo-subsite');
-    const titulo = input.value.trim();
-    if (!user || titulo === "") return;
-
-    try {
-        await addDoc(collection(db, "subsites"), { idDono: user.uid, titulo: titulo, criadoEm: new Date() });
-        input.value = ""; 
-        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-        carregarSubsites(user.uid, limitesPlanos[userDoc.data().planoPreferido] || 1); 
-    } catch (error) { alert("Erro ao criar."); }
+    const titulo = document.getElementById('titulo-subsite').value;
+    if (!titulo) return;
+    await addDoc(collection(db, "subsites"), { idDono: auth.currentUser.uid, titulo: titulo, criadoEm: new Date() });
+    document.getElementById('titulo-subsite').value = "";
+    carregarDadosCliente(auth.currentUser.uid);
 });
 
-function adicionarEventosSubsite(uidDono, limite) {
-    document.querySelectorAll('.btn-apagar-subsite').forEach(btn => btn.addEventListener('click', async (e) => {
-        if (confirm("Apagar subsite?")) {
-            await deleteDoc(doc(db, "subsites", e.target.closest('button').getAttribute('data-id')));
-            carregarSubsites(uidDono, limite);
-        }
-    }));
+async function abrirSubsite(id) {
+    subsiteAtualId = id;
+    const snap = await getDoc(doc(db, "subsites", id));
+    document.getElementById('nome-do-subsite').textContent = snap.data().titulo;
 
-    document.querySelectorAll('.btn-editar-subsite').forEach(btn => btn.addEventListener('click', async (e) => {
-        const botao = e.target.closest('button');
-        const novo = prompt("Novo título:", botao.getAttribute('data-titulo'));
-        if (novo && novo.trim() !== "") {
-            await updateDoc(doc(db, "subsites", botao.getAttribute('data-id')), { titulo: novo.trim() });
-            carregarSubsites(uidDono, limite);
-        }
-    }));
+    // Verifica regras do plano
+    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
 
-    // Evento Acessar (Gatekeeping)
-    document.querySelectorAll('.btn-acessar-subsite').forEach(btn => btn.addEventListener('click', async (e) => {
-        const id = e.target.closest('button').getAttribute('data-id');
-        subsiteAtualId = id; // Salva o ID global
-
-        const docSnap = await getDoc(doc(db, "subsites", id));
-        if (docSnap.exists()) {
-            document.getElementById('nome-do-subsite').textContent = docSnap.data().titulo;
-            
-            const userDoc = await getDoc(doc(db, "usuarios", auth.currentUser.uid));
-            const regras = recursosPlanos[userDoc.data().planoPreferido] || recursosPlanos.start;
-
-            // Contratos (Apenas Premium)
-            const btnContrato = document.getElementById('btn-gerador-contrato');
-            if (regras.contratos) {
-                btnContrato.disabled = false; btnContrato.textContent = "Acessar"; btnContrato.style.background = "var(--gradiente-neo)";
-            } else {
-                btnContrato.disabled = true; btnContrato.innerHTML = "🔒 Elite Premium"; btnContrato.style.background = "#333";
-            }
-
-            // Relatórios (Pro pra cima)
-            const btnRelatorios = document.getElementById('btn-relatorios');
-            const txtRelatorio = document.getElementById('txt-relatorio');
-            if (regras.relatorios) {
-                btnRelatorios.disabled = false; btnRelatorios.textContent = "Ver Relatório"; btnRelatorios.style.background = "var(--gradiente-neo)";
-                txtRelatorio.textContent = "Vendas mensais.";
-            } else {
-                btnRelatorios.disabled = true; btnRelatorios.innerHTML = "🔒 Pro ou superior"; btnRelatorios.style.background = "#333";
-                txtRelatorio.textContent = "Indisponível no Start.";
-            }
-
-            carregarFestas(id); // Busca os cards de festas
-            mostrarTela('tela-subsite');
-        }
-    }));
-}
-
-// ==========================================
-// 7. LÓGICA DE FESTAS E CATÁLOGO (MODAIS)
-// ==========================================
-async function carregarFestas(idSubsite) {
-    const container = document.getElementById('lista-festas-criadas');
-    container.innerHTML = "<p style='color: #888;'>Buscando festas...</p>";
+    document.getElementById('btn-abrir-kits').disabled = !regras.kits;
+    document.getElementById('btn-abrir-kits').style.background = regras.kits ? "var(--gradiente-neo)" : "#333";
     
-    try {
-        const q = query(collection(db, "festas"), where("idSubsite", "==", idSubsite));
-        const snap = await getDocs(q);
-        container.innerHTML = "";
+    document.getElementById('btn-relatorios').disabled = !regras.relatorios;
+    document.getElementById('btn-relatorios').style.background = regras.relatorios ? "var(--gradiente-neo)" : "#333";
 
-        if (snap.empty) {
-            container.innerHTML = "<p style='color: #888;'>Nenhuma festa agendada ainda.</p>";
-            return;
-        }
+    // Neo Wave
+    document.getElementById('btn-neo-wave').style.display = regras.assistente ? 'flex' : 'none';
 
-        snap.forEach(doc => {
-            const festa = doc.data();
-            const card = document.createElement('div');
-            card.style.cssText = "background: #121212; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: left;";
-            card.innerHTML = `
-                <h4 style="color: var(--cor-azul); margin: 0 0 10px 0;">${festa.nome}</h4>
-                <p style="font-size: 0.8rem; margin: 3px 0; color: #ccc;"><b>Data:</b> ${festa.data.split('-').reverse().join('/')}</p>
-                <p style="font-size: 0.8rem; margin: 3px 0; color: #ccc;"><b>Tema:</b> ${festa.tema}</p>
-                <p style="font-size: 0.8rem; margin: 3px 0; color: #ccc;"><b>Local:</b> ${festa.local}</p>
-                <p style="font-size: 0.8rem; margin: 3px 0; color: #ccc;"><b>Tel:</b> ${festa.telefone}</p>
-            `;
-            container.appendChild(card);
-        });
-    } catch (error) { console.error(error); }
+    carregarFestas(id);
+    mostrarTela('tela-subsite');
 }
 
-document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
-    document.getElementById('modal-agendar-festa').style.display = 'flex';
+// ==========================================
+// 7. FESTAS, FRETE E RELATÓRIOS
+// ==========================================
+async function carregarFestas(id) {
+    const container = document.getElementById('lista-festas-criadas');
+    container.innerHTML = "";
+    festasGlobais = [];
+    
+    const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
+    snap.forEach(doc => {
+        const festa = doc.data();
+        festasGlobais.push(festa);
+        const card = document.createElement('div');
+        card.style.cssText = "background: #121212; border-left: 4px solid var(--cor-azul); border-radius: 8px; padding: 20px; text-align: left;";
+        card.innerHTML = `
+            <h4 style="color: white; margin: 0 0 10px 0;">${festa.nome}</h4>
+            <p style="font-size: 0.85rem; color: #aaa; margin: 5px 0;"><b>Data:</b> ${festa.data.split('-').reverse().join('/')}</p>
+            <p style="font-size: 0.85rem; color: #aaa; margin: 5px 0;"><b>Tema:</b> ${festa.tema}</p>
+            <p style="font-size: 0.85rem; color: #aaa; margin: 5px 0;"><b>Local:</b> ${festa.local}</p>
+            <p style="font-size: 0.85rem; color: #00c853; margin: 5px 0;"><b>Frete:</b> R$ ${festa.frete || "0,00"}</p>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Calculadora de Frete no Modal
+document.getElementById('frete-km')?.addEventListener('input', () => {
+    const km = parseFloat(document.getElementById('frete-km').value) || 0;
+    const preco = parseFloat(document.getElementById('frete-preco').value) || 8.00; // Valor padrão do litro
+    const total = (km * 2 / 9) * preco; // Lógica básica: Ida e Volta (km*2), 9km/L
+    document.getElementById('total-frete').textContent = `R$ ${total.toFixed(2)}`;
 });
-document.getElementById('btn-fechar-modal-festa')?.addEventListener('click', () => {
-    document.getElementById('modal-agendar-festa').style.display = 'none';
+document.getElementById('frete-preco')?.addEventListener('input', () => {
+    document.getElementById('frete-km').dispatchEvent(new Event('input'));
 });
 
+// Salvar Festa
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('button[type="submit"]');
-    btn.textContent = "Agendando..."; btn.disabled = true;
-
+    carregar(true);
     try {
         await addDoc(collection(db, "festas"), {
             idSubsite: subsiteAtualId,
@@ -371,58 +227,64 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
             tema: document.getElementById('festa-tema').value,
             local: document.getElementById('festa-local').value,
             obs: document.getElementById('festa-obs').value,
-            criadoEm: new Date()
+            frete: document.getElementById('total-frete').textContent.replace('R$ ', '')
         });
         document.getElementById('form-agendar-festa').reset();
         document.getElementById('modal-agendar-festa').style.display = 'none';
         carregarFestas(subsiteAtualId);
-    } catch (error) { alert("Erro ao agendar."); }
-    finally { btn.textContent = "Agendar"; btn.disabled = false; }
+    } catch (error) { alert("Erro ao salvar."); }
+    finally { carregar(false); }
 });
 
-document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => {
-    document.getElementById('modal-catalogo').style.display = 'flex';
-    carregarCatalogo(subsiteAtualId);
-});
-document.getElementById('btn-fechar-modal-catalogo')?.addEventListener('click', () => {
-    document.getElementById('modal-catalogo').style.display = 'none';
-});
-
-document.getElementById('btn-add-item')?.addEventListener('click', async () => {
-    const nome = document.getElementById('cat-nome').value;
-    const cat = document.getElementById('cat-categoria').value;
-    if (!nome) return alert("Digite o nome do item");
-
-    await addDoc(collection(db, "catalogo"), {
-        idSubsite: subsiteAtualId, nome: nome, categoria: cat, criadoEm: new Date()
+// Relatórios
+document.getElementById('btn-relatorios')?.addEventListener('click', () => {
+    document.getElementById('modal-relatorios').style.display = 'flex';
+    const tbody = document.getElementById('tabela-relatorio');
+    tbody.innerHTML = "";
+    festasGlobais.forEach(f => {
+        tbody.innerHTML += `<tr style="border-bottom: 1px solid #222;"><td style="padding: 10px;">${f.nome}</td><td style="padding: 10px;">${f.tema}</td><td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td></tr>`;
     });
-    
-    document.getElementById('cat-nome').value = "";
-    document.getElementById('cat-categoria').value = "";
-    carregarCatalogo(subsiteAtualId);
 });
-
-async function carregarCatalogo(idSubsite) {
-    const lista = document.getElementById('lista-catalogo');
-    lista.innerHTML = "<li>Carregando...</li>";
-    try {
-        const q = query(collection(db, "catalogo"), where("idSubsite", "==", idSubsite));
-        const snap = await getDocs(q);
-        lista.innerHTML = "";
-        if (snap.empty) { lista.innerHTML = "<li>Nenhum item no catálogo.</li>"; return; }
-        
-        snap.forEach(doc => {
-            const item = doc.data();
-            const li = document.createElement('li');
-            li.style.cssText = "background: #000; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border: 1px solid #333;";
-            li.innerHTML = `<span><b>${item.nome}</b> <span style="color: #888; font-size: 0.8rem;">(${item.categoria})</span></span>`;
-            lista.appendChild(li);
-        });
-    } catch (error) { console.error(error); }
-}
 
 // ==========================================
-// 8. OBSERVADOR DE ESTADO
+// 8. MODAIS DE CATÁLOGO E KITS
+// ==========================================
+document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => document.getElementById('modal-catalogo').style.display = 'flex');
+document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
+
+// Neo Wave Chat (Simples)
+document.getElementById('btn-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'flex');
+document.getElementById('btn-fechar-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'none');
+
+document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => {
+    const input = document.getElementById('neo-wave-input');
+    const body = document.getElementById('neo-wave-body');
+    if(!input.value) return;
+
+    body.innerHTML += `<div class="msg-user">${input.value}</div>`;
+    const msg = input.value.toLowerCase();
+    input.value = "";
+
+    setTimeout(() => {
+        let resposta = "Ainda estou aprendendo a responder isso. Tente falar sobre 'agendar', 'kits' ou 'catálogo'.";
+        if (msg.includes('agendar') || msg.includes('festa')) resposta = "Para agendar, clique no botão 'Agendar Festa' no painel. Lá você preenche os dados e a calculadora de frete já faz o cálculo!";
+        if (msg.includes('kit')) resposta = "O Gerador de Kits está disponível para planos Pro pra cima. Clique no card 'Kits'!";
+        if (msg.includes('relatorio') || msg.includes('relatório')) resposta = "A planilha de relatórios fica no card 'Relatórios' e mostra todas as festas do mês.";
+        
+        body.innerHTML += `<div class="msg-bot">${resposta}</div>`;
+        body.scrollTop = body.scrollHeight;
+    }, 800);
+});
+
+// Fechar Modais
+document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.target.closest('[id^="modal-"]').style.display = 'none';
+    });
+});
+
+// ==========================================
+// 9. OBSERVADOR DE ESTADO
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
