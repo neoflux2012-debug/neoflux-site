@@ -43,10 +43,10 @@ const termosPlanos = {
 const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
 
 const recursosPlanos = {
-    start: { kits: false, relatorios: false, assistente: false, valores: false },
-    pro: { kits: true, relatorios: true, assistente: false, valores: true },
-    elite: { kits: true, relatorios: true, assistente: true, valores: true },
-    elite_premium: { kits: true, relatorios: true, assistente: true, valores: true }
+    start: { kits: false, relatorios: false, assistente: false, valores: false, contratos: false },
+    pro: { kits: true, relatorios: true, assistente: false, valores: true, contratos: false },
+    elite: { kits: true, relatorios: true, assistente: true, valores: true, contratos: false },
+    elite_premium: { kits: true, relatorios: true, assistente: true, valores: true, contratos: true }
 };
 
 // ==========================================
@@ -99,6 +99,7 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         const email = document.getElementById('email-cadastro').value;
         const senha = document.getElementById('senha-cadastro').value;
         const cred = await createUserWithEmailAndPassword(auth, email, senha);
+        await updateProfile(cred.user, { displayName: document.getElementById('nome-cliente').value });
         await sendEmailVerification(cred.user);
         await setDoc(doc(db, "usuarios", cred.user.uid), {
             nome: document.getElementById('nome-cliente').value, 
@@ -208,6 +209,12 @@ async function abrirSubsite(id) {
         btnRel.style.background = regras.relatorios ? "var(--gradiente-neo)" : "#333";
     }
 
+    const btnContratos = document.getElementById('btn-abrir-contratos');
+    if(btnContratos) {
+        btnContratos.disabled = !regras.contratos;
+        btnContratos.style.background = regras.contratos ? "#e67e22" : "#333";
+    }
+
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
@@ -224,6 +231,7 @@ async function abrirSubsite(id) {
     }
 
     carregarFestas(id);
+    carregarContratos();
     mostrarTela('tela-subsite');
 }
 
@@ -249,7 +257,6 @@ async function carregarFestas(id) {
         const falta = total - sinal;
         const valorFaltaFormatado = falta > 0 ? `R$ ${falta.toFixed(2).replace('.', ',')}` : 'Pago';
         
-        // Só mostra valores se o plano permitir
         const blocoValores = regras.valores ? `
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <div>
@@ -265,7 +272,10 @@ async function carregarFestas(id) {
                     <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.sinal || '0,00'}</p>
                 </div>
             </div>
-        ` : `<div><p style="color: #888; font-size: 0.8rem;">Valores disponíveis apenas no plano Pro ou superior.</p></div>`;
+        ` : `<div><p style="color: #888; font-size: 0.8rem;">Valores disponíveis no plano Pro ou superior.</p></div>`;
+
+        const botaoContrato = regras.contratos ? 
+            `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
 
         const card = document.createElement('div');
         card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative;";
@@ -285,7 +295,6 @@ async function carregarFestas(id) {
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <!-- COLUNA ESQUERDA (AUMENTADO) -->
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div>
                         <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data</p>
@@ -300,12 +309,9 @@ async function carregarFestas(id) {
                         <p style="color: #00d2ff; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.tema}</p>
                     </div>
                 </div>
-                
-                <!-- COLUNA DIREITA -->
                 ${blocoValores}
             </div>
 
-            <!-- FALTA PAGAR -->
             ${regras.valores ? `
             <div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-bottom: 15px;">
                 <span style="color: #888; font-size: 0.8rem;">Falta Pagar: </span>
@@ -313,6 +319,7 @@ async function carregarFestas(id) {
             </div>` : ''}
 
             <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px;">
+                ${botaoContrato}
                 <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;">
                     <i data-lucide="edit" style="width: 16px;"></i> Editar
                 </button>
@@ -326,7 +333,6 @@ async function carregarFestas(id) {
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    // Filtro de pesquisa
     const inputPesquisa = document.getElementById('pesquisa-festas');
     if (inputPesquisa) {
         inputPesquisa.addEventListener('input', (e) => {
@@ -367,8 +373,43 @@ window.editarFesta = function(id) {
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 };
 
-window.gerarContrato = function(id) {
-    alert("O Gerador de Contrato (Elite Premium) será implementado aqui!");
+// NOVA FUNÇÃO: GERAR CONTRATO BASEADO EM MODELO
+window.gerarContrato = async function(idFesta) {
+    const festa = festasGlobais.find(f => f.id === idFesta);
+    if (!festa) return;
+
+    // Busca os contratos salvos
+    const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
+    
+    if (snap.empty) {
+        alert("Você ainda não cadastrou nenhum modelo de contrato. Vá em 'Contratos' no painel e cadastre um.");
+        return;
+    }
+
+    // Cria um prompt simples para escolher o modelo (poderia ser um modal bonito)
+    let opcoes = "";
+    let index = 1;
+    const contratos = [];
+    snap.forEach(doc => {
+        const c = doc.data();
+        c.id = doc.id;
+        contratos.push(c);
+        opcoes += `[${index}] ${c.nome}\n`;
+        index++;
+    });
+
+    const escolha = prompt(`Qual modelo de contrato deseja usar?\n\n${opcoes}\nDigite o número:`);
+    const indexEscolhido = parseInt(escolha) - 1;
+    
+    if (isNaN(indexEscolhido) || indexEscolhido < 0 || indexEscolhido >= contratos.length) {
+        return; // Cancelou ou digitou errado
+    }
+
+    const contratoEscolhido = contratos[indexEscolhido];
+    
+    // Aqui a gente abriria o contrato para impressão. 
+    // Como o arquivo é PDF ou TXT, a lógica de substituir dados exige ler o arquivo.
+    alert(`Contrato selecionado: ${contratoEscolhido.nome}\n\n(Aqui abrirá o contrato com os dados da festa preenchidos futuramente!)`);
 };
 
 // Calculadora de Frete
@@ -426,7 +467,7 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
 });
 
 // ==========================================
-// 8. MODAIS DE CATÁLOGO E KITS
+// 8. MODAIS DE CATÁLOGO, KITS E CONTRATOS
 // ==========================================
 document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => {
     document.getElementById('modal-catalogo').style.display = 'flex';
@@ -474,10 +515,8 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
     const fileInput = document.getElementById('kit-imagem');
 
     let base64Imagem = "";
-
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        // Redimensiona a imagem para não dar erro de tamanho
         base64Imagem = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
@@ -490,7 +529,7 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
                     canvas.height = img.height * scaleSize;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // Qualidade 70%
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
                 };
                 img.src = ev.target.result;
             };
@@ -503,13 +542,85 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
         alert("Kit salvo com sucesso!");
         document.getElementById('form-kit').reset();
         document.getElementById('modal-kits').style.display = 'none';
-        abrirSubsite(subsiteAtualId); // Recarrega para atualizar o Datalist
+        abrirSubsite(subsiteAtualId); 
     } catch (error) {
         alert("Erro ao salvar o kit: " + error.message);
     } finally {
         carregar(false);
     }
 });
+
+// CONTRATOS
+document.getElementById('btn-abrir-contratos')?.addEventListener('click', () => {
+    document.getElementById('modal-contratos').style.display = 'flex';
+    carregarContratos();
+});
+
+document.getElementById('form-contrato')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    carregar(true);
+    const nome = document.getElementById('contrato-nome').value;
+    const fileInput = document.getElementById('contrato-arquivo');
+
+    let base64Arquivo = "";
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        // Lê o arquivo (PDF ou TXT) em Base64
+        base64Arquivo = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    try {
+        await addDoc(collection(db, "contratos"), { 
+            idSubsite: subsiteAtualId, 
+            nome: nome, 
+            arquivo: base64Arquivo,
+            tipo: fileInput.files[0].type
+        });
+        alert("Contrato salvo com sucesso!");
+        document.getElementById('form-contrato').reset();
+        carregarContratos();
+    } catch (error) {
+        alert("Erro ao salvar contrato: " + error.message);
+    } finally {
+        carregar(false);
+    }
+});
+
+async function carregarContratos() {
+    const lista = document.getElementById('lista-contratos');
+    if(!lista) return;
+    lista.innerHTML = "<li>Carregando...</li>";
+    const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
+    lista.innerHTML = "";
+    if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum contrato cadastrado.</li>";
+    
+    snap.forEach(doc => {
+        const item = doc.data();
+        const li = document.createElement('li');
+        li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;";
+        li.innerHTML = `
+            <span><i data-lucide="file" style="width: 16px; vertical-align: middle; margin-right: 5px;"></i> ${item.nome}</span>
+            <button onclick="window.baixarContrato('${doc.id}')" style="background: #e67e22; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Baixar</button>
+        `;
+        lista.appendChild(li);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+window.baixarContrato = async function(id) {
+    const docSnap = await getDoc(doc(db, "contratos", id));
+    if(docSnap.exists()) {
+        const dados = docSnap.data();
+        const link = document.createElement('a');
+        link.href = dados.arquivo;
+        link.download = `${dados.nome}.${dados.tipo === 'application/pdf' ? 'pdf' : 'txt'}`;
+        link.click();
+    }
+};
 
 // ==========================================
 // 9. BOTÕES DE FECHAR MODAIS E NEO WAVE
@@ -534,9 +645,10 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
     input.value = "";
 
     setTimeout(() => {
-        let resposta = "Ainda estou aprendendo. Tente falar sobre 'agendar', 'kits' ou 'relatórios'.";
+        let resposta = "Ainda estou aprendendo. Tente falar sobre 'agendar', 'kits', 'contratos' ou 'relatórios'.";
         if (msg.includes('agendar')) resposta = "Clique em 'Agendar Festa' para abrir o formulário!";
         if (msg.includes('kit')) resposta = "O gerador de kits está no card roxo.";
+        if (msg.includes('contrato')) resposta = "Você pode cadastrar seus modelos de contrato no card laranja 'Contratos'.";
         if (msg.includes('relatorio')) resposta = "Clique em 'Ver Planilha' para ver suas vendas.";
         body.innerHTML += `<div class="msg-bot">${resposta}</div>`;
         body.scrollTop = body.scrollHeight;
