@@ -34,10 +34,10 @@ let festasGlobais = [];
 // 3. REGRAS E TEXTOS
 // ==========================================
 const termosPlanos = {
-    start: `<h3>Plano Start</h3><p>...</p>`,
-    pro: `<h3>Plano Pro</h3><p>...</p>`,
-    elite: `<h3>Plano Elite</h3><p>...</p>`,
-    elite_premium: `<h3>Elite Premium</h3><p>...</p>`
+    start: `<h3>Termos - Plano Start</h3><p>O plano Start permite 1 subsite e 1 login por subsite. Armazenamento local.</p>`,
+    pro: `<h3>Termos - Plano Pro</h3><p>O plano Pro permite 1 subsite e 2 logins por subsite. Armazenamento em nuvem, até 10 reuniões.</p>`,
+    elite: `<h3>Termos - Plano Elite</h3><p>O plano Elite permite múltiplos subsites e múltiplos logins. Reuniões ilimitadas.</p>`,
+    elite_premium: `<h3>Termos - Elite Premium</h3><p>Todas as ferramentas do Elite + Gerador de Contratos.</p>`
 };
 
 const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
@@ -77,6 +77,12 @@ document.getElementById('ir-para-recuperar')?.addEventListener('click', (e) => {
 document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
 document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
+
+// BOTÃO DE SAIR DA CONTA (LOGOUT)
+document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    await signOut(auth);
+    mostrarTela('tela-boas-vindas');
+});
 
 document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -239,6 +245,20 @@ async function abrirSubsite(id) {
         });
     }
 
+    // Carrega o catálogo no select de peças
+    const selectPecas = document.getElementById('festa-pecas');
+    if(selectPecas) {
+        selectPecas.innerHTML = "";
+        const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", id)));
+        snapCat.forEach(c => {
+            const item = c.data();
+            const opt = document.createElement('option');
+            opt.value = item.nome;
+            opt.textContent = `${item.nome} (${item.categoria})`;
+            selectPecas.appendChild(opt);
+        });
+    }
+
     carregarFestas(id);
     carregarContratos();
     mostrarTela('tela-subsite');
@@ -286,6 +306,14 @@ async function carregarFestas(id) {
         const botaoContrato = regras.contratos ? 
             `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
 
+        // Exibe as peças selecionadas
+        const pecasStr = festa.pecas && festa.pecas.length > 0 ? festa.pecas.join(", ") : "Nenhuma";
+        const blocoPecas = festa.pecas && festa.pecas.length > 0 ? 
+            `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;">
+                <p style="color: #888; font-size: 0.8rem; margin: 0 0 4px 0;"><i data-lucide="package" style="width: 14px; vertical-align: middle;"></i> Peças:</p>
+                <p style="color: #00d2ff; font-size: 0.85rem; margin: 0;">${pecasStr}</p>
+            </div>` : '';
+
         const card = document.createElement('div');
         card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative;";
         
@@ -321,13 +349,15 @@ async function carregarFestas(id) {
                 ${blocoValores}
             </div>
 
+            ${blocoPecas}
+
             ${regras.valores ? `
-            <div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-bottom: 15px;">
+            <div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-top: 10px; margin-bottom: 15px;">
                 <span style="color: #888; font-size: 0.8rem;">Falta Pagar: </span>
                 <span style="color: #e74c3c; font-weight: bold; font-size: 1rem;">${valorFaltaFormatado}</span>
             </div>` : ''}
 
-            <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px;">
+            <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px; margin-top: 10px;">
                 ${botaoContrato}
                 <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;">
                     <i data-lucide="edit" style="width: 16px;"></i> Editar
@@ -376,10 +406,18 @@ window.editarFesta = function(id) {
     document.getElementById('festa-obs').value = festa.obs || "";
     document.getElementById('festa-total').value = festa.total || "0.00";
     document.getElementById('festa-sinal').value = festa.sinal || "0.00";
+    
+    // Seleciona as peças no select
+    const selectPecas = document.getElementById('festa-pecas');
+    if (selectPecas && festa.pecas) {
+        for (let i = 0; i < selectPecas.options.length; i++) {
+            selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value);
+        }
+    }
+
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 };
 
-// FUNÇÃO DO CONTRATO (VISUALIZADOR COM LOGO NO TOPO E RODAPÉ)
 window.gerarContrato = async function(idFesta) {
     const festa = festasGlobais.find(f => f.id === idFesta);
     if (!festa) return;
@@ -403,7 +441,6 @@ window.gerarContrato = async function(idFesta) {
     const contrato = contratos[indexEscolhido];
     const janela = window.open('', '_blank');
     
-    // URL da logo da Neo Flux
     const logoNeoFlux = "https://neoflux2012-debug.github.io/neoflux-site/logo.png";
 
     janela.document.write(`
@@ -419,7 +456,6 @@ window.gerarContrato = async function(idFesta) {
                 .footer-print { background: white; text-align: center; padding: 20px; position: relative; border-top: 1px solid #ccc; }
                 .footer-print img { max-height: 40px; opacity: 0.3; }
                 
-                /* Estilos para quando o usuário clicar em imprimir */
                 @media print {
                     body { background: white; }
                     .header-print { position: fixed; top: 0; width: 100%; border: none; }
@@ -429,17 +465,14 @@ window.gerarContrato = async function(idFesta) {
             </style>
         </head>
         <body>
-            <!-- LOGO DO CLIENTE NO TOPO -->
             <div class="header-print">
                 ${contrato.logo ? `<img src="${contrato.logo}" alt="Logo Empresa">` : `<h3 style="color:#333; margin:0;">${festa.nome}</h3>`}
             </div>
 
-            <!-- O PDF NO MEIO -->
             <div class="content-print">
                 <iframe src="${contrato.arquivo}"></iframe>
             </div>
 
-            <!-- LOGO DA NEO FLUX NO RODAPÉ -->
             <div class="footer-print">
                 <img src="${logoNeoFlux}" alt="Neo Flux">
                 <p style="margin: 5px 0 0 0; font-size: 10px; color: #888;">Gerado por Neo Flux</p>
@@ -449,7 +482,6 @@ window.gerarContrato = async function(idFesta) {
     `);
 };
 
-// Calculadora de Frete
 function calcularFrete() {
     const km = parseFloat(document.getElementById('frete-km').value) || 0;
     const preco = parseFloat(document.getElementById('frete-preco').value) || 0;
@@ -468,6 +500,16 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     e.preventDefault();
     carregar(true);
     const idEdicao = document.getElementById('festa-id-edicao').value;
+    
+    // Pega as peças selecionadas no select
+    const selectPecas = document.getElementById('festa-pecas');
+    const pecasSelecionadas = [];
+    if (selectPecas) {
+        for (let i = 0; i < selectPecas.options.length; i++) {
+            if (selectPecas.options[i].selected) pecasSelecionadas.push(selectPecas.options[i].value);
+        }
+    }
+
     const dadosFesta = {
         idSubsite: subsiteAtualId,
         nome: document.getElementById('festa-nome').value,
@@ -479,7 +521,8 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
         obs: document.getElementById('festa-obs').value,
         frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
         total: document.getElementById('festa-total').value,
-        sinal: document.getElementById('festa-sinal').value
+        sinal: document.getElementById('festa-sinal').value,
+        pecas: pecasSelecionadas // <-- SALVANDO AS PEÇAS
     };
 
     try {
@@ -540,13 +583,12 @@ document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 });
 
-// EVENTO DO BOTÃO DE RELATÓRIOS (AQUI ESTAVA FALTANDO)
+// EVENTO DO BOTÃO DE RELATÓRIOS
 document.getElementById('btn-relatorios')?.addEventListener('click', () => {
     document.getElementById('modal-relatorios').style.display = 'flex';
     const tbody = document.getElementById('tabela-relatorio');
     tbody.innerHTML = "";
     
-    // Pega o mês atual para o relatório
     const hoje = new Date();
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
@@ -554,7 +596,6 @@ document.getElementById('btn-relatorios')?.addEventListener('click', () => {
 
     festasGlobais.forEach(f => {
         const dataFesta = new Date(f.data + 'T00:00:00');
-        // Se a festa for do mês e ano atual, adiciona na tabela
         if (dataFesta.getMonth() === mesAtual && dataFesta.getFullYear() === anoAtual) {
             tbody.innerHTML += `
                 <tr style="border-bottom: 1px solid #333;">
@@ -563,7 +604,6 @@ document.getElementById('btn-relatorios')?.addEventListener('click', () => {
                     <td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td>
                 </tr>`;
             
-            // Soma o valor total da festa
             totalMes += parseFloat(f.total) || 0;
         }
     });
@@ -572,7 +612,6 @@ document.getElementById('btn-relatorios')?.addEventListener('click', () => {
         tbody.innerHTML = "<tr><td colspan='3' style='padding: 10px; text-align: center; color: #888;'>Nenhuma festa agendada para este mês.</td></tr>";
     }
 
-    // Atualiza o total do mês
     document.getElementById('total-mes').textContent = `R$ ${totalMes.toFixed(2).replace('.', ',')}`;
 });
 
