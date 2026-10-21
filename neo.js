@@ -379,7 +379,7 @@ window.editarFesta = function(id) {
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 };
 
-// FUNÇÃO DO CONTRATO (VISUALIZADOR LIMPO DE PDF)
+// FUNÇÃO DO CONTRATO (VISUALIZADOR COM LOGO NO TOPO E RODAPÉ)
 window.gerarContrato = async function(idFesta) {
     const festa = festasGlobais.find(f => f.id === idFesta);
     if (!festa) return;
@@ -403,17 +403,47 @@ window.gerarContrato = async function(idFesta) {
     const contrato = contratos[indexEscolhido];
     const janela = window.open('', '_blank');
     
+    // URL da logo da Neo Flux (troque pelo link real da sua logo hospedada ou em Base64)
+    const logoNeoFlux = "https://neoflux2012-debug.github.io/neoflux-site/logo.png";
+
     janela.document.write(`
         <html>
         <head>
             <title>Contrato - ${festa.nome}</title>
             <style>
-                body { margin: 0; padding: 0; background: #333; }
-                iframe { width: 100vw; height: 100vh; border: none; }
+                body { margin: 0; padding: 0; background: #e0e0e0; display: flex; flex-direction: column; min-height: 100vh; }
+                .header-print { background: white; text-align: center; padding: 20px; border-bottom: 1px solid #ccc; }
+                .header-print img { max-height: 80px; max-width: 200px; }
+                .content-print { flex: 1; }
+                .content-print iframe { width: 100%; height: 100%; border: none; min-height: 800px; }
+                .footer-print { background: white; text-align: center; padding: 20px; position: relative; border-top: 1px solid #ccc; }
+                .footer-print img { max-height: 40px; opacity: 0.3; }
+                
+                /* Estilos para quando o usuário clicar em imprimir */
+                @media print {
+                    body { background: white; }
+                    .header-print { position: fixed; top: 0; width: 100%; border: none; }
+                    .footer-print { position: fixed; bottom: 0; width: 100%; border: none; }
+                    .content-print iframe { margin-top: 100px; margin-bottom: 80px; }
+                }
             </style>
         </head>
         <body>
-            <iframe src="${contrato.arquivo}"></iframe>
+            <!-- LOGO DO CLIENTE NO TOPO -->
+            <div class="header-print">
+                ${contrato.logo ? `<img src="${contrato.logo}" alt="Logo Empresa">` : `<h3 style="color:#333; margin:0;">${festa.nome}</h3>`}
+            </div>
+
+            <!-- O PDF NO MEIO -->
+            <div class="content-print">
+                <iframe src="${contrato.arquivo}"></iframe>
+            </div>
+
+            <!-- LOGO DA NEO FLUX NO RODAPÉ -->
+            <div class="footer-print">
+                <img src="${logoNeoFlux}" alt="Neo Flux">
+                <p style="margin: 5px 0 0 0; font-size: 10px; color: #888;">Gerado por Neo Flux</p>
+            </div>
         </body>
         </html>
     `);
