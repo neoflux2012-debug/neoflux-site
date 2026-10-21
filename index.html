@@ -140,7 +140,8 @@
             <h2>Ative seu plano</h2>
             <p>Sua conta foi criada, <strong id="resumo-nome-pagamento">...</strong>!</p>
             <div class="caixa-pagamento-simulada" style="text-align: center;">
-                <img src="./qrcode.png" alt="QR Code Pix" style="max-width: 200px; width: 100%;">
+                <!-- AQUI ESTÁ A SUA IMAGEM ORIGINAL -->
+                <img id="img-qrcode" src="./qrcode.png" alt="QR Code Pix" style="max-width: 200px; width: 100%;">
                 <p>Chave Pix: <strong>(61) 99161-4509</strong></p>
             </div>
             <button id="btn-ir-para-login" class="botao-principal">Já paguei, ir para o login</button>
@@ -205,16 +206,6 @@
                     <h3 style="color: white; margin: 0 0 10px 0;">Relatórios</h3>
                     <button id="btn-relatorios" class="botao-principal" style="width: 100%;">Ver Planilha</button>
                 </div>
-
-                <div id="card-ponto" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="clock" style="color: #00d2ff; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;">Ponto Eletrônico</h3>
-                    <p id="txt-ponto-hoje" style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Nenhum registro hoje.</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="btn-bater-entrada" class="botao-principal" style="width: 50%; background: #00c853;">Entrada</button>
-                        <button id="btn-bater-saida" class="botao-principal" style="width: 50%; background: #e74c3c;">Saída</button>
-                    </div>
-                </div>
             </div>
 
             <div style="margin: 40px 0 20px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -236,7 +227,6 @@
                         <div><label style="color: #ccc;">CPF:</label><input type="text" id="festa-cpf" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
                         <div><label style="color: #ccc;">Telefone:</label><input type="tel" id="festa-telefone" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
                         <div><label style="color: #ccc;">Data:</label><input type="date" id="festa-data" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                        <div><label style="color: #ccc;">Horário:</label><input type="time" id="festa-horario" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
                     </div>
                     <label style="color: #ccc; margin-top: 10px; display: block;">Tema (ou escolha um Kit salvo):</label>
                     <input type="text" id="festa-tema" required list="lista-kits-salvos" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
@@ -282,13 +272,11 @@
         <div id="modal-catalogo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px;">
                 <h2 style="color: white; margin-top: 0;">Meu Catálogo</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
                     <input type="text" id="cat-nome" placeholder="Nome do item" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    <input type="text" id="cat-categoria" placeholder="Categoria (ex: Mesas)" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    <input type="text" id="cat-modelo" placeholder="Modelo (ex: Rústica)" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    <input type="number" id="cat-quantidade" placeholder="Quantidade" value="1" min="1" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                    <input type="text" id="cat-categoria" placeholder="Categoria" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                    <button id="btn-add-item" class="botao-principal" style="width: auto; margin-top: 0;">Adicionar ao Catálogo</button>
                 </div>
-                <button id="btn-add-item" class="botao-principal" style="width: 100%; margin-bottom: 20px;">Adicionar ao Catálogo</button>
                 <ul id="lista-catalogo" style="list-style: none; padding: 0; max-height: 250px; overflow-y: auto;"></ul>
                 <button type="button" id="btn-fechar-modal-catalogo" class="botao-principal" style="background: #333; margin-top: 20px;">Fechar</button>
             </div>
