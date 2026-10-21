@@ -242,40 +242,93 @@ async function carregarFestas(id) {
         festa.id = doc.id;
         festasGlobais.push(festa);
 
+        // Cálculos para o card
+        const total = parseFloat(festa.total) || 0;
+        const sinal = parseFloat(festa.sinal) || 0;
+        const falta = total - sinal;
+        
+        const valorFaltaFormatado = falta > 0 ? `R$ ${falta.toFixed(2).replace('.', ',')}` : 'Pago';
+
+        // Botão de contrato (só aparece se o plano permitir)
         const botaoContrato = regras.contratos ? 
-            `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 2; padding: 11px; background: #e67e22; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">📝 Gerar Contrato</button>` : '';
+            `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 2; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
 
         const card = document.createElement('div');
-        // Estilo do card inspirado no que você mostrou
-        card.style.cssText = "background: #ffffff; border: 1px solid #ddd; border-left: 6px solid var(--cor-azul); border-radius: 12px; padding: 22px; text-align: left; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #333;";
+        card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 15px; position: relative;";
         
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-                <h4 style="color: #333; margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
-                    👶 ${festa.nome}
-                </h4>
-                <span style="background: #e67e22; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">PENDENTE</span>
-            </div>
-            
-            <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">📅 <b>Data:</b> ${festa.data.split('-').reverse().join('/')}</p>
-            <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">🆔 <b>CPF:</b> ${festa.cpf || '—'}</p>
-            <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">🎨 <b>Tema:</b> <span style="color: var(--cor-azul); font-weight: bold;">${festa.tema}</span></p>
-            <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">🚚 <b>Frete:</b> R$ ${festa.frete || '0,00'}</p>
-            
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc;">
-                <p style="font-size: 0.9rem; color: #333; margin-bottom: 5px;">💰 <b>Total:</b> R$ ${festa.total || '0,00'}</p>
-                <p style="font-size: 0.9rem; color: #333; margin-bottom: 5px;">💵 <b>Sinal:</b> R$ ${festa.sinal || '0,00'}</p>
+            <!-- CABEÇALHO DO CARD -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;">
+                        <i data-lucide="party-popper" style="color: #00d2ff; width: 20px; height: 20px;"></i>
+                    </div>
+                    <div>
+                        <h4 style="color: white; margin: 0; font-size: 1.1rem;">${festa.nome}</h4>
+                        <small style="color: #888;">Evento #${festa.id.substring(0, 4)}</small>
+                    </div>
+                </div>
+                <span style="background: rgba(255, 152, 0, 0.2); color: #ff9800; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ff9800;">PENDENTE</span>
             </div>
 
-            <div style="display: flex; gap: 8px; margin-top: 20px;">
+            <!-- INFORMAÇÕES EM DUAS COLUNAS -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <!-- COLUNA ESQUERDA -->
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 12px;"></i> Data</p>
+                        <p style="color: white; font-weight: bold; margin: 0; font-size: 0.9rem;">${festa.data.split('-').reverse().join('/')}</p>
+                    </div>
+                    <div>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 12px;"></i> CPF</p>
+                        <p style="color: white; font-weight: bold; margin: 0; font-size: 0.9rem;">${festa.cpf || '—'}</p>
+                    </div>
+                    <div>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="palette" style="width: 12px;"></i> Tema</p>
+                        <p style="color: #00d2ff; font-weight: bold; margin: 0; font-size: 0.9rem;">${festa.tema}</p>
+                    </div>
+                </div>
+                
+                <!-- COLUNA DIREITA -->
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="truck" style="width: 12px;"></i> Frete</p>
+                        <p style="color: #00c853; font-weight: bold; margin: 0; font-size: 0.9rem;">R$ ${festa.frete || '0,00'}</p>
+                    </div>
+                    <div>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="dollar-sign" style="width: 12px;"></i> Total</p>
+                        <p style="color: white; font-weight: bold; margin: 0; font-size: 0.9rem;">R$ ${festa.total || '0,00'}</p>
+                    </div>
+                    <div>
+                        <p style="color: #888; font-size: 0.75rem; margin: 0 0 2px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="wallet" style="width: 12px;"></i> Sinal</p>
+                        <p style="color: white; font-weight: bold; margin: 0; font-size: 0.9rem;">R$ ${festa.sinal || '0,00'}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FALTA PAGAR -->
+            <div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-bottom: 15px;">
+                <span style="color: #888; font-size: 0.8rem;">Falta Pagar: </span>
+                <span style="color: #e74c3c; font-weight: bold; font-size: 1rem;">${valorFaltaFormatado}</span>
+            </div>
+
+            <!-- BOTÕES DE AÇÃO -->
+            <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px;">
                 ${botaoContrato}
-                <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 11px; background: #3498db; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">✏️ Editar</button>
-                <button onclick="window.apagarFesta('${festa.id}')" style="flex: 1; padding: 11px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">🗑️</button>
+                <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <i data-lucide="edit" style="width: 16px;"></i> Editar
+                </button>
+                <button onclick="window.apagarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <i data-lucide="trash-2" style="width: 16px;"></i> Apagar
+                </button>
             </div>
         `;
         container.appendChild(card);
     });
     
+    // Inicializa os ícones Lucide nos cards recém-criados
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
     // Filtro de pesquisa em tempo real
     const inputPesquisa = document.getElementById('pesquisa-festas');
     if (inputPesquisa) {
