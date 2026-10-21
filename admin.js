@@ -1,10 +1,51 @@
+// ==========================================
+// 1. IMPORTAÇÕES
+// ==========================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU", authDomain: "neo-flux-c91c8.firebaseapp.com", projectId: "neo-flux-c91c8", storageBucket: "neo-flux-c91c8.firebasestorage.app", messagingSenderId: "6686219198", appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const todasAsTelas = document.querySelectorAll('.tela');
+
+function mostrarTela(id) {
+    todasAsTelas.forEach(t => t.classList.remove('ativa'));
+    const tela = document.getElementById(id);
+    if (tela) tela.classList.add('ativa');
+}
+
+// ==========================================
+// 2. LOGIN E LOGOUT
+// ==========================================
+document.getElementById('form-admin-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value);
+    } catch (error) {
+        alert("Erro ao logar. Verifique o e-mail e senha.");
+    }
+});
+
+document.getElementById('btn-admin-sair').addEventListener('click', async () => {
+    await signOut(auth);
+});
+
+// ==========================================
+// 3. CARREGAR DADOS (CLIENTES E UPGRADES)
+// ==========================================
 async function carregarClientes() {
     const tabela = document.getElementById('lista-clientes');
     const tabelaUpgrades = document.getElementById('lista-upgrades');
     if(!tabela || !tabelaUpgrades) return;
 
     tabela.innerHTML = '<tr><td colspan="5">Buscando clientes...</td></tr>';
-    tabelaUpgrades.innerHTML = '<tr><td colspan="4">Buscando pedidos de upgrade...</td></tr>';
+    tabelaUpgrades.innerHTML = '<tr><td colspan="4">Buscando pedidos...</td></tr>';
 
     try {
         const querySnapshot = await getDocs(collection(db, "usuarios"));
@@ -22,17 +63,16 @@ async function carregarClientes() {
             const cliente = docSnap.data();
             const idCliente = docSnap.id;
             
-            // ---- 1. LISTA NORMAL DE CLIENTES ----
+            // 1. LISTA NORMAL DE CLIENTES
             const tr = document.createElement('tr');
             const statusClass = cliente.statusPagamento === "pendente" ? "status-pendente" : "status-ativo";
-            let statusTexto = cliente.statusPagamento === "pendente" ? "Pendente" : (cliente.statusPagamento === "ativo" ? "Ativo" : cliente.statusPagamento);
+            let statusTexto = cliente.statusPagamento === "pendente" ? "Pendente" : (cliente.statusPagamento === "ativo" ? "Ativo" : "Upgrade Pendente");
 
-            // Botão de Liberar normal (se não for upgrade pendente)
             let botaoAcao = "";
             if (cliente.statusPagamento === "pendente") {
-                botaoAcao = `<button class="btn-liberar" data-id="${idCliente}">Liberar Acesso</button>`;
+                botaoAcao = `<button class="btn-liberar" data-id="${idCliente}" style="background: #00c853; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">Liberar</button>`;
             } else if (cliente.statusPagamento === "upgrade_pendente") {
-                botaoAcao = `<span style="color:#00d2ff; font-weight:bold;">Aguardando Aprovação</span>`;
+                botaoAcao = `<span style="color:#00d2ff; font-weight:bold;">Aguardando</span>`;
             } else {
                 botaoAcao = "Já liberado";
             }
@@ -46,7 +86,7 @@ async function carregarClientes() {
             `;
             tabela.appendChild(tr);
 
-            // ---- 2. LISTA DE UPGRADES ----
+            // 2. LISTA DE UPGRADES
             if (cliente.statusPagamento === "upgrade_pendente") {
                 temUpgrade = true;
                 const trUp = document.createElement('tr');
@@ -54,7 +94,7 @@ async function carregarClientes() {
                     <td>${cliente.nome}</td>
                     <td>${cliente.email}</td>
                     <td>${cliente.planoPreferido.toUpperCase()}</td>
-                    <td><button class="btn-aprovar-upgrade" data-id="${idCliente}" style="background: #00c853; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">✅ Aprovar Upgrade</button></td>
+                    <td><button class="btn-aprovar-upgrade" data-id="${idCliente}" style="background: #00c853; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">Aprovar</button></td>
                 `;
                 tabelaUpgrades.appendChild(trUp);
             }
@@ -69,7 +109,7 @@ async function carregarClientes() {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.getAttribute('data-id');
                 await updateDoc(doc(db, "usuarios", id), { statusPagamento: "ativo" });
-                carregarClientes(); // Recarrega
+                carregarClientes();
             });
         });
 
@@ -77,23 +117,33 @@ async function carregarClientes() {
         document.querySelectorAll('.btn-aprovar-upgrade').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.getAttribute('data-id');
-                const confirmar = confirm("Confirmar que o cliente pagou a diferença e deseja mudar de plano?");
-                
-                if (confirmar) {
-                    // Aqui você pode mudar o plano dele para Elite Premium (ou o que ele pediu)
-                    // Para simplificar, vamos mudar para o status "ativo" e o plano para "elite_premium"
-                    await updateDoc(doc(db, "usuarios", id), { 
-                        statusPagamento: "ativo",
-                        planoPreferido: "elite_premium" 
-                    });
+                if (confirm("Confirmar upgrade para Elite Premium?")) {
+                    await updateDoc(doc(db, "usuarios", id), { statusPagamento: "ativo", planoPreferido: "elite_premium" });
                     alert("Upgrade aprovado!");
-                    carregarClientes(); // Recarrega a lista
+                    carregarClientes();
                 }
             });
         });
 
     } catch (error) {
         console.error(error);
-        tabela.innerHTML = '<tr><td colspan="5" style="color:red;">Erro ao carregar dados.</td></tr>';
+        tabela.innerHTML = '<tr><td colspan="5" style="color:red;">Erro ao carregar.</td></tr>';
     }
 }
+
+// ==========================================
+// 4. OBSERVADOR DE ESTADO (SEGURANÇA)
+// ==========================================
+onAuthStateChanged(auth, (user) => {
+    const emailAdmin = "neoflux2012@gmail.com"; 
+
+    if (user && user.email === emailAdmin) {
+        mostrarTela('tela-admin-painel');
+        carregarClientes();
+    } else if (user) {
+        signOut(auth);
+        alert("Acesso negado. Você não é o administrador.");
+    } else {
+        mostrarTela('tela-admin-login');
+    }
+});
