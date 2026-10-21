@@ -26,13 +26,28 @@ const msgStatus = document.getElementById('mensagem-status');
 
 function mostrarTela(idDaTela) {
     todasAsTelas.forEach(tela => tela.classList.remove('ativa'));
-    document.getElementById(idDaTela).classList.add('ativa');
-    msgStatus.textContent = "";
+    
+    // PROTEÇÃO AQUI: Verifica se a tela existe antes de tentar ativar
+    const telaAlvo = document.getElementById(idDaTela);
+    if (telaAlvo) {
+        telaAlvo.classList.add('ativa');
+    } else {
+        console.warn("Erro: O código tentou abrir a tela '" + idDaTela + "', mas ela não existe no HTML.");
+    }
+    
+    // PROTEÇÃO AQUI: Verifica se o aviso de mensagem existe
+    if (msgStatus) {
+        msgStatus.textContent = "";
+        msgStatus.className = "mensagem";
+    }
+    window.scrollTo(0, 0);
 }
 
 function mostrarMensagem(texto, tipo) {
-    msgStatus.textContent = texto;
-    msgStatus.className = `mensagem ${tipo}`;
+    if (msgStatus) {
+        msgStatus.textContent = texto;
+        msgStatus.className = `mensagem ${tipo}`;
+    }
 }
 
 // ==========================================
