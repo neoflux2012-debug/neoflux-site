@@ -121,6 +121,16 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     finally { carregar(false); }
 });
 
+document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    carregar(true);
+    try {
+        await sendPasswordResetEmail(auth, document.getElementById('email-recuperar').value);
+        alert("Link de recuperação enviado!");
+    } catch (error) { alert("Erro ao enviar e-mail."); }
+    finally { carregar(false); }
+});
+
 // ==========================================
 // 6. ÁREA DO CLIENTE E SUBSITES
 // ==========================================
@@ -218,7 +228,6 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
-    // Carrega os kits no Datalist do form
     const datalist = document.getElementById('lista-kits-salvos');
     if(datalist) {
         datalist.innerHTML = "";
@@ -346,7 +355,6 @@ async function carregarFestas(id) {
     }
 }
 
-// Ações dos botões do card
 window.apagarFesta = async function(id) {
     if(confirm("Tem certeza que deseja apagar esta festa?")) {
         await deleteDoc(doc(db, "festas", id));
@@ -357,7 +365,6 @@ window.apagarFesta = async function(id) {
 window.editarFesta = function(id) {
     const festa = festasGlobais.find(f => f.id === id);
     if(!festa) return;
-
     document.getElementById('festa-id-edicao').value = id;
     document.getElementById('titulo-modal-festa').textContent = "Editar Festa";
     document.getElementById('festa-nome').value = festa.nome || "";
@@ -369,47 +376,47 @@ window.editarFesta = function(id) {
     document.getElementById('festa-obs').value = festa.obs || "";
     document.getElementById('festa-total').value = festa.total || "0.00";
     document.getElementById('festa-sinal').value = festa.sinal || "0.00";
-
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 };
 
-// NOVA FUNÇÃO: GERAR CONTRATO BASEADO EM MODELO
+// FUNÇÃO DO CONTRATO (IMPRIMIR)
 window.gerarContrato = async function(idFesta) {
     const festa = festasGlobais.find(f => f.id === idFesta);
     if (!festa) return;
 
-    // Busca os contratos salvos
     const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
-    
     if (snap.empty) {
         alert("Você ainda não cadastrou nenhum modelo de contrato. Vá em 'Contratos' no painel e cadastre um.");
         return;
     }
 
-    // Cria um prompt simples para escolher o modelo (poderia ser um modal bonito)
-    let opcoes = "";
-    let index = 1;
-    const contratos = [];
+    let opcoes = ""; let index = 1; const contratos = [];
     snap.forEach(doc => {
-        const c = doc.data();
-        c.id = doc.id;
-        contratos.push(c);
-        opcoes += `[${index}] ${c.nome}\n`;
-        index++;
+        const c = doc.data(); c.id = doc.id; contratos.push(c);
+        opcoes += `[${index}] ${c.nome}\n`; index++;
     });
 
-    const escolha = prompt(`Qual modelo de contrato deseja usar?\n\n${opcoes}\nDigite o número:`);
+    const escolha = prompt(`Qual modelo usar para ${festa.nome}?\n\n${opcoes}\nDigite o número:`);
     const indexEscolhido = parseInt(escolha) - 1;
-    
-    if (isNaN(indexEscolhido) || indexEscolhido < 0 || indexEscolhido >= contratos.length) {
-        return; // Cancelou ou digitou errado
-    }
+    if (isNaN(indexEscolhido) || indexEscolhido < 0 || indexEscolhido >= contratos.length) return;
 
-    const contratoEscolhido = contratos[indexEscolhido];
+    const contrato = contratos[indexEscolhido];
+    const janela = window.open('', '_blank');
     
-    // Aqui a gente abriria o contrato para impressão. 
-    // Como o arquivo é PDF ou TXT, a lógica de substituir dados exige ler o arquivo.
-    alert(`Contrato selecionado: ${contratoEscolhido.nome}\n\n(Aqui abrirá o contrato com os dados da festa preenchidos futuramente!)`);
+    if (contrato.tipo === "application/pdf") {
+        janela.document.write(`
+            <html><head><title>Contrato - ${festa.nome}</title><style>body{margin:0;} iframe{width:100vw;height:100vh;border:none;} .btn{position:fixed;bottom:20px;right:20px;padding:15px 30px;background:#00c853;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.3);}</style></head>
+            <body><button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button><iframe src="${contrato.arquivo}"></iframe></body></html>
+        `);
+    } else {
+        const texto = atob(contrato.arquivo.split(',')[1]);
+        janela.document.write(`
+            <html><head><title>Contrato - ${festa.nome}</title><style>body{font-family:'Times New Roman',serif;padding:40px;line-height:1.5;max-width:800px;margin:0 auto;} .btn{position:fixed;top:20px;right:20px;padding:15px 30px;background:#00c853;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;} @media print{.btn{display:none;}}</style></head>
+            <body><button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+            ${contrato.logo ? `<div style="text-align:center;"><img src="${contrato.logo}" style="max-height:80px;margin-bottom:20px;"></div>` : ''}
+            <pre style="white-space:pre-wrap;font-family:inherit;">${texto}</pre></body></html>
+        `);
+    }
 };
 
 // Calculadora de Frete
@@ -418,9 +425,7 @@ function calcularFrete() {
     const preco = parseFloat(document.getElementById('frete-preco').value) || 0;
     const consumo = parseFloat(document.getElementById('frete-consumo').value) || 1; 
     const multiplicador = parseFloat(document.getElementById('frete-ida-volta').value) || 2; 
-    const kmTotal = km * multiplicador;
-    const litros = kmTotal / consumo;
-    const total = litros * preco;
+    const total = (km * multiplicador / consumo) * preco;
     document.getElementById('total-frete').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
 }
 
@@ -429,12 +434,10 @@ function calcularFrete() {
 });
 document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
 
-// Salvar / Editar Festa
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
     const idEdicao = document.getElementById('festa-id-edicao').value;
-    
     const dadosFesta = {
         idSubsite: subsiteAtualId,
         nome: document.getElementById('festa-nome').value,
@@ -452,10 +455,10 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     try {
         if (idEdicao) {
             await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
-            alert("Festa atualizada com sucesso!");
+            alert("Festa atualizada!");
         } else {
             await addDoc(collection(db, "festas"), dadosFesta);
-            alert("Festa agendada com sucesso!");
+            alert("Festa agendada!");
         }
         document.getElementById('form-agendar-festa').reset();
         document.getElementById('festa-id-edicao').value = "";
@@ -524,11 +527,9 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 500;
-                    const scaleSize = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    canvas.height = img.height * (MAX_WIDTH / img.width);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     resolve(canvas.toDataURL('image/jpeg', 0.7));
                 };
                 img.src = ev.target.result;
@@ -539,15 +540,12 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
 
     try {
         await addDoc(collection(db, "kits"), { idSubsite: subsiteAtualId, nome: nome, modelo: modelo, imagem: base64Imagem });
-        alert("Kit salvo com sucesso!");
+        alert("Kit salvo!");
         document.getElementById('form-kit').reset();
         document.getElementById('modal-kits').style.display = 'none';
         abrirSubsite(subsiteAtualId); 
-    } catch (error) {
-        alert("Erro ao salvar o kit: " + error.message);
-    } finally {
-        carregar(false);
-    }
+    } catch (error) { alert("Erro ao salvar kit: " + error.message); }
+    finally { carregar(false); }
 });
 
 // CONTRATOS
@@ -560,12 +558,14 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
     e.preventDefault();
     carregar(true);
     const nome = document.getElementById('contrato-nome').value;
-    const fileInput = document.getElementById('contrato-arquivo');
+    const fileInputArquivo = document.getElementById('contrato-arquivo');
+    const fileInputLogo = document.getElementById('contrato-logo');
 
     let base64Arquivo = "";
-    if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        // Lê o arquivo (PDF ou TXT) em Base64
+    let base64Logo = "";
+
+    if (fileInputArquivo.files.length > 0) {
+        const file = fileInputArquivo.files[0];
         base64Arquivo = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
@@ -573,21 +573,36 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
         });
     }
 
+    if (fileInputLogo.files.length > 0) {
+        const fileLogo = fileInputLogo.files[0];
+        base64Logo = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 400;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * (MAX_WIDTH / img.width);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(fileLogo);
+        });
+    }
+
     try {
         await addDoc(collection(db, "contratos"), { 
-            idSubsite: subsiteAtualId, 
-            nome: nome, 
-            arquivo: base64Arquivo,
-            tipo: fileInput.files[0].type
+            idSubsite: subsiteAtualId, nome: nome, arquivo: base64Arquivo,
+            tipo: fileInputArquivo.files[0].type, logo: base64Logo
         });
-        alert("Contrato salvo com sucesso!");
+        alert("Contrato salvo!");
         document.getElementById('form-contrato').reset();
         carregarContratos();
-    } catch (error) {
-        alert("Erro ao salvar contrato: " + error.message);
-    } finally {
-        carregar(false);
-    }
+    } catch (error) { alert("Erro: " + error.message); }
+    finally { carregar(false); }
 });
 
 async function carregarContratos() {
@@ -602,25 +617,11 @@ async function carregarContratos() {
         const item = doc.data();
         const li = document.createElement('li');
         li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;";
-        li.innerHTML = `
-            <span><i data-lucide="file" style="width: 16px; vertical-align: middle; margin-right: 5px;"></i> ${item.nome}</span>
-            <button onclick="window.baixarContrato('${doc.id}')" style="background: #e67e22; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Baixar</button>
-        `;
+        li.innerHTML = `<span><i data-lucide="file" style="width: 16px; vertical-align: middle; margin-right: 5px;"></i> ${item.nome}</span>`;
         lista.appendChild(li);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
-
-window.baixarContrato = async function(id) {
-    const docSnap = await getDoc(doc(db, "contratos", id));
-    if(docSnap.exists()) {
-        const dados = docSnap.data();
-        const link = document.createElement('a');
-        link.href = dados.arquivo;
-        link.download = `${dados.nome}.${dados.tipo === 'application/pdf' ? 'pdf' : 'txt'}`;
-        link.click();
-    }
-};
 
 // ==========================================
 // 9. BOTÕES DE FECHAR MODAIS E NEO WAVE
@@ -639,16 +640,14 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
     const input = document.getElementById('neo-wave-input');
     const body = document.getElementById('neo-wave-body');
     if(!input.value) return;
-
     body.innerHTML += `<div class="msg-user">${input.value}</div>`;
     const msg = input.value.toLowerCase();
     input.value = "";
-
     setTimeout(() => {
         let resposta = "Ainda estou aprendendo. Tente falar sobre 'agendar', 'kits', 'contratos' ou 'relatórios'.";
-        if (msg.includes('agendar')) resposta = "Clique em 'Agendar Festa' para abrir o formulário!";
+        if (msg.includes('agendar')) resposta = "Clique em 'Agendar Festa'!";
         if (msg.includes('kit')) resposta = "O gerador de kits está no card roxo.";
-        if (msg.includes('contrato')) resposta = "Você pode cadastrar seus modelos de contrato no card laranja 'Contratos'.";
+        if (msg.includes('contrato')) resposta = "Você pode cadastrar seus contratos no card laranja.";
         if (msg.includes('relatorio')) resposta = "Clique em 'Ver Planilha' para ver suas vendas.";
         body.innerHTML += `<div class="msg-bot">${resposta}</div>`;
         body.scrollTop = body.scrollHeight;
