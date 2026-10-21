@@ -6,17 +6,23 @@
     --cor-card: #121212;
     --cor-azul: #00d2ff;
     --cor-roxo: #8a2be2;
+    --cor-roxo-escuro: #4b0082;
     --texto-principal: #ffffff;
     --texto-secundario: #a0a0a0;
     --borda-sutil: #2a2a2a;
     --gradiente-neo: linear-gradient(135deg, var(--cor-azul) 0%, var(--cor-roxo) 100%);
+    
+    /* Cores de suporte */
+    --cor-aviso: #ff9800;
+    --cor-sucesso: #00c853;
+    --cor-erro: #e74c3c;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Poppins', sans-serif; /* Fonte nova aplicada */
 }
 
 body {
@@ -26,8 +32,12 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    -webkit-font-smoothing: antialiased;
 }
 
+/* ==========================================
+   2. CABEÇALHO E LOGO
+   ========================================== */
 header {
     width: 100%;
     padding: 30px 20px;
@@ -36,12 +46,14 @@ header {
 }
 
 .logo {
-    max-width: 150px;
-    filter: drop-shadow(0 0 10px rgba(138, 43, 226, 0.3));
+    max-width: 160px;
+    filter: drop-shadow(0 0 15px rgba(138, 43, 226, 0.4));
+    transition: transform 0.3s;
 }
+.logo:hover { transform: scale(1.05); }
 
 /* ==========================================
-   2. CONTROLE DE TELAS
+   3. CONTROLE DE TELAS (O Segredo do SPA)
    ========================================== */
 main {
     width: 100%;
@@ -52,10 +64,11 @@ main {
     flex-direction: column;
 }
 
-/* A MÁGICA AQUI: Quando a tela do subsite ou admin estiver ativa, o espaço aumenta */
+/* Quando a tela do subsite estiver ativa, o espaço aumenta */
 main:has(#tela-subsite.ativa) {
     max-width: 1200px !important;
 }
+/* Quando o admin estiver ativo, o espaço aumenta */
 main:has(#tela-admin-painel.ativa) {
     max-width: 1000px !important;
 }
@@ -77,8 +90,9 @@ main:has(#tela-admin-painel.ativa) {
 
 h2 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     font-size: 1.8rem;
+    font-weight: 600;
     background: var(--gradiente-neo);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -88,19 +102,21 @@ p {
     text-align: center;
     color: var(--texto-secundario);
     margin-bottom: 15px;
+    line-height: 1.5;
 }
 
 /* ==========================================
-   3. FORMULÁRIOS E INPUTS
+   4. FORMULÁRIOS E INPUTS
    ========================================== */
 form {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
     background: var(--cor-card);
-    padding: 25px;
-    border-radius: 12px;
+    padding: 30px;
+    border-radius: 16px;
     border: 1px solid var(--borda-sutil);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     width: 100%;
 }
 
@@ -112,83 +128,146 @@ label {
 
 input, select, textarea {
     width: 100%;
-    padding: 12px;
+    padding: 14px 16px;
     background-color: #0a0a0a;
     border: 1px solid var(--borda-sutil);
-    border-radius: 8px;
+    border-radius: 10px;
     color: white;
     font-size: 1rem;
     outline: none;
+    transition: all 0.3s ease;
 }
 
 input:focus, select:focus, textarea:focus {
     border-color: var(--cor-roxo);
+    box-shadow: 0 0 0 4px rgba(138, 43, 226, 0.1);
+    background-color: #000;
 }
 
 .checkbox-container {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-top: 5px;
 }
 
 .checkbox-container input {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--cor-roxo);
+    cursor: pointer;
+}
+
+.checkbox-container label {
+    font-size: 0.85rem;
+    color: var(--texto-secundario);
+    cursor: pointer;
 }
 
 /* ==========================================
-   4. BOTÕES
+   5. BOTÕES GERAIS
    ========================================== */
 .botao-principal {
     width: 100%;
-    padding: 14px;
+    padding: 15px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     background: var(--gradiente-neo);
     color: white;
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 10px;
 }
 
 .botao-principal:hover {
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
 }
 
 .botao-principal:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* ==========================================
-   5. CARDS DE PLANOS E SUBSITES
+   6. CARDS DE PLANOS E SUBSITES
    ========================================== */
 .container-planos {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    gap: 20px;
 }
 
 .card-plano {
     background: var(--cor-card);
-    padding: 20px;
-    border-radius: 12px;
+    padding: 25px 20px;
+    border-radius: 16px;
     border: 1px solid var(--borda-sutil);
     text-align: center;
     transition: 0.3s;
+    position: relative;
+    overflow: hidden;
 }
 
 .card-plano:hover {
     border-color: var(--cor-azul);
     transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 210, 255, 0.1);
 }
 
-.card-plano h3 { color: var(--cor-azul); margin-bottom: 10px; }
-.preco { font-size: 1.5rem; font-weight: bold; color: white; }
+.card-plano h3 { color: var(--cor-azul); margin-bottom: 10px; font-size: 1.4rem; }
+.preco { font-size: 1.8rem; font-weight: 700; color: white; margin-bottom: 15px;}
 
 /* ==========================================
-   6. PAINEL DO SUBSITE (TELA 10)
+   7. CAIXAS DE TERMOS E ÁREAS COMUNS
+   ========================================== */
+.caixa-termos {
+    background: var(--cor-card);
+    padding: 25px;
+    border-radius: 16px;
+    border: 1px solid var(--borda-sutil);
+    margin-bottom: 20px;
+}
+
+.caixa-termos p {
+    text-align: left;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+.caixa-termos h3 {
+    color: var(--cor-azul);
+    margin-bottom: 15px;
+}
+
+.caixa-pagamento-simulada {
+    background: rgba(138, 43, 226, 0.05);
+    border: 1px dashed var(--cor-roxo);
+    padding: 30px;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Links de troca de tela */
+.link-troca {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+.link-troca a {
+    color: var(--cor-azul);
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.link-troca a:hover { color: var(--cor-roxo); }
+
+/* ==========================================
+   8. PAINEL DO SUBSITE
    ========================================== */
 #tela-subsite > div:nth-child(2) {
     display: grid;
@@ -197,27 +276,51 @@ input:focus, select:focus, textarea:focus {
     width: 100%;
 }
 
-.caixa-termos {
-    background: var(--cor-card);
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid var(--borda-sutil);
-    margin-bottom: 20px;
+/* Estilo dos Cards de Ferramentas (Festas, Kits, etc) */
+#tela-subsite > div:nth-child(2) > div {
+    background: var(--cor-card) !important;
+    border: 1px solid var(--borda-sutil) !important;
+    border-radius: 16px !important;
+    padding: 30px 25px !important;
+    transition: 0.3s;
 }
-.caixa-termos p {
-    text-align: left;
-    margin-bottom: 8px;
+
+#tela-subsite > div:nth-child(2) > div:hover {
+    border-color: var(--cor-azul) !important;
+    transform: translateY(-5px);
 }
 
 /* ==========================================
-   7. PAINEL DE ADMIN (TABELAS)
+   9. MODAIS E OVERLAYS
+   ========================================== */
+[id^="modal-"] {
+    backdrop-filter: blur(5px);
+}
+
+/* Caixa interna dos modais */
+[id^="modal-"] > div {
+    background: var(--cor-card) !important;
+    border: 1px solid var(--borda-sutil) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Inputs dentro dos modais */
+[id^="modal-"] input, [id^="modal-"] select {
+    background-color: #000 !important;
+    border: 1px solid var(--borda-sutil) !important;
+}
+
+/* ==========================================
+   10. PAINEL DE ADMIN (TABELAS)
    ========================================== */
 #tela-admin-login {
     max-width: 400px;
     margin: 50px auto;
     background: var(--cor-card);
-    padding: 30px;
-    border-radius: 12px;
+    padding: 40px;
+    border-radius: 16px;
     border: 1px solid var(--borda-sutil);
 }
 
@@ -226,12 +329,13 @@ input:focus, select:focus, textarea:focus {
     border-collapse: collapse;
     margin-top: 15px;
     background: var(--cor-card);
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .tabela-clientes th, .tabela-clientes td {
-    padding: 12px;
+    padding: 15px;
     text-align: left;
     border-bottom: 1px solid var(--borda-sutil);
     font-size: 0.9rem;
@@ -240,12 +344,18 @@ input:focus, select:focus, textarea:focus {
 .tabela-clientes th {
     background: #0a0a0a;
     color: var(--cor-azul);
+    font-weight: 600;
 }
 
-.status-pendente { color: #ff9800; font-weight: bold; }
-.status-ativo { color: #00c853; font-weight: bold; }
+.status-pendente { color: var(--cor-aviso); font-weight: bold; }
+.status-ativo { color: var(--cor-sucesso); font-weight: bold; }
 
+/* ==========================================
+   11. RESPONSIVIDADE (PC e Celular)
+   ========================================== */
 @media (max-width: 600px) {
     .container-planos { grid-template-columns: 1fr; }
     h2 { font-size: 1.5rem; }
+    form { padding: 20px; }
+    #tela-subsite > div:nth-child(2) { grid-template-columns: 1fr; }
 }
