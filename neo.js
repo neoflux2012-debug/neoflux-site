@@ -29,7 +29,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ==========================================
-// 3. TEXTOS DOS TERMOS
+// 3. REGRAS DE NEGÓCIO E TEXTOS
 // ==========================================
 const termosPlanos = {
     start: `<h3>Plano Start — R$ 49,99 mensais</h3><p>A assinatura Start concede...</p><p class="destaque-aviso"><strong>IMPORTANTE: Caso tenha atualização do site, o aviso será enviado APENAS pelo nosso Instagram oficial!</strong></p>`,
@@ -45,8 +45,16 @@ const limitesPlanos = {
     elite_premium: 9999 
 };
 
+// O CÉREBRO DO SISTEMA (Baseado na sua imagem)
+const recursosPlanos = {
+    start: { reunioes: false, historico: "1 mês", assistente: false },
+    pro: { reunioes: "Até 10", historico: "2 meses", assistente: true },
+    elite: { reunioes: "Ilimitadas", historico: "Mais de 2 meses", assistente: true },
+    elite_premium: { reunioes: "Ilimitadas", historico: "Ilimitado", assistente: true }
+};
+
 // ==========================================
-// 4. CONTROLE DE TELAS (COM PROTEÇÃO)
+// 4. CONTROLE DE TELAS
 // ==========================================
 let dadosCliente = { nome: "", documento: "", aceitouTermos: false, plano: "" };
 const todasAsTelas = document.querySelectorAll('.tela');
@@ -54,26 +62,14 @@ const msgStatus = document.getElementById('mensagem-status');
 
 function mostrarTela(idDaTela) {
     todasAsTelas.forEach(tela => tela.classList.remove('ativa'));
-    
     const telaAlvo = document.getElementById(idDaTela);
-    if (telaAlvo) {
-        telaAlvo.classList.add('ativa');
-    } else {
-        console.warn("Aviso: A tela '" + idDaTela + "' não foi encontrada no HTML.");
-    }
-    
-    if (msgStatus) {
-        msgStatus.textContent = "";
-        msgStatus.className = "mensagem";
-    }
+    if (telaAlvo) telaAlvo.classList.add('ativa');
+    if (msgStatus) { msgStatus.textContent = ""; msgStatus.className = "mensagem"; }
     window.scrollTo(0, 0);
 }
 
 function mostrarMensagem(texto, tipo) {
-    if (msgStatus) {
-        msgStatus.textContent = texto;
-        msgStatus.className = `mensagem ${tipo}`;
-    }
+    if (msgStatus) { msgStatus.textContent = texto; msgStatus.className = `mensagem ${tipo}`; }
 }
 
 // Navegação Básica
@@ -350,7 +346,7 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
         });
     });
 
-    // Evento Acessar (Com verificação de plano)
+    // Evento Acessar (Lógica de Gatekeeping)
     document.querySelectorAll('.btn-acessar-subsite').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const botao = e.target.closest('.btn-acessar-subsite');
@@ -362,10 +358,14 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
                     const dadosSubsite = docSnap.data();
                     const userDoc = await getDoc(doc(db, "usuarios", auth.currentUser.uid));
                     const planoUsuario = userDoc.data().planoPreferido;
+                    
+                    // Puxa as regras do plano atual
+                    const regras = recursosPlanos[planoUsuario] || recursosPlanos.start;
 
                     document.getElementById('titulo-subsite-visualizacao').textContent = `Visualizando: ${dadosSubsite.titulo}`;
                     document.getElementById('nome-do-subsite').textContent = dadosSubsite.titulo;
 
+                    // --- 1. VALIDANDO CONTRATOS ---
                     const btnContrato = document.getElementById('btn-gerador-contrato');
                     if (planoUsuario === 'elite_premium') {
                         btnContrato.disabled = false;
@@ -378,6 +378,32 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
                         btnContrato.style.background = "#333";
                         btnContrato.style.cursor = "not-allowed";
                     }
+
+                    // --- 2. VALIDANDO REUNIÕES ---
+                    const btnReunioes = document.getElementById('btn-reunioes');
+                    const txtReunioes = document.getElementById('txt-reunioes');
+                    if (regras.reunioes) {
+                        btnReunioes.disabled = false;
+                        btnReunioes.textContent = "Agendar Reunião";
+                        btnReunioes.style.background = "var(--gradiente-neo)";
+                        btnReunioes.style.cursor = "pointer";
+                        txtReunioes.textContent = "Limite: " + regras.reunioes;
+                    } else {
+                        btnReunioes.disabled = true;
+                        btnReunioes.innerHTML = "🔒 Bloqueado (Pro ou superior)";
+                        btnReunioes.style.background = "#333";
+                        btnReunioes.style.cursor = "not-allowed";
+                    }
+
+                    // --- 3. VALIDANDO HISTÓRICO ---
+                    const btnPontos = document.getElementById('btn-pontos');
+                    const txtPontos = document.getElementById('txt-pontos');
+                    btnPontos.disabled = false;
+                    btnPontos.textContent = "Ver Histórico";
+                    btnPontos.style.background = "var(--gradiente-neo)";
+                    btnPontos.style.cursor = "pointer";
+                    txtPontos.textContent = "Histórico de: " + regras.historico;
+
                     mostrarTela('tela-subsite');
                 }
             } catch (error) {
