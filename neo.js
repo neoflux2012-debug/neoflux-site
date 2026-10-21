@@ -45,12 +45,32 @@ const limitesPlanos = {
     elite_premium: 9999 
 };
 
-// O CÉREBRO DO SISTEMA (Baseado na sua imagem)
+// O CÉREBRO DO SISTEMA (Baseado no seu documento)
 const recursosPlanos = {
-    start: { reunioes: false, historico: "1 mês", assistente: false },
-    pro: { reunioes: "Até 10", historico: "2 meses", assistente: true },
-    elite: { reunioes: "Ilimitadas", historico: "Mais de 2 meses", assistente: true },
-    elite_premium: { reunioes: "Ilimitadas", historico: "Ilimitado", assistente: true }
+    start: { 
+        contratos: false, 
+        reunioes: false, 
+        historico: "Até 1 mês", 
+        armazenamento: "Local (LocalStorage)" 
+    },
+    pro: { 
+        contratos: false, 
+        reunioes: "Até 10 reuniões", 
+        historico: "Até 2 meses", 
+        armazenamento: "Nuvem (Firebase)" 
+    },
+    elite: { 
+        contratos: false, 
+        reunioes: "Ilimitadas", 
+        historico: "Mais de 2 meses", 
+        armazenamento: "Nuvem (Completo)" 
+    },
+    elite_premium: { 
+        contratos: true,
+        reunioes: "Ilimitadas", 
+        historico: "Ilimitado", 
+        armazenamento: "Nuvem (Completo)" 
+    }
 };
 
 // ==========================================
@@ -362,19 +382,18 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
                     // Puxa as regras do plano atual
                     const regras = recursosPlanos[planoUsuario] || recursosPlanos.start;
 
-                    document.getElementById('titulo-subsite-visualizacao').textContent = `Visualizando: ${dadosSubsite.titulo}`;
                     document.getElementById('nome-do-subsite').textContent = dadosSubsite.titulo;
 
                     // --- 1. VALIDANDO CONTRATOS ---
                     const btnContrato = document.getElementById('btn-gerador-contrato');
-                    if (planoUsuario === 'elite_premium') {
+                    if (regras.contratos) {
                         btnContrato.disabled = false;
-                        btnContrato.textContent = "Gerar Contrato Agora";
+                        btnContrato.textContent = "Gerar Contrato";
                         btnContrato.style.background = "var(--gradiente-neo)";
                         btnContrato.style.cursor = "pointer";
                     } else {
                         btnContrato.disabled = true;
-                        btnContrato.innerHTML = "🔒 Bloqueado (Elite Premium)";
+                        btnContrato.innerHTML = "🔒 Elite Premium";
                         btnContrato.style.background = "#333";
                         btnContrato.style.cursor = "not-allowed";
                     }
@@ -384,25 +403,23 @@ function adicionarEventosBotoesSubsite(uidDono, limite) {
                     const txtReunioes = document.getElementById('txt-reunioes');
                     if (regras.reunioes) {
                         btnReunioes.disabled = false;
-                        btnReunioes.textContent = "Agendar Reunião";
+                        btnReunioes.textContent = "Acessar";
                         btnReunioes.style.background = "var(--gradiente-neo)";
-                        btnReunioes.style.cursor = "pointer";
-                        txtReunioes.textContent = "Limite: " + regras.reunioes;
+                        txtReunioes.textContent = regras.reunioes;
                     } else {
                         btnReunioes.disabled = true;
-                        btnReunioes.innerHTML = "🔒 Bloqueado (Pro ou superior)";
+                        btnReunioes.innerHTML = "🔒 Pro ou superior";
                         btnReunioes.style.background = "#333";
-                        btnReunioes.style.cursor = "not-allowed";
+                        txtReunioes.textContent = "Agendamento não incluso.";
                     }
 
                     // --- 3. VALIDANDO HISTÓRICO ---
-                    const btnPontos = document.getElementById('btn-pontos');
                     const txtPontos = document.getElementById('txt-pontos');
-                    btnPontos.disabled = false;
-                    btnPontos.textContent = "Ver Histórico";
-                    btnPontos.style.background = "var(--gradiente-neo)";
-                    btnPontos.style.cursor = "pointer";
-                    txtPontos.textContent = "Histórico de: " + regras.historico;
+                    txtPontos.textContent = "Período: " + regras.historico;
+
+                    // --- 4. VALIDANDO ARMAZENAMENTO ---
+                    const txtArmazenamento = document.getElementById('txt-armazenamento');
+                    txtArmazenamento.textContent = regras.armazenamento;
 
                     mostrarTela('tela-subsite');
                 }
