@@ -1,4 +1,53 @@
-            <h2 style="margin-top: 40px;">Solicitações de Upgrade</h2>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin | Neo Flux</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <main>
+        <!-- TELA DE LOGIN DO ADMIN -->
+        <section id="tela-admin-login" class="tela ativa">
+            <h2 style="text-align: center;">Acesso Restrito</h2>
+            <form id="form-admin-login">
+                <label for="admin-email">E-mail Admin:</label>
+                <input type="email" id="admin-email" required>
+
+                <label for="admin-senha">Senha:</label>
+                <input type="password" id="admin-senha" required>
+
+                <button type="submit" class="botao-principal">Entrar no Painel</button>
+            </form>
+        </section>
+
+        <!-- TELA DO PAINEL -->
+        <section id="tela-admin-painel" class="tela">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 style="color: var(--cor-azul); margin: 0;">Painel do Administrador</h1>
+                <button id="btn-admin-sair" class="botao-principal" style="width: auto; background: #333;">Sair</button>
+            </div>
+
+            <h2 style="text-align: left;">Gerenciar Clientes</h2>
+            <div style="overflow-x: auto;">
+                <table class="tabela-clientes">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Plano</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-clientes"></tbody>
+                </table>
+            </div>
+
+            <h2 style="text-align: left; margin-top: 40px;">Solicitações de Upgrade</h2>
             <div style="overflow-x: auto;">
                 <table class="tabela-clientes">
                     <thead>
@@ -9,8 +58,13 @@
                             <th>Ação</th>
                         </tr>
                     </thead>
-                    <tbody id="lista-upgrades">
-                        <!-- Preenchido via JS -->
-                    </tbody>
+                    <tbody id="lista-upgrades"></tbody>
                 </table>
             </div>
+        </section>
+    </main>
+
+    <script>lucide.createIcons();</script>
+    <script type="module" src="./admin.js"></script>
+</body>
+</html>
