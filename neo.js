@@ -30,6 +30,9 @@ let subsiteAtualId = "";
 let planoAtual = "";
 let festasGlobais = [];
 
+// CONTROLE DE FLUXO: Evita que o observador mude de tela durante cadastro ou login
+let processoEmAndamento = false; 
+
 // ==========================================
 // 3. REGRAS E TEXTOS
 // ==========================================
@@ -59,11 +62,10 @@ function mostrarTela(id) {
     const tela = document.getElementById(id);
     if (tela) tela.classList.add('ativa');
     
-    // FORÇA O RECARREGAMENTO DA IMAGEM DO QR CODE QUANDO A TELA DE PAGAMENTO É ABERTA
+    // Força o recarregamento da imagem do QR Code
     if (id === 'tela-pagamento') {
         const imgQr = document.getElementById('img-qrcode');
         if (imgQr) {
-            // Adiciona um timestamp para evitar cache do navegador
             imgQr.src = `./qrcode.png?t=${new Date().getTime()}`;
         }
     }
@@ -111,9 +113,12 @@ document.getElementById('form-termos')?.addEventListener('submit', (e) => {
     mostrarTela('tela-criar-conta'); 
 });
 
+// --- CADASTRO ---
 document.getElementById('form-cadastro-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
+    processoEmAndamento = true; 
+    
     try {
         const email = document.getElementById('email-cadastro').value;
         const senha = document.getElementById('senha-cadastro').value;
@@ -130,24 +135,39 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
             statusPagamento: "pendente"
         });
         
-        // Preenche o nome na tela de pagamento
         document.getElementById('resumo-nome-pagamento').textContent = nome;
-        
         mostrarTela('tela-pagamento');
+        
     } catch (error) { 
         alert("Erro: " + error.message); 
+        processoEmAndamento = false; 
     }
     finally { carregar(false); }
 });
 
+// --- LOGIN (CORRIGIDO) ---
 document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
+    
+    // Ativa a trava para o observador NÃO mudar a tela enquanto processa
+    processoEmAndamento = true; 
+    
     try {
-        await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
-        // O onAuthStateChanged vai cuidar de mudar a tela
+        await signInWithEmailAndPassword(
+            auth, 
+            document.getElementById('email-login').value, 
+            document.getElementById('senha-login').value
+        );
+        
+        // Se o login der certo, o observador onAuthStateChanged vai cuidar de mudar a tela.
+        // Mas só vamos liberar a trava depois que o observador agir.
+        // Para garantir, adicionamos um pequeno delay.
+        setTimeout(() => { processoEmAndamento = false; }, 1000);
+        
     } catch (error) { 
         alert("E-mail ou senha incorretos."); 
+        processoEmAndamento = false; // Libera a trava se der erro
     }
     finally { carregar(false); }
 });
@@ -791,11 +811,16 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 });
 
 // ==========================================
-// 10. OBSERVADOR DE ESTADO (CORRIGIDO)
+// 10. OBSERVADOR DE ESTADO (CORRIGIDO PARA LOGIN E CADASTRO)
 // ==========================================
 onAuthStateChanged(auth, (user) => {
+    // Se um processo de cadastro ou login estiver rodando, ignora o observador
+    if (processoEmAndamento) {
+        return;
+    }
+
     if (user) {
-        // Se o usuário está logado mas o e-mail não foi verificado
+        // Se o usuário está logado mas não verificou o e-mail
         if (!user.emailVerified) {
             mostrarTela('tela-verificacao');
         } else {
@@ -805,7 +830,6 @@ onAuthStateChanged(auth, (user) => {
         }
     } else {
         // Se não há usuário logado, mostra a tela de boas-vindas
-        // MAS SÓ SE não estivermos em uma tela de cadastro/login
         const telaAtual = document.querySelector('.tela.ativa');
         if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas'].includes(telaAtual.id)) {
             mostrarTela('tela-boas-vindas');
