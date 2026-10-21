@@ -812,7 +812,7 @@ window.apagarContrato = async function(id) {
 // ==========================================
 async function carregarPonto() {
     const user = auth.currentUser;
-    if(!user) return;
+    if(!user || !subsiteAtualId) return;
     
     const hoje = new Date().toLocaleDateString('pt-BR');
     const docRef = doc(db, "pontos", `${subsiteAtualId}_${hoje}`);
@@ -828,21 +828,39 @@ async function carregarPonto() {
 }
 
 document.getElementById('btn-bater-entrada')?.addEventListener('click', async () => {
+    if (!subsiteAtualId) {
+        alert("Erro: O subsite não foi carregado corretamente. Volte e acesse o subsite novamente.");
+        return;
+    }
+
     const horaAtual = new Date().toLocaleTimeString('pt-BR');
     const hoje = new Date().toLocaleDateString('pt-BR');
     
-    await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { entrada: horaAtual }, { merge: true });
-    alert("Entrada registrada às " + horaAtual);
-    carregarPonto();
+    try {
+        await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { entrada: horaAtual }, { merge: true });
+        alert("Entrada registrada às " + horaAtual);
+        carregarPonto();
+    } catch (error) {
+        alert("Erro ao registrar ponto: " + error.message);
+    }
 });
 
 document.getElementById('btn-bater-saida')?.addEventListener('click', async () => {
+    if (!subsiteAtualId) {
+        alert("Erro: O subsite não foi carregado corretamente. Volte e acesse o subsite novamente.");
+        return;
+    }
+
     const horaAtual = new Date().toLocaleTimeString('pt-BR');
     const hoje = new Date().toLocaleDateString('pt-BR');
     
-    await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { saida: horaAtual }, { merge: true });
-    alert("Saída registrada às " + horaAtual);
-    carregarPonto();
+    try {
+        await setDoc(doc(db, "pontos", `${subsiteAtualId}_${hoje}`), { saida: horaAtual }, { merge: true });
+        alert("Saída registrada às " + horaAtual);
+        carregarPonto();
+    } catch (error) {
+        alert("Erro ao registrar ponto: " + error.message);
+    }
 });
 
 // ==========================================
