@@ -36,9 +36,9 @@ function mostrarMensagem(texto, tipo) {
 }
 
 // ==========================================
-// 3. LOGIN DO ADMIN
+// 3. LOGIN DO ADMIN (Com proteção)
 // ==========================================
-document.getElementById('form-admin-login').addEventListener('submit', async (e) => {
+document.getElementById('form-admin-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('admin-email').value;
     const senha = document.getElementById('admin-senha').value;
@@ -49,7 +49,7 @@ document.getElementById('form-admin-login').addEventListener('submit', async (e)
     }
 });
 
-document.getElementById('btn-admin-sair').addEventListener('click', async () => {
+document.getElementById('btn-admin-sair')?.addEventListener('click', async () => {
     await signOut(auth);
 });
 
@@ -85,7 +85,6 @@ async function carregarClientes() {
             const statusClass = cliente.statusPagamento === "pendente" ? "status-pendente" : "status-ativo";
             let statusTexto = cliente.statusPagamento === "pendente" ? "Pendente" : (cliente.statusPagamento === "ativo" ? "Ativo" : cliente.statusPagamento);
 
-            // Botão de Liberar normal (se não for upgrade pendente)
             let botaoAcao = "";
             if (cliente.statusPagamento === "pendente") {
                 botaoAcao = `<button class="btn-liberar" data-id="${idCliente}">Liberar Acesso</button>`;
@@ -127,7 +126,7 @@ async function carregarClientes() {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.getAttribute('data-id');
                 await updateDoc(doc(db, "usuarios", id), { statusPagamento: "ativo" });
-                carregarClientes(); // Recarrega
+                carregarClientes(); 
             });
         });
 
@@ -138,13 +137,12 @@ async function carregarClientes() {
                 const confirmar = confirm("Confirmar que o cliente pagou a diferença e deseja mudar de plano?");
                 
                 if (confirmar) {
-                    // Muda o status e atualiza o plano para Elite Premium
                     await updateDoc(doc(db, "usuarios", id), { 
                         statusPagamento: "ativo",
                         planoPreferido: "elite_premium" 
                     });
                     alert("Upgrade aprovado com sucesso!");
-                    carregarClientes(); // Recarrega a lista
+                    carregarClientes();
                 }
             });
         });
