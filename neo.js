@@ -87,6 +87,24 @@ document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { 
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
 document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
 
+// ==========================================
+// BOTÃO COMPARAR ASSINATURAS (AQUI ESTÁ A NOVIDADE)
+// ==========================================
+document.getElementById('btn-comparar-planos')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-comparar');
+    if (modal) modal.style.display = 'flex';
+});
+
+document.getElementById('btn-fechar-modal-comparar')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-comparar');
+    if (modal) modal.style.display = 'none';
+});
+
+document.getElementById('btn-fechar-modal-comparar-footer')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-comparar');
+    if (modal) modal.style.display = 'none';
+});
+
 document.getElementById('btn-logout')?.addEventListener('click', async () => {
     await signOut(auth);
     mostrarTela('tela-boas-vindas');
@@ -152,8 +170,6 @@ document.getElementById('form-login')?.addEventListener('submit', async (e) => {
             document.getElementById('email-login').value, 
             document.getElementById('senha-login').value
         );
-        // O onAuthStateChanged vai detectar e mudar a tela. 
-        // Mas para garantir que o loading suma, fechamos no finally.
     } catch (error) { 
         alert("E-mail ou senha incorretos."); 
     } finally { 
@@ -811,9 +827,8 @@ onAuthStateChanged(auth, (user) => {
             mostrarTela('tela-cliente');
         }
     } else {
-        // Só volta para o início se não estiver em uma tela de formulário
         const telaAtual = document.querySelector('.tela.ativa');
-        if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas', 'tela-termos', 'tela-pagamento'].includes(telaAtual.id)) {
+        if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas', 'tela-termos', 'tela-pagamento', 'tela-planos'].includes(telaAtual.id)) {
             mostrarTela('tela-boas-vindas');
         }
     }
