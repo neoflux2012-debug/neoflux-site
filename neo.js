@@ -28,6 +28,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Variável global para guardar qual subsite está aberto no momento
+let subsiteAtualId = "";
+
 // ==========================================
 // 3. REGRAS DE NEGÓCIO E TEXTOS
 // ==========================================
@@ -39,38 +42,14 @@ const termosPlanos = {
 };
 
 const limitesPlanos = {
-    start: 1,
-    pro: 1,
-    elite: 999,
-    elite_premium: 9999 
+    start: 1, pro: 1, elite: 999, elite_premium: 9999 
 };
 
-// O CÉREBRO DO SISTEMA (Baseado no seu documento)
 const recursosPlanos = {
-    start: { 
-        contratos: false, 
-        reunioes: false, 
-        historico: "Até 1 mês", 
-        armazenamento: "Local (LocalStorage)" 
-    },
-    pro: { 
-        contratos: false, 
-        reunioes: "Até 10 reuniões", 
-        historico: "Até 2 meses", 
-        armazenamento: "Nuvem (Firebase)" 
-    },
-    elite: { 
-        contratos: false, 
-        reunioes: "Ilimitadas", 
-        historico: "Mais de 2 meses", 
-        armazenamento: "Nuvem (Completo)" 
-    },
-    elite_premium: { 
-        contratos: true,
-        reunioes: "Ilimitadas", 
-        historico: "Ilimitado", 
-        armazenamento: "Nuvem (Completo)" 
-    }
+    start: { contratos: false, relatorios: false },
+    pro: { contratos: false, relatorios: true },
+    elite: { contratos: false, relatorios: true },
+    elite_premium: { contratos: true, relatorios: true }
 };
 
 // ==========================================
@@ -88,10 +67,6 @@ function mostrarTela(idDaTela) {
     window.scrollTo(0, 0);
 }
 
-function mostrarMensagem(texto, tipo) {
-    if (msgStatus) { msgStatus.textContent = texto; msgStatus.className = `mensagem ${tipo}`; }
-}
-
 // Navegação Básica
 document.getElementById('btn-comecar')?.addEventListener('click', () => mostrarTela('tela-planos'));
 document.getElementById('voltar-inicio')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
@@ -103,7 +78,7 @@ document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mo
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
 
 // ==========================================
-// 5. SELEÇÃO DE PLANO E TERMOS
+// 5. SELEÇÃO DE PLANO, TERMOS E CADASTRO
 // ==========================================
 document.querySelectorAll('.btn-selecionar-plano').forEach(botao => {
     botao.addEventListener('click', (e) => {
@@ -125,9 +100,6 @@ document.getElementById('form-termos')?.addEventListener('submit', (e) => {
     mostrarTela('tela-criar-conta');
 });
 
-// ==========================================
-// 6. CRIAÇÃO DE CONTA
-// ==========================================
 document.getElementById('form-cadastro-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email-cadastro').value;
@@ -138,78 +110,67 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         btn.textContent = "Criando...";
         btn.disabled = true;
         const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-        const user = userCredential.user;
-        await updateProfile(user, { displayName: dadosCliente.nome });
-        await sendEmailVerification(user);
-        await setDoc(doc(db, "usuarios", user.uid), {
-            nome: dadosCliente.nome,
-            documento: dadosCliente.documento,
-            email: email,
-            planoPreferido: dadosCliente.plano,
-            aceitouTermos: dadosCliente.aceitouTermos,
-            statusPagamento: "pendente", 
-            criadoEm: new Date()
+        await updateProfile(userCredential.user, { displayName: dadosCliente.nome });
+        await sendEmailVerification(userCredential.user);
+        await setDoc(doc(db, "usuarios", userCredential.user.uid), {
+            nome: dadosCliente.nome, documento: dadosCliente.documento, email: email,
+            planoPreferido: dadosCliente.plano, aceitouTermos: dadosCliente.aceitouTermos,
+            statusPagamento: "pendente", criadoEm: new Date()
         });
         document.getElementById('resumo-plano-pagamento').textContent = dadosCliente.plano.toUpperCase();
         document.getElementById('resumo-nome-pagamento').textContent = dadosCliente.nome;
         mostrarTela('tela-pagamento');
     } catch (error) {
-        if (error.code === 'auth/email-already-in-use') mostrarMensagem("Este e-mail já está cadastrado.", "erro");
-        else if (error.code === 'auth/weak-password') mostrarMensagem("A senha precisa ter no mínimo 6 caracteres.", "erro");
-        else mostrarMensagem("Erro: " + error.message, "erro");
+        alert("Erro ao cadastrar: " + error.message);
     } finally {
         btn.textContent = "Criar minha conta";
         btn.disabled = false;
     }
 });
 
-// ==========================================
-// 7. VERIFICAÇÃO, LOGIN E RECUPERAÇÃO
-// ==========================================
+// Login e Recuperação
 document.getElementById('btn-ja-verifiquei')?.addEventListener('click', async () => {
     if (auth.currentUser) {
         await auth.currentUser.reload(); 
         if (auth.currentUser.emailVerified) {
             carregarDadosCliente(auth.currentUser.uid);
             mostrarTela('tela-cliente');
-        } else { mostrarMensagem("E-mail ainda não verificado.", "erro"); }
+        } else { alert("E-mail ainda não verificado."); }
     }
 });
 
 document.getElementById('btn-reenviar-email')?.addEventListener('click', async (e) => {
     e.preventDefault();
     if (auth.currentUser) {
-        try { await sendEmailVerification(auth.currentUser); mostrarMensagem("E-mail reenviado!", "sucesso"); } 
-        catch (error) { mostrarMensagem("Aguarde para reenviar.", "erro"); }
+        try { await sendEmailVerification(auth.currentUser); alert("E-mail reenviado!"); } 
+        catch (error) { alert("Aguarde para reenviar."); }
     }
 });
 
 document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('email-login').value;
-    const senha = document.getElementById('senha-login').value;
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+        const userCredential = await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
         if (!userCredential.user.emailVerified) {
             mostrarTela('tela-verificacao');
-            mostrarMensagem("Verifique seu e-mail antes de entrar.", "info");
+            alert("Verifique seu e-mail antes de entrar.");
         } else {
             carregarDadosCliente(userCredential.user.uid);
             mostrarTela('tela-cliente');
         }
-    } catch (error) { mostrarMensagem("E-mail ou senha incorretos.", "erro"); }
+    } catch (error) { alert("E-mail ou senha incorretos."); }
 });
 
 document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
         await sendPasswordResetEmail(auth, document.getElementById('email-recuperar').value);
-        mostrarMensagem("Link de recuperação enviado!", "sucesso");
-    } catch (error) { mostrarMensagem("Erro ao enviar.", "erro"); }
+        alert("Link de recuperação enviado!");
+    } catch (error) { alert("Erro ao enviar."); }
 });
 
 // ==========================================
-// 8. ÁREA DO CLIENTE E SUBSITES
+// 6. ÁREA DO CLIENTE E SUBSITES
 // ==========================================
 async function carregarDadosCliente(uid) {
     try {
@@ -221,41 +182,24 @@ async function carregarDadosCliente(uid) {
             document.getElementById('cliente-plano').textContent = dados.planoPreferido.toUpperCase();
             
             const statusEl = document.getElementById('cliente-status');
-            if (dados.statusPagamento === "pendente") {
-                statusEl.textContent = "Pendente (Aguardando Pagamento)";
-                statusEl.style.color = "#ff9800";
-            } else if (dados.statusPagamento === "upgrade_pendente") {
-                statusEl.textContent = "Upgrade em Análise";
-                statusEl.style.color = "#00d2ff";
-            } else {
-                statusEl.textContent = "Ativo (Pagamento Confirmado)";
-                statusEl.style.color = "#00c853";
-            }
+            if (dados.statusPagamento === "pendente") { statusEl.textContent = "Pendente (Aguardando Pagamento)"; statusEl.style.color = "#ff9800"; }
+            else if (dados.statusPagamento === "upgrade_pendente") { statusEl.textContent = "Upgrade em Análise"; statusEl.style.color = "#00d2ff"; }
+            else { statusEl.textContent = "Ativo (Pagamento Confirmado)"; statusEl.style.color = "#00c853"; }
 
             const limite = limitesPlanos[dados.planoPreferido] || 1;
-            const labelLimite = document.getElementById('limite-subsites');
-            if (labelLimite) labelLimite.textContent = limite === 9999 ? "ilimitados" : limite;
+            document.getElementById('limite-subsites').textContent = limite === 9999 ? "ilimitados" : limite;
 
             carregarSubsites(uid, limite);
         }
-    } catch (error) { console.error("Erro ao buscar dados:", error); }
+    } catch (error) { console.error(error); }
 }
 
-// Evento para pedir Upgrade de Plano
 document.getElementById('btn-pedir-upgrade')?.addEventListener('click', async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const confirmar = confirm("Você deseja solicitar um upgrade de plano?\n\nNossa equipe verificará o pagamento e liberará o novo plano no seu painel.");
-    if (!confirmar) return;
-
-    try {
-        await updateDoc(doc(db, "usuarios", user.uid), { statusPagamento: "upgrade_pendente" });
-        alert("Solicitação enviada! Aguarde a aprovação da nossa equipe.");
-        carregarDadosCliente(user.uid);
-    } catch (error) {
-        console.error(error);
-        alert("Erro ao solicitar upgrade.");
+    if (!auth.currentUser) return;
+    if (confirm("Você deseja solicitar um upgrade de plano?\n\nNossa equipe verificará o pagamento.")) {
+        await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { statusPagamento: "upgrade_pendente" });
+        alert("Solicitação enviada!");
+        carregarDadosCliente(auth.currentUser.uid);
     }
 });
 
@@ -266,21 +210,19 @@ async function carregarSubsites(uidDono, limite) {
     if (!lista) return;
     
     try {
-        const q = query(collection(db, "subsites"), where("idDono", "==", uidDono));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocs(query(collection(db, "subsites"), where("idDono", "==", uidDono)));
         lista.innerHTML = ""; 
 
         if (querySnapshot.size >= limite) {
-            if(btnCriar) { btnCriar.disabled = true; btnCriar.textContent = "Limite Atingido"; btnCriar.style.background = "#555"; }
-            if(inputTitulo) inputTitulo.disabled = true;
+            btnCriar.disabled = true; btnCriar.textContent = "Limite Atingido"; btnCriar.style.background = "#555";
+            inputTitulo.disabled = true;
         } else {
-            if(btnCriar) { btnCriar.disabled = false; btnCriar.textContent = "Criar Subsite"; btnCriar.style.background = ""; }
-            if(inputTitulo) inputTitulo.disabled = false;
+            btnCriar.disabled = false; btnCriar.textContent = "Criar Subsite"; btnCriar.style.background = "";
+            inputTitulo.disabled = false;
         }
 
         querySnapshot.forEach((docSnap) => {
             const subsite = docSnap.data();
-            const idSubsite = docSnap.id;
             const li = document.createElement('li');
             li.style.cssText = "border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a;";
 
@@ -290,148 +232,197 @@ async function carregarSubsites(uidDono, limite) {
                     <small style="color: #888;">Criado em: ${subsite.criadoEm.toDate().toLocaleDateString()}</small>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="btn-acessar-subsite" data-id="${idSubsite}" style="background: #00d2ff; color: #000; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Acessar Subsite">
-                        <i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
-                    </button>
-                    <button class="btn-editar-subsite" data-id="${idSubsite}" data-titulo="${subsite.titulo}" style="background: #f39c12; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i data-lucide="edit" style="width: 18px; height: 18px;"></i>
-                    </button>
-                    <button class="btn-apagar-subsite" data-id="${idSubsite}" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
-                    </button>
+                    <button class="btn-acessar-subsite" data-id="${docSnap.id}" style="background: #00d2ff; color: #000; border: none; padding: 8px; border-radius: 6px; cursor: pointer;"><i data-lucide="external-link" style="width: 18px; height: 18px;"></i></button>
+                    <button class="btn-editar-subsite" data-id="${docSnap.id}" data-titulo="${subsite.titulo}" style="background: #f39c12; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer;"><i data-lucide="edit" style="width: 18px; height: 18px;"></i></button>
+                    <button class="btn-apagar-subsite" data-id="${docSnap.id}" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer;"><i data-lucide="trash-2" style="width: 18px; height: 18px;"></i></button>
                 </div>
             `;
             lista.appendChild(li);
         });
 
-        if (querySnapshot.size === 0) { lista.innerHTML = "<li>Você ainda não criou nenhum subsite.</li>"; }
-        adicionarEventosBotoesSubsite(uidDono, limite);
+        if (querySnapshot.size === 0) lista.innerHTML = "<li>Você ainda não criou nenhum subsite.</li>";
+        
+        adicionarEventosSubsite(uidDono, limite);
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    } catch (error) {
-        console.error("Erro ao carregar subsites:", error);
-        lista.innerHTML = "<li>Erro ao carregar subsites.</li>";
-    }
+    } catch (error) { console.error(error); }
 }
 
 document.getElementById('btn-criar-subsite')?.addEventListener('click', async () => {
     const user = auth.currentUser;
-    const inputTitulo = document.getElementById('titulo-subsite');
-    const titulo = inputTitulo ? inputTitulo.value.trim() : "";
+    const input = document.getElementById('titulo-subsite');
+    const titulo = input.value.trim();
     if (!user || titulo === "") return;
 
-    const btn = document.getElementById('btn-criar-subsite');
-    btn.textContent = "Criando...";
-    btn.disabled = true;
-
     try {
-        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-        const limite = limitesPlanos[userDoc.data().planoPreferido] || 1;
         await addDoc(collection(db, "subsites"), { idDono: user.uid, titulo: titulo, criadoEm: new Date() });
-        if (inputTitulo) inputTitulo.value = ""; 
-        carregarSubsites(user.uid, limite); 
-    } catch (error) {
-        alert("Erro ao criar subsite: " + error.message);
-        btn.textContent = "Criar Subsite";
-        btn.disabled = false;
-    }
+        input.value = ""; 
+        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+        carregarSubsites(user.uid, limitesPlanos[userDoc.data().planoPreferido] || 1); 
+    } catch (error) { alert("Erro ao criar."); }
 });
 
-function adicionarEventosBotoesSubsite(uidDono, limite) {
-    document.querySelectorAll('.btn-apagar-subsite').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const botao = e.target.closest('.btn-apagar-subsite');
-            const id = botao.getAttribute('data-id');
-            if (confirm("Tem certeza que deseja apagar este subsite?")) {
-                try {
-                    await deleteDoc(doc(db, "subsites", id));
-                    carregarSubsites(uidDono, limite);
-                } catch (error) { alert("Erro ao apagar: " + error.message); }
+function adicionarEventosSubsite(uidDono, limite) {
+    document.querySelectorAll('.btn-apagar-subsite').forEach(btn => btn.addEventListener('click', async (e) => {
+        if (confirm("Apagar subsite?")) {
+            await deleteDoc(doc(db, "subsites", e.target.closest('button').getAttribute('data-id')));
+            carregarSubsites(uidDono, limite);
+        }
+    }));
+
+    document.querySelectorAll('.btn-editar-subsite').forEach(btn => btn.addEventListener('click', async (e) => {
+        const botao = e.target.closest('button');
+        const novo = prompt("Novo título:", botao.getAttribute('data-titulo'));
+        if (novo && novo.trim() !== "") {
+            await updateDoc(doc(db, "subsites", botao.getAttribute('data-id')), { titulo: novo.trim() });
+            carregarSubsites(uidDono, limite);
+        }
+    }));
+
+    // Evento Acessar (Gatekeeping)
+    document.querySelectorAll('.btn-acessar-subsite').forEach(btn => btn.addEventListener('click', async (e) => {
+        const id = e.target.closest('button').getAttribute('data-id');
+        subsiteAtualId = id; // Salva o ID global
+
+        const docSnap = await getDoc(doc(db, "subsites", id));
+        if (docSnap.exists()) {
+            document.getElementById('nome-do-subsite').textContent = docSnap.data().titulo;
+            
+            const userDoc = await getDoc(doc(db, "usuarios", auth.currentUser.uid));
+            const regras = recursosPlanos[userDoc.data().planoPreferido] || recursosPlanos.start;
+
+            // Contratos (Apenas Premium)
+            const btnContrato = document.getElementById('btn-gerador-contrato');
+            if (regras.contratos) {
+                btnContrato.disabled = false; btnContrato.textContent = "Acessar"; btnContrato.style.background = "var(--gradiente-neo)";
+            } else {
+                btnContrato.disabled = true; btnContrato.innerHTML = "🔒 Elite Premium"; btnContrato.style.background = "#333";
             }
-        });
-    });
 
-    document.querySelectorAll('.btn-editar-subsite').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const botao = e.target.closest('.btn-editar-subsite');
-            const id = botao.getAttribute('data-id');
-            const tituloAtual = botao.getAttribute('data-titulo');
-            const novoTitulo = prompt("Edite o título do subsite:", tituloAtual);
-            if (novoTitulo && novoTitulo.trim() !== "" && novoTitulo !== tituloAtual) {
-                try {
-                    await updateDoc(doc(db, "subsites", id), { titulo: novoTitulo.trim() });
-                    carregarSubsites(uidDono, limite);
-                } catch (error) { alert("Erro ao editar: " + error.message); }
+            // Relatórios (Pro pra cima)
+            const btnRelatorios = document.getElementById('btn-relatorios');
+            const txtRelatorio = document.getElementById('txt-relatorio');
+            if (regras.relatorios) {
+                btnRelatorios.disabled = false; btnRelatorios.textContent = "Ver Relatório"; btnRelatorios.style.background = "var(--gradiente-neo)";
+                txtRelatorio.textContent = "Vendas mensais.";
+            } else {
+                btnRelatorios.disabled = true; btnRelatorios.innerHTML = "🔒 Pro ou superior"; btnRelatorios.style.background = "#333";
+                txtRelatorio.textContent = "Indisponível no Start.";
             }
-        });
-    });
 
-    // Evento Acessar (Lógica de Gatekeeping)
-    document.querySelectorAll('.btn-acessar-subsite').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const botao = e.target.closest('.btn-acessar-subsite');
-            const id = botao.getAttribute('data-id');
-            try {
-                const docRef = doc(db, "subsites", id);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const dadosSubsite = docSnap.data();
-                    const userDoc = await getDoc(doc(db, "usuarios", auth.currentUser.uid));
-                    const planoUsuario = userDoc.data().planoPreferido;
-                    
-                    // Puxa as regras do plano atual
-                    const regras = recursosPlanos[planoUsuario] || recursosPlanos.start;
-
-                    document.getElementById('nome-do-subsite').textContent = dadosSubsite.titulo;
-
-                    // --- 1. VALIDANDO CONTRATOS ---
-                    const btnContrato = document.getElementById('btn-gerador-contrato');
-                    if (regras.contratos) {
-                        btnContrato.disabled = false;
-                        btnContrato.textContent = "Gerar Contrato";
-                        btnContrato.style.background = "var(--gradiente-neo)";
-                        btnContrato.style.cursor = "pointer";
-                    } else {
-                        btnContrato.disabled = true;
-                        btnContrato.innerHTML = "🔒 Elite Premium";
-                        btnContrato.style.background = "#333";
-                        btnContrato.style.cursor = "not-allowed";
-                    }
-
-                    // --- 2. VALIDANDO REUNIÕES ---
-                    const btnReunioes = document.getElementById('btn-reunioes');
-                    const txtReunioes = document.getElementById('txt-reunioes');
-                    if (regras.reunioes) {
-                        btnReunioes.disabled = false;
-                        btnReunioes.textContent = "Acessar";
-                        btnReunioes.style.background = "var(--gradiente-neo)";
-                        txtReunioes.textContent = regras.reunioes;
-                    } else {
-                        btnReunioes.disabled = true;
-                        btnReunioes.innerHTML = "🔒 Pro ou superior";
-                        btnReunioes.style.background = "#333";
-                        txtReunioes.textContent = "Agendamento não incluso.";
-                    }
-
-                    // --- 3. VALIDANDO HISTÓRICO ---
-                    const txtPontos = document.getElementById('txt-pontos');
-                    txtPontos.textContent = "Período: " + regras.historico;
-
-                    // --- 4. VALIDANDO ARMAZENAMENTO ---
-                    const txtArmazenamento = document.getElementById('txt-armazenamento');
-                    txtArmazenamento.textContent = regras.armazenamento;
-
-                    mostrarTela('tela-subsite');
-                }
-            } catch (error) {
-                console.error("Erro ao acessar subsite:", error);
-            }
-        });
-    });
+            carregarFestas(id); // Busca os cards de festas
+            mostrarTela('tela-subsite');
+        }
+    }));
 }
 
 // ==========================================
-// 9. OBSERVADOR DE ESTADO
+// 7. LÓGICA DE FESTAS E CATÁLOGO (MODAIS)
+// ==========================================
+async function carregarFestas(idSubsite) {
+    const container = document.getElementById('lista-festas-criadas');
+    container.innerHTML = "<p style='color: #888;'>Buscando festas...</p>";
+    
+    try {
+        const q = query(collection(db, "festas"), where("idSubsite", "==", idSubsite));
+        const snap = await getDocs(q);
+        container.innerHTML = "";
+
+        if (snap.empty) {
+            container.innerHTML = "<p style='color: #888;'>Nenhuma festa agendada ainda.</p>";
+            return;
+        }
+
+        snap.forEach(doc => {
+            const festa = doc.data();
+            const card = document.createElement('div');
+            card.style.cssText = "background: #121212; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: left;";
+            card.innerHTML = `
+                <h4 style="color: var(--cor-azul); margin: 0 0 10px 0;">${festa.nome}</h4>
+                <p style="font-size: 0.8rem; margin: 3px 0; color: #ccc;"><b>Data:</b> ${festa.data.split('-').reverse().join('/')}</p>
+                <p style="font-size: 0.8rem; margin: 3px 0; color: #ccc;"><b>Tema:</b> ${festa.tema}</p>
+                <p style="font-size: 0.8rem; margin: 3px 0; color: #ccc;"><b>Local:</b> ${festa.local}</p>
+                <p style="font-size: 0.8rem; margin: 3px 0; color: #ccc;"><b>Tel:</b> ${festa.telefone}</p>
+            `;
+            container.appendChild(card);
+        });
+    } catch (error) { console.error(error); }
+}
+
+document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
+    document.getElementById('modal-agendar-festa').style.display = 'flex';
+});
+document.getElementById('btn-fechar-modal-festa')?.addEventListener('click', () => {
+    document.getElementById('modal-agendar-festa').style.display = 'none';
+});
+
+document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.textContent = "Agendando..."; btn.disabled = true;
+
+    try {
+        await addDoc(collection(db, "festas"), {
+            idSubsite: subsiteAtualId,
+            nome: document.getElementById('festa-nome').value,
+            cpf: document.getElementById('festa-cpf').value,
+            telefone: document.getElementById('festa-telefone').value,
+            data: document.getElementById('festa-data').value,
+            tema: document.getElementById('festa-tema').value,
+            local: document.getElementById('festa-local').value,
+            obs: document.getElementById('festa-obs').value,
+            criadoEm: new Date()
+        });
+        document.getElementById('form-agendar-festa').reset();
+        document.getElementById('modal-agendar-festa').style.display = 'none';
+        carregarFestas(subsiteAtualId);
+    } catch (error) { alert("Erro ao agendar."); }
+    finally { btn.textContent = "Agendar"; btn.disabled = false; }
+});
+
+document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => {
+    document.getElementById('modal-catalogo').style.display = 'flex';
+    carregarCatalogo(subsiteAtualId);
+});
+document.getElementById('btn-fechar-modal-catalogo')?.addEventListener('click', () => {
+    document.getElementById('modal-catalogo').style.display = 'none';
+});
+
+document.getElementById('btn-add-item')?.addEventListener('click', async () => {
+    const nome = document.getElementById('cat-nome').value;
+    const cat = document.getElementById('cat-categoria').value;
+    if (!nome) return alert("Digite o nome do item");
+
+    await addDoc(collection(db, "catalogo"), {
+        idSubsite: subsiteAtualId, nome: nome, categoria: cat, criadoEm: new Date()
+    });
+    
+    document.getElementById('cat-nome').value = "";
+    document.getElementById('cat-categoria').value = "";
+    carregarCatalogo(subsiteAtualId);
+});
+
+async function carregarCatalogo(idSubsite) {
+    const lista = document.getElementById('lista-catalogo');
+    lista.innerHTML = "<li>Carregando...</li>";
+    try {
+        const q = query(collection(db, "catalogo"), where("idSubsite", "==", idSubsite));
+        const snap = await getDocs(q);
+        lista.innerHTML = "";
+        if (snap.empty) { lista.innerHTML = "<li>Nenhum item no catálogo.</li>"; return; }
+        
+        snap.forEach(doc => {
+            const item = doc.data();
+            const li = document.createElement('li');
+            li.style.cssText = "background: #000; padding: 10px; margin-bottom: 5px; border-radius: 6px; display: flex; justify-content: space-between; border: 1px solid #333;";
+            li.innerHTML = `<span><b>${item.nome}</b> <span style="color: #888; font-size: 0.8rem;">(${item.categoria})</span></span>`;
+            lista.appendChild(li);
+        });
+    } catch (error) { console.error(error); }
+}
+
+// ==========================================
+// 8. OBSERVADOR DE ESTADO
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
