@@ -36,7 +36,7 @@
             border-radius: 12px;
             padding: 25px;
             transition: 0.3s;
-            display: none; /* Escondido por padrão, o JS mostra se for Elite */
+            display: none;
         }
         .card-analista:hover {
             border-color: #ffb347 !important;
@@ -283,73 +283,73 @@
 
         <!-- TELA 11: PAINEL ADMIN MASTER -->
         <section id="tela-admin-painel" class="tela" style="max-width: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1 style="color: #00d2ff; margin: 0; display: flex; align-items: center; gap: 10px;">
-                    <i data-lucide="shield-check" style="width: 32px;"></i> Painel Administrativo
+            <div class="admin-header">
+                <h1 class="admin-titulo">
+                    <i data-lucide="shield-check"></i> Painel Administrativo
                 </h1>
-                <button id="btn-admin-logout" class="botao-principal" style="width: auto; background: #333;">Sair do Admin</button>
+                <button id="btn-admin-logout" class="botao-principal botao-admin-sair">Sair do Admin</button>
             </div>
 
             <!-- NEO WAVE MONITOR -->
-            <div style="background: linear-gradient(135deg, rgba(243,156,18,0.15) 0%, rgba(230,126,34,0.10) 100%), #121212; border: 1px solid #f39c12; border-radius: 12px; padding: 25px; margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <h3 style="color: #f39c12; margin: 0; display: flex; align-items: center; gap: 10px;">
-                        <i data-lucide="bot" style="width: 24px;"></i> Neo Wave Monitor
+            <div class="admin-card-monitor">
+                <div class="admin-card-monitor-header">
+                    <h3 class="admin-card-monitor-titulo">
+                        <i data-lucide="bot"></i> Neo Wave Monitor
                     </h3>
-                    <p style="margin: 0; color: #ccc; font-size: 0.85rem;">Seu assistente de cobranças e renovações.</p>
+                    <p class="admin-card-monitor-subtitulo">Seu assistente de cobranças e renovações.</p>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 20px;">
-                    <div style="background: #0a0a0a; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: center;">
-                        <p style="margin: 0; color: #888; font-size: 0.8rem;">Vencem Hoje</p>
-                        <h3 style="margin: 5px 0 0 0; color: #ff9800; font-size: 1.8rem;" id="monitor-vencem-hoje">0</h3>
+                <div class="admin-monitor-grid">
+                    <div class="admin-monitor-stat">
+                        <p class="admin-monitor-stat-label">Vencem Hoje</p>
+                        <h3 class="admin-monitor-stat-valor admin-stat-laranja" id="monitor-vencem-hoje">0</h3>
                     </div>
-                    <div style="background: #0a0a0a; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: center;">
-                        <p style="margin: 0; color: #888; font-size: 0.8rem;">Vencem em 7 dias</p>
-                        <h3 style="margin: 5px 0 0 0; color: #00d2ff; font-size: 1.8rem;" id="monitor-vencem-7">0</h3>
+                    <div class="admin-monitor-stat">
+                        <p class="admin-monitor-stat-label">Vencem em 7 dias</p>
+                        <h3 class="admin-monitor-stat-valor admin-stat-azul" id="monitor-vencem-7">0</h3>
                     </div>
-                    <div style="background: #0a0a0a; border: 1px solid #333; border-radius: 8px; padding: 15px; text-align: center;">
-                        <p style="margin: 0; color: #888; font-size: 0.8rem;">Atrasados</p>
-                        <h3 style="margin: 5px 0 0 0; color: #e74c3c; font-size: 1.8rem;" id="monitor-atrasados">0</h3>
+                    <div class="admin-monitor-stat">
+                        <p class="admin-monitor-stat-label">Atrasados</p>
+                        <h3 class="admin-monitor-stat-valor admin-stat-vermelho" id="monitor-atrasados">0</h3>
                     </div>
                 </div>
-                <button id="btn-monitor-whatsapp" class="botao-principal" style="background: #25D366; margin-top: 20px; width: auto; padding: 10px 20px;">
+                <button id="btn-monitor-whatsapp" class="botao-principal botao-admin-whatsapp">
                     <i data-lucide="message-circle" style="width: 16px; vertical-align: middle;"></i> Copiar Lista de Cobrança (WhatsApp)
                 </button>
             </div>
 
             <!-- NEO WAVE AUTOPILOT -->
-            <div style="background: #0a0a0a; border: 1px dashed #f39c12; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div class="admin-card-autopilot">
+                <div class="admin-autopilot-header">
                     <div>
-                        <h4 style="color: #f39c12; margin: 0; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="zap" style="width: 20px;"></i> Neo Wave Autopilot
+                        <h4 class="admin-autopilot-titulo">
+                            <i data-lucide="zap"></i> Neo Wave Autopilot
                         </h4>
-                        <p style="color: #888; font-size: 0.8rem; margin: 5px 0 0 0;">Deixe o Neo Wave cuidar das cobranças enquanto você está fora.</p>
+                        <p class="admin-autopilot-subtitulo">Deixe o Neo Wave cuidar das cobranças enquanto você está fora.</p>
                     </div>
-                    <button id="btn-toggle-ausente" style="padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; background: #333; color: #ccc; transition: 0.3s;">
+                    <button id="btn-toggle-ausente" class="admin-btn-ausente">
                         <i data-lucide="power" style="width: 16px; vertical-align: middle;"></i> Ativar Modo Ausente
                     </button>
                 </div>
 
-                <div id="painel-despacho" style="display: none; margin-top: 20px; border-top: 1px solid #333; padding-top: 20px;">
-                    <h5 style="color: white; margin: 0 0 15px 0;">⚡ Ações Sugeridas pelo Neo Wave:</h5>
-                    <div id="lista-despacho" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
+                <div id="painel-despacho" class="admin-painel-despacho">
+                    <h5 class="admin-despacho-titulo">⚡ Ações Sugeridas pelo Neo Wave:</h5>
+                    <div id="lista-despacho" class="admin-lista-despacho">
                         <!-- Preenchido via JS -->
                     </div>
                     
-                    <!-- NOVA TABELA DE VENCIMENTOS -->
-                    <h5 style="color: white; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">
-                        <i data-lucide="calendar-clock" style="width: 18px; color: #f39c12;"></i> 
+                    <!-- TABELA DE VENCIMENTOS -->
+                    <h5 class="admin-tabela-titulo">
+                        <i data-lucide="calendar-clock"></i> 
                         Tabela de Vencimentos (Visão Geral)
                     </h5>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left; color: #ccc; font-size: 0.85rem;">
+                    <div class="admin-tabela-wrapper">
+                        <table class="tabela-admin tabela-vencimentos">
                             <thead>
-                                <tr style="border-bottom: 2px solid #333;">
-                                    <th style="padding: 10px; color: #888;">Cliente</th>
-                                    <th style="padding: 10px; color: #888;">Plano</th>
-                                    <th style="padding: 10px; color: #888;">Vencimento</th>
-                                    <th style="padding: 10px; color: #888; text-align: right;">Situação</th>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Plano</th>
+                                    <th>Vencimento</th>
+                                    <th class="texto-direita">Situação</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-vencimentos-corpo">
@@ -361,15 +361,15 @@
             </div>
 
             <!-- TABELA DE CLIENTES -->
-            <div class="caixa-termos">
-                <h3 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="users" style="width: 20px; color: #00d2ff;"></i> Clientes Cadastrados
+            <div class="caixa-termos admin-caixa-clientes">
+                <h3 class="admin-clientes-titulo">
+                    <i data-lucide="users"></i> Clientes Cadastrados
                 </h3>
                 
                 <!-- Filtros -->
-                <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
-                    <input type="text" id="admin-busca-cliente" placeholder="🔍 Buscar por nome ou e-mail..." style="flex: 1; min-width: 200px; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                    <select id="admin-filtro-status" style="padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
+                <div class="admin-filtros">
+                    <input type="text" id="admin-busca-cliente" placeholder="🔍 Buscar por nome ou e-mail..." class="admin-input-busca">
+                    <select id="admin-filtro-status" class="admin-select-filtro">
                         <option value="">Todos os Status</option>
                         <option value="ativo">Ativos</option>
                         <option value="pendente">Pendentes</option>
@@ -379,19 +379,19 @@
                 </div>
 
                 <!-- Tabela -->
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; color: #ccc;">
+                <div class="admin-tabela-wrapper">
+                    <table class="tabela-admin tabela-clientes">
                         <thead>
-                            <tr style="border-bottom: 2px solid #333;">
-                                <th style="padding: 12px; color: #888;">Cliente</th>
-                                <th style="padding: 12px; color: #888;">Plano</th>
-                                <th style="padding: 12px; color: #888;">Vencimento</th>
-                                <th style="padding: 12px; color: #888;">Status</th>
-                                <th style="padding: 12px; color: #888; text-align: center;">Ações</th>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Plano</th>
+                                <th>Vencimento</th>
+                                <th>Status</th>
+                                <th class="texto-centro">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="lista-admin-clientes">
-                            <tr><td colspan="5" style="text-align: center; padding: 20px; color: #888;">Carregando clientes...</td></tr>
+                            <tr><td colspan="5" class="admin-tabela-vazia">Carregando clientes...</td></tr>
                         </tbody>
                     </table>
                 </div>
