@@ -294,21 +294,51 @@ function calcularFrete() {
 document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
 
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); carregar(true);
+    e.preventDefault(); 
+    carregar(true);
+    
     const idEdicao = document.getElementById('festa-id-edicao').value;
-    const selectPecas = document.getElementById('festa-pecas'); const pecasSelecionadas = [];
+    const dataFesta = document.getElementById('festa-data').value;
+    const nomeCliente = document.getElementById('festa-nome').value;
+
+    // ==========================================
+    // DETECTOR DE CONFLITO DE DATAS
+    // ==========================================
+    if (!idEdicao) {
+        const festasNoMesmoDia = festasGlobais.filter(f => f.data === dataFesta);
+        if (festasNoMesmoDia.length > 0) {
+            let nomes = festasNoMesmoDia.map(f => f.nome).join(", ");
+            const continuar = confirm(`⚠️ ATENÇÃO: Já existe(m) festa(s) agendada(s) para o dia ${dataFesta.split('-').reverse().join('/')}.\n\nCliente(s): ${nomes}\n\nDeseja continuar agendando mesmo assim? (Clique em OK se for usar peças diferentes, ou Cancelar se for conflito).`);
+            if (!continuar) { carregar(false); return; }
+        }
+    }
+
+    const selectPecas = document.getElementById('festa-pecas'); 
+    const pecasSelecionadas = [];
     if (selectPecas) { for (let i = 0; i < selectPecas.options.length; i++) { if (selectPecas.options[i].selected) pecasSelecionadas.push(selectPecas.options[i].value); } }
+
     const dadosFesta = {
-        idSubsite: subsiteAtualId, nome: document.getElementById('festa-nome').value, cpf: document.getElementById('festa-cpf').value,
-        telefone: document.getElementById('festa-telefone').value, data: document.getElementById('festa-data').value, tema: document.getElementById('festa-tema').value,
-        local: document.getElementById('festa-local').value, obs: document.getElementById('festa-obs').value, frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
-        total: document.getElementById('festa-total').value, sinal: document.getElementById('festa-sinal').value, pecas: pecasSelecionadas
+        idSubsite: subsiteAtualId, 
+        nome: nomeCliente, 
+        cpf: document.getElementById('festa-cpf').value,
+        telefone: document.getElementById('festa-telefone').value, 
+        data: dataFesta, 
+        tema: document.getElementById('festa-tema').value,
+        local: document.getElementById('festa-local').value, 
+        obs: document.getElementById('festa-obs').value, 
+        frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
+        total: document.getElementById('festa-total').value, 
+        sinal: document.getElementById('festa-sinal').value, 
+        pecas: pecasSelecionadas
     };
+
     try {
         if (idEdicao) { await updateDoc(doc(db, "festas", idEdicao), dadosFesta); alert("Festa atualizada!"); } 
         else { await addDoc(collection(db, "festas"), dadosFesta); alert("Festa agendada!"); }
-        document.getElementById('form-agendar-festa').reset(); document.getElementById('festa-id-edicao').value = "";
-        document.getElementById('titulo-modal-festa').textContent = "Agendar Nova Festa"; document.getElementById('modal-agendar-festa').style.display = 'none';
+        document.getElementById('form-agendar-festa').reset(); 
+        document.getElementById('festa-id-edicao').value = "";
+        document.getElementById('titulo-modal-festa').textContent = "Agendar Nova Festa"; 
+        document.getElementById('modal-agendar-festa').style.display = 'none';
         carregarFestas(subsiteAtualId);
     } catch (error) { alert("Erro ao salvar: " + error.message); } finally { carregar(false); }
 });
@@ -362,11 +392,7 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
         const file = fileInput.files[0];
         base64Imagem = await new Promise((resolve) => {
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                const img = new Image();
-                img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 500; canvas.width = MAX_WIDTH; canvas.height = img.height * (MAX_WIDTH / img.width); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.7)); };
-                img.src = ev.target.result;
-            };
+            reader.onload = (ev) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 500; canvas.width = MAX_WIDTH; canvas.height = img.height * (MAX_WIDTH / img.width); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target.result; };
             reader.readAsDataURL(file);
         });
     }
@@ -426,7 +452,9 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 
         if (msg.includes('orcamento')) resposta = "O **Orçamento Inteligente** está no card roxo! Lá você escolhe o cliente, seleciona um Kit já cadastrado, e eu monto a mensagem perfeita pra você enviar no WhatsApp. 💜";
         else if (msg.includes('historico')) resposta = "No card do **Orçamento Inteligente**, tem o botão **'Ver Histórico (30 dias)'**. Lá você encontra todos os orçamentos que gerou no último mês, pode copiar a mensagem de novo, reenviar ou apagar. 📚";
-        else if (msg.includes('analista') || msg.includes('grafico') || msg.includes('lucro') || msg.includes('estatistica')) resposta = "O **Neo Wave Analista** é exclusivo para planos Elite! É o card laranja. Ele te mostra o faturamento do mês, o pico de vendas em gráfico e quais modelos de kits você mais vendeu. 📊✨";
+        else if (msg.includes('analista') || msg.includes('grafico') || msg.includes('lucro') || msg.includes('estatistica')) resposta = "O **Neo Wave Analista** é exclusivo para planos Elite! É o card laranja. Ele te mostra o faturamento do mês, o pico de vendas em gráfico, quais modelos de kits você mais vendeu e ainda gera recibos! 📊✨";
+        else if (msg.includes('recibo')) resposta = "Dentro do **Neo Wave Analista**, tem o Gerador de Recibos. Você escolhe a festa, se é sinal ou quitação total, e o sistema monta o recibo pronto para imprimir ou salvar em PDF. 🧾";
+        else if (msg.includes('conflito') || msg.includes('data')) resposta = "O sistema agora tem um **Detector de Conflito de Datas**! Se você tentar agendar duas festas para o mesmo dia, ele vai avisar na hora para você não alugar a mesma peça para duas pessoas. 🛡️";
         else if (msg.includes('preco') || msg.includes('valor do kit')) resposta = "Para o Orçamento Inteligente funcionar certinho, sempre coloque o **Preço do Modelo** quando for cadastrar um Kit novo! Assim eu já puxo o valor automaticamente. 💰";
         else if (msg.includes('kit')) resposta = "No card **Kits**, você pode cadastrar novos modelos com nome, foto e preço! Esses kits ficam salvos e depois aparecem no Orçamento Inteligente. 🎁";
         else if (msg.includes('contrato')) resposta = "Para gerar contratos, vá no card **Contratos** (laranja). Você pode subir o PDF do seu modelo, colocar a logo da sua empresa e usar em qualquer festa. O módulo está disponível no plano **Elite Premium**. ✍️";
@@ -582,7 +610,11 @@ window.apagarOrcamentoHistorico = async function(id) { if (confirm("Apagar este 
 // ==========================================
 let chartPicoInstance = null; let chartKitsInstance = null;
 
-document.getElementById('btn-abrir-analista')?.addEventListener('click', async () => { document.getElementById('modal-analista').style.display = 'flex'; await gerarRelatorioAnalista(); });
+document.getElementById('btn-abrir-analista')?.addEventListener('click', async () => { 
+    document.getElementById('modal-analista').style.display = 'flex'; 
+    await gerarRelatorioAnalista(); 
+    await carregarFestasParaRecibo();
+});
 ['btn-fechar-modal-analista', 'btn-fechar-modal-analista-footer'].forEach(id => { document.getElementById(id)?.addEventListener('click', () => { document.getElementById('modal-analista').style.display = 'none'; }); });
 
 async function gerarRelatorioAnalista() {
@@ -629,3 +661,108 @@ async function gerarRelatorioAnalista() {
         });
     } catch (err) { console.error("Erro ao gerar análise:", err); alert("Erro ao carregar os dados do analista."); }
 }
+
+// ==========================================
+// 13. GERADOR DE RECIBO (DENTRO DO ANALISTA)
+// ==========================================
+async function carregarFestasParaRecibo() {
+    const select = document.getElementById('recibo-festa-select');
+    if (!select) return;
+    select.innerHTML = '<option value="">— Selecione uma festa —</option>';
+    
+    try {
+        const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", subsiteAtualId)));
+        const festas = [];
+        snap.forEach(doc => festas.push({ id: doc.id, ...doc.data() }));
+        festas.sort((a, b) => new Date(b.data) - new Date(a.data));
+        
+        festas.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = `${f.nome} - ${f.data.split('-').reverse().join('/')}`;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Erro ao carregar festas para recibo:", err);
+    }
+}
+
+document.getElementById('recibo-festa-select')?.addEventListener('change', atualizarPreviewRecibo);
+document.getElementById('recibo-tipo')?.addEventListener('change', atualizarPreviewRecibo);
+
+async function atualizarPreviewRecibo() {
+    const idFesta = document.getElementById('recibo-festa-select').value;
+    const tipo = document.getElementById('recibo-tipo').value;
+    const preview = document.getElementById('recibo-preview');
+    
+    if (!idFesta) {
+        preview.style.display = 'none';
+        return;
+    }
+
+    try {
+        const docSnap = await getDoc(doc(db, "festas", idFesta));
+        if (!docSnap.exists()) return;
+        
+        const festa = docSnap.data();
+        const valorTotal = (parseFloat(festa.total) || 0) + (parseFloat(festa.frete) || 0);
+        const sinal = parseFloat(festa.sinal) || 0;
+        
+        let valorRecibo = tipo === 'sinal' ? sinal : valorTotal;
+        let referente = tipo === 'sinal' ? 'Sinal / Entrada' : 'Quitação Total do Evento';
+
+        document.getElementById('recibo-valor').textContent = `R$ ${valorRecibo.toFixed(2).replace('.', ',')}`;
+        document.getElementById('recibo-cliente').textContent = festa.nome || '—';
+        document.getElementById('recibo-referente').textContent = referente;
+        document.getElementById('recibo-data-evento').textContent = festa.data ? festa.data.split('-').reverse().join('/') : '—';
+        
+        preview.style.display = 'block';
+    } catch (err) {
+        console.error("Erro ao gerar preview do recibo:", err);
+    }
+}
+
+document.getElementById('btn-gerar-recibo')?.addEventListener('click', () => {
+    const idFesta = document.getElementById('recibo-festa-select').value;
+    if (!idFesta) return alert("Selecione uma festa para gerar o recibo.");
+    atualizarPreviewRecibo();
+});
+
+document.getElementById('btn-imprimir-recibo')?.addEventListener('click', () => {
+    const idFesta = document.getElementById('recibo-festa-select').value;
+    if (!idFesta) return alert("Selecione e gere o recibo primeiro.");
+    
+    const preview = document.getElementById('recibo-preview');
+    const conteudo = preview.innerHTML;
+    
+    const janela = window.open('', '_blank');
+    janela.document.write(`
+        <html>
+        <head>
+            <title>Recibo - Neo Flux</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; color: #333; background: #fff; }
+                h4 { color: #000; font-size: 20px; margin-bottom: 5px; }
+                .recibo-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+                .recibo-linha { margin-bottom: 10px; font-size: 14px; }
+                .recibo-linha b { color: #000; }
+                .recibo-valor { font-size: 18px; font-weight: bold; color: #00c853; margin: 15px 0; }
+                .recibo-footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                .assinatura { margin-top: 50px; border-top: 1px solid #333; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; text-align: center; font-size: 13px; }
+            </style>
+        </head>
+        <body>
+            <div class="recibo-header">
+                <h4>RECIBO DE PAGAMENTO</h4>
+                <div style="font-size: 12px; color: #666;">Neo Flux - Gestão de Eventos</div>
+            </div>
+            ${conteudo.replace(/background: #0a0a0a;/g, 'background: #fff;').replace(/color: #ccc;/g, 'color: #333;').replace(/color: #888;/g, 'color: #666;').replace(/color: white;/g, 'color: #000;').replace(/border: 1px solid #00c853;/g, 'border: none;')}
+            <div class="recibo-footer">
+                Este recibo é válido como comprovante de pagamento.
+            </div>
+        </body>
+        </html>
+    `);
+    janela.document.close();
+    setTimeout(() => { janela.print(); }, 500);
+});
