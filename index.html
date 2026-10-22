@@ -36,7 +36,7 @@
             border-radius: 12px;
             padding: 25px;
             transition: 0.3s;
-            display: none; /* Escondido por padrão, o JS mostra se for Elite */
+            display: none;
         }
         .card-analista:hover {
             border-color: #ffb347 !important;
@@ -58,6 +58,9 @@
             z-index: 1;
         }
         .card-analista .btn-analista:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(243,156,18,0.4); }
+        
+        /* Animação para o card minimizar */
+        .card-festa.minimizado .card-conteudo { display: none !important; }
     </style>
 </head>
 <body>
@@ -278,7 +281,40 @@
                 <input type="text" id="pesquisa-festas" placeholder="🔍 Pesquisar por nome..." style="padding: 10px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; width: 300px;">
             </div>
 
+            <!-- CONTAINER DAS PASTAS (ONDE ELAS VÃO APARECER) -->
+            <div id="lista-pastas-container" style="margin-bottom: 20px;"></div>
+
+            <!-- LISTA DE FESTAS NORMAIS -->
             <div id="lista-festas-criadas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;"></div>
+
+            <!-- BOTÃO CRIAR PASTA -->
+            <div style="margin-top: 30px; text-align: center;">
+                <button id="btn-abrir-modal-pasta" style="background: rgba(138,43,226,0.2); color: #c9a8ff; border: 1px solid var(--cor-roxo); padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;">
+                    <i data-lucide="folder-plus" style="width: 18px;"></i>
+                    Criar Pasta / Agrupar Festas
+                </button>
+            </div>
+
+            <!-- MODAL CRIAR PASTA -->
+            <div id="modal-criar-pasta" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+                <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+                    <h2 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                        <i data-lucide="folder" style="color: #8a2be2;"></i> Criar Nova Pasta
+                    </h2>
+                    <label style="color: #ccc; font-size: 0.9rem; display: block; margin-top: 15px;">Nome da Pasta:</label>
+                    <input type="text" id="nome-nova-pasta" placeholder="Ex: Festas de Novembro" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px;">
+
+                    <label style="color: #ccc; font-size: 0.9rem; display: block;">Selecione as festas para agrupar:</label>
+                    <div id="lista-checkboxes-festas" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; background: #0a0a0a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
+                        <!-- Preenchido via JS -->
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-cancelar-pasta" class="botao-principal" style="background: #333;">Cancelar</button>
+                        <button type="button" id="btn-salvar-pasta" class="botao-principal" style="background: #8a2be2;">Criar Pasta</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- MODAL AGENDAR FESTA -->
