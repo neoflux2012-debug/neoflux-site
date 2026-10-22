@@ -1,171 +1,493 @@
-// ==========================================
-// 1. IMPORTAÇÕES
-// ==========================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+/* ==========================================
+   NEO FLUX - PAINEL ADMIN (admin.css)
+   ========================================== */
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU", authDomain: "neo-flux-c91c8.firebaseapp.com", projectId: "neo-flux-c91c8", storageBucket: "neo-flux-c91c8.firebasestorage.app", messagingSenderId: "6686219198", appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const todasAsTelas = document.querySelectorAll('.tela');
-
-function mostrarTela(id) {
-    todasAsTelas.forEach(t => t.classList.remove('ativa'));
-    const tela = document.getElementById(id);
-    if (tela) tela.classList.add('ativa');
+/* Variáveis Globais */
+:root {
+    --cor-fundo: #050505;
+    --cor-fundo-alt: #0a0a0a;
+    --cor-card: #121212;
+    --cor-card-hover: #161616;
+    --cor-azul: #00d2ff;
+    --cor-roxo: #8a2be2;
+    --texto-principal: #ffffff;
+    --texto-secundario: #a0a0a0;
+    --texto-terciario: #6b6b6b;
+    --borda-sutil: #2a2a2a;
+    --borda-hover: #3a3a3a;
+    
+    --gradiente-neo: linear-gradient(135deg, var(--cor-azul) 0%, var(--cor-roxo) 100%);
+    --sombra-media: 0 4px 20px rgba(0, 0, 0, 0.5);
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-// ==========================================
-// 2. LOGIN E LOGOUT
-// ==========================================
-document.getElementById('form-admin-login')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-        await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value);
-    } catch (error) {
-        alert("Erro ao logar. Verifique o e-mail e senha.");
-    }
-});
-
-document.getElementById('btn-admin-sair')?.addEventListener('click', async () => {
-    await signOut(auth);
-});
-
-// ==========================================
-// 3. CARREGAR DADOS (CLIENTES E UPGRADES)
-// ==========================================
-async function carregarClientes() {
-    const tabela = document.getElementById('lista-clientes');
-    const tabelaUpgrades = document.getElementById('lista-upgrades');
-    if(!tabela || !tabelaUpgrades) return;
-
-    tabela.innerHTML = '<tr><td colspan="4" class="admin-tabela-vazia">Buscando clientes...</td></tr>';
-    tabelaUpgrades.innerHTML = '<tr><td colspan="3" class="admin-tabela-vazia">Buscando pedidos...</td></tr>';
-
-    try {
-        const querySnapshot = await getDocs(collection(db, "usuarios"));
-        
-        tabela.innerHTML = ""; 
-        tabelaUpgrades.innerHTML = "";
-        let temUpgrade = false;
-
-        if (querySnapshot.empty) {
-            tabela.innerHTML = '<tr><td colspan="4" class="admin-tabela-vazia">Nenhum cliente.</td></tr>';
-            return;
-        }
-
-        querySnapshot.forEach((docSnap) => {
-            const cliente = docSnap.data();
-            const idCliente = docSnap.id;
-            
-            // 1. LISTA NORMAL DE CLIENTES
-            const tr = document.createElement('tr');
-            
-            // Configura a Badge de Status
-            let badgeClass = "badge-ativo";
-            let statusTexto = "Ativo";
-            
-            if (cliente.statusPagamento === "pendente") {
-                badgeClass = "badge-pendente"; statusTexto = "Pendente";
-            } else if (cliente.statusPagamento === "upgrade_pendente") {
-                badgeClass = "badge-pendente"; statusTexto = "Upgrade Solicitado";
-            }
-
-            let botaoAcao = "";
-            if (cliente.statusPagamento === "pendente") {
-                botaoAcao = `<button class="btn-acao btn-pago btn-liberar" data-id="${idCliente}">✅ Liberar</button>`;
-            } else if (cliente.statusPagamento === "upgrade_pendente") {
-                botaoAcao = `<span class="badge-status badge-pendente">Aguardando</span>`;
-            } else {
-                botaoAcao = `<span style="color: #888; font-size: 0.85rem;">Já liberado</span>`;
-            }
-
-            tr.innerHTML = `
-                <td data-label="Cliente">
-                    <span class="cliente-nome">${cliente.nome}</span>
-                    <span class="cliente-email">${cliente.email}</span>
-                </td>
-                <td data-label="Plano">
-                    <span class="cliente-plano">${(cliente.planoPreferido || '').toUpperCase()}</span>
-                </td>
-                <td data-label="Status">
-                    <span class="badge-status ${badgeClass}">${statusTexto}</span>
-                </td>
-                <td data-label="Ação" class="texto-centro">
-                    ${botaoAcao}
-                </td>
-            `;
-            tabela.appendChild(tr);
-
-            // 2. LISTA DE UPGRADES
-            if (cliente.statusPagamento === "upgrade_pendente") {
-                temUpgrade = true;
-                const trUp = document.createElement('tr');
-                trUp.innerHTML = `
-                    <td data-label="Cliente">
-                        <span class="cliente-nome">${cliente.nome}</span>
-                        <span class="cliente-email">${cliente.email}</span>
-                    </td>
-                    <td data-label="Plano Solicitado">
-                        <span class="cliente-plano">ELITE PREMIUM</span>
-                    </td>
-                    <td data-label="Ação" class="texto-centro">
-                        <button class="btn-acao btn-pago btn-aprovar-upgrade" data-id="${idCliente}">✅ Aprovar</button>
-                    </td>
-                `;
-                tabelaUpgrades.appendChild(trUp);
-            }
-        });
-
-        if (!temUpgrade) {
-            tabelaUpgrades.innerHTML = '<tr><td colspan="3" class="admin-tabela-vazia">Nenhum pedido de upgrade no momento.</td></tr>';
-        }
-
-        // Eventos de Liberar Normal
-        document.querySelectorAll('.btn-liberar').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.getAttribute('data-id');
-                await updateDoc(doc(db, "usuarios", id), { statusPagamento: "ativo" });
-                carregarClientes();
-            });
-        });
-
-        // Eventos de Aprovar Upgrade
-        document.querySelectorAll('.btn-aprovar-upgrade').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.getAttribute('data-id');
-                if (confirm("Confirmar upgrade para Elite Premium?")) {
-                    await updateDoc(doc(db, "usuarios", id), { statusPagamento: "ativo", planoPreferido: "elite_premium" });
-                    alert("Upgrade aprovado!");
-                    carregarClientes();
-                }
-            });
-        });
-
-    } catch (error) {
-        console.error(error);
-        tabela.innerHTML = '<tr><td colspan="4" class="admin-tabela-vazia" style="color:red;">Erro ao carregar.</td></tr>';
-    }
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-font-smoothing: antialiased;
 }
 
-// ==========================================
-// 4. OBSERVADOR DE ESTADO (SEGURANÇA)
-// ==========================================
-onAuthStateChanged(auth, (user) => {
-    const emailAdmin = "neoflux2012@gmail.com"; 
+body {
+    background-color: var(--cor-fundo);
+    color: var(--texto-principal);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image:
+        radial-gradient(ellipse at top, rgba(138, 43, 226, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(0, 210, 255, 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+}
 
-    if (user && user.email === emailAdmin) {
-        mostrarTela('tela-admin-painel');
-        carregarClientes();
-    } else if (user) {
-        signOut(auth);
-        alert("Acesso negado. Você não é o administrador.");
-    } else {
-        mostrarTela('tela-admin-login');
+/* Header e Logo */
+header {
+    width: 100%;
+    padding: 40px 20px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.logo {
+    max-width: 160px;
+    filter: drop-shadow(0 0 24px rgba(138, 43, 226, 0.4));
+    transition: var(--transition);
+    animation: logoFloat 6s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+/* Controle de Telas */
+main {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.tela {
+    display: none;
+    animation: fadeIn 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+}
+
+.tela.ativa { display: block; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tipografia */
+h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+
+h2 {
+    text-align: center;
+    margin-bottom: 28px;
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: var(--gradiente-neo);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+}
+
+h3 { font-size: 1.2rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 10px; }
+p { text-align: center; color: var(--texto-secundario); margin-bottom: 15px; line-height: 1.6; font-size: 0.95rem; }
+a { color: var(--cor-azul); text-decoration: none; transition: var(--transition); }
+
+/* Formulários */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--cor-card);
+    padding: 28px;
+    border-radius: 14px;
+    border: 1px solid var(--borda-sutil);
+    width: 100%;
+    box-shadow: var(--sombra-media);
+}
+
+label {
+    font-size: 0.88rem;
+    color: var(--texto-principal);
+    font-weight: 500;
+    margin-bottom: -4px;
+}
+
+input, select {
+    width: 100%;
+    padding: 13px 15px;
+    background-color: var(--cor-fundo-alt);
+    border: 1px solid var(--borda-sutil);
+    border-radius: 6px;
+    color: white;
+    font-size: 0.95rem;
+    outline: none;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+input:focus, select:focus {
+    border-color: var(--cor-roxo);
+    box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.15);
+}
+
+/* Botões */
+.botao-principal {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 6px;
+    background: var(--gradiente-neo);
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 14px rgba(138, 43, 226, 0.3);
+}
+
+.botao-principal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(138, 43, 226, 0.45);
+}
+
+/* ==========================================
+   LAYOUT DO PAINEL ADMIN
+   ========================================== */
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-titulo {
+    color: var(--cor-azul);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.admin-titulo i {
+    color: var(--cor-azul);
+    filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.5));
+    width: 32px;
+    height: 32px;
+}
+
+.botao-admin-sair {
+    width: auto;
+    padding: 12px 22px;
+    background: #333;
+    font-size: 0.9rem;
+    box-shadow: none;
+}
+
+.botao-admin-sair:hover {
+    background: #444;
+}
+
+/* Caixa de Clientes */
+.caixa-termos {
+    background: var(--cor-card);
+    padding: 24px;
+    border-radius: 14px;
+    border: 1px solid var(--borda-sutil);
+    margin-bottom: 20px;
+}
+
+.admin-caixa-clientes {
+    background: var(--cor-card);
+    border: 1px solid var(--borda-sutil);
+    border-radius: 14px;
+    padding: 26px;
+    margin-bottom: 25px;
+}
+
+.admin-clientes-titulo {
+    color: white;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--borda-sutil);
+}
+
+.admin-clientes-titulo i {
+    color: var(--cor-azul);
+    width: 22px;
+    height: 22px;
+}
+
+/* Filtros */
+.admin-filtros {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-input-busca {
+    flex: 1;
+    min-width: 220px;
+    padding: 12px 16px;
+    background: #000;
+    border: 1px solid var(--borda-sutil);
+    color: white;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.admin-input-busca:focus {
+    border-color: var(--cor-roxo);
+    outline: none;
+}
+
+/* ==========================================
+   TABELAS (O Segredo do Alinhamento)
+   ========================================== */
+
+.admin-tabela-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--borda-sutil);
+    background: var(--cor-card);
+}
+
+.tabela-admin {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    color: #ccc;
+    font-size: 0.88rem;
+    min-width: 650px;
+}
+
+.tabela-admin thead {
+    background: #0a0a0a;
+    border-bottom: 2px solid #333;
+}
+
+.tabela-admin th {
+    padding: 16px 18px;
+    color: #888;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.tabela-admin td {
+    padding: 16px 18px;
+    border-bottom: 1px solid #222;
+    vertical-align: middle;
+    line-height: 1.5;
+}
+
+.tabela-admin tbody tr {
+    transition: background 0.2s ease;
+}
+
+.tabela-admin tbody tr:hover {
+    background: rgba(0, 210, 255, 0.04);
+}
+
+.tabela-admin tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Células Especiais */
+.tabela-admin .cliente-nome {
+    color: white;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.92rem;
+}
+
+.tabela-admin .cliente-email {
+    color: #888;
+    font-size: 0.78rem;
+    display: block;
+}
+
+.tabela-admin .cliente-plano {
+    color: var(--cor-azul);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+}
+
+/* Badges de Status */
+.tabela-admin .badge-status {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.tabela-admin .badge-ativo {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
+    border: 1px solid rgba(0, 200, 83, 0.4);
+}
+
+.tabela-admin .badge-pendente {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ff9800;
+    border: 1px solid rgba(255, 152, 0, 0.4);
+}
+
+.tabela-admin .badge-vencido {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.tabela-admin .badge-suspenso {
+    background: rgba(150, 150, 150, 0.15);
+    color: #bbb;
+    border: 1px solid rgba(150, 150, 150, 0.4);
+}
+
+/* Botões de Ação da Tabela */
+.tabela-admin .btn-acao {
+    padding: 7px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 2px;
+    white-space: nowrap;
+}
+
+.tabela-admin .btn-acao:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tabela-admin .btn-pago {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
+    border: 1px solid #00c853;
+}
+
+.tabela-admin .btn-pago:hover {
+    background: #00c853;
+    color: white;
+}
+
+.tabela-admin .btn-suspender {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+}
+
+.tabela-admin .btn-suspender:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+/* Utilitários */
+.texto-centro { text-align: center; }
+.texto-direita { text-align: right; }
+.admin-tabela-vazia {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* ==========================================
+   RESPONSIVIDADE (Celular)
+   ========================================== */
+@media (max-width: 900px) {
+    .admin-header {
+        flex-direction: column;
+        align-items: stretch;
     }
-});
+    .admin-titulo { font-size: 1.5rem; }
+    .botao-admin-sair { width: 100%; }
+
+    .admin-caixa-clientes { padding: 18px; }
+    .admin-filtros { flex-direction: column; }
+    .admin-input-busca { min-width: 100%; }
+
+    /* Tabela vira Cards */
+    .tabela-admin { min-width: 100%; display: block; }
+    .tabela-admin thead { display: none; }
+    
+    .tabela-admin tbody, .tabela-admin tr, .tabela-admin td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabela-admin tr {
+        background: #0a0a0a;
+        border: 1px solid var(--borda-sutil);
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 12px;
+    }
+
+    .tabela-admin td {
+        padding: 8px 0;
+        border-bottom: 1px dashed #222;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+
+    .tabela-admin td:last-child { border-bottom: none; }
+
+    .tabela-admin td::before {
+        content: attr(data-label);
+        color: #888;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-right: 12px;
+    }
+
+    .tabela-admin .btn-acao {
+        flex: 1;
+        justify-content: center;
+        padding: 10px;
+    }
+}
