@@ -1,13 +1,12 @@
 /* ==========================================
-   NEO FLUX - CSS PREMIUM v2.0
-   Inspirado em Linear, Vercel e Stripe
+   NEO FLUX - CSS PREMIUM v3.0
+   Compatível com o HTML atual + Orçamento Inteligente
    ========================================== */
 
 /* ==========================================
-   1. RESET E CONFIGURAÇÕES GERAIS
+   1. VARIÁVEIS E RESET
    ========================================== */
 :root {
-    /* Cores base */
     --cor-fundo: #050505;
     --cor-fundo-alt: #0a0a0a;
     --cor-card: #121212;
@@ -20,26 +19,21 @@
     --borda-sutil: #2a2a2a;
     --borda-hover: #3a3a3a;
 
-    /* Gradientes */
     --gradiente-neo: linear-gradient(135deg, var(--cor-azul) 0%, var(--cor-roxo) 100%);
     --gradiente-neo-hover: linear-gradient(135deg, #33ddff 0%, #9d4ee8 100%);
     --gradiente-card: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
 
-    /* Sombras */
     --sombra-suave: 0 1px 3px rgba(0, 0, 0, 0.4);
     --sombra-media: 0 4px 20px rgba(0, 0, 0, 0.5);
     --sombra-glow: 0 0 20px rgba(0, 210, 255, 0.15);
     --sombra-glow-roxo: 0 0 20px rgba(138, 43, 226, 0.2);
 
-    /* Bordas */
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 14px;
     --radius-xl: 20px;
 
-    /* Transições */
     --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -51,9 +45,7 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
-html {
-    scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
     background-color: var(--cor-fundo);
@@ -108,12 +100,8 @@ main {
     flex-direction: column;
 }
 
-main:has(#tela-subsite.ativa) {
-    max-width: 1200px !important;
-}
-main:has(#tela-admin-painel.ativa) {
-    max-width: 1000px !important;
-}
+main:has(#tela-subsite.ativa) { max-width: 1200px !important; }
+main:has(#tela-admin-painel.ativa) { max-width: 1000px !important; }
 
 .tela {
     display: none;
@@ -121,29 +109,17 @@ main:has(#tela-admin-painel.ativa) {
     width: 100%;
 }
 
-.tela.ativa {
-    display: block;
-}
+.tela.ativa { display: block; }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ==========================================
    4. TIPOGRAFIA
    ========================================== */
-h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-}
+h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
 
 h2 {
     text-align: center;
@@ -158,17 +134,8 @@ h2 {
     line-height: 1.2;
 }
 
-h3 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin-bottom: 10px;
-}
-
-h4 {
-    font-size: 1rem;
-    font-weight: 600;
-}
+h3 { font-size: 1.2rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 10px; }
+h4 { font-size: 1rem; font-weight: 600; }
 
 p {
     text-align: center;
@@ -178,24 +145,13 @@ p {
     font-size: 0.95rem;
 }
 
-a {
-    color: var(--cor-azul);
-    text-decoration: none;
-    transition: var(--transition);
-}
+a { color: var(--cor-azul); text-decoration: none; transition: var(--transition); }
+a:hover { color: #33ddff; text-decoration: underline; }
 
-a:hover {
-    color: #33ddff;
-    text-decoration: underline;
-}
-
-strong {
-    color: var(--texto-principal);
-    font-weight: 600;
-}
+strong { color: var(--texto-principal); font-weight: 600; }
 
 /* ==========================================
-   5. FORMULÁRIOS E INPUTS
+   5. FORMULÁRIOS
    ========================================== */
 form {
     display: flex;
@@ -211,9 +167,7 @@ form {
     transition: var(--transition);
 }
 
-form:hover {
-    border-color: var(--borda-hover);
-}
+form:hover { border-color: var(--borda-hover); }
 
 label {
     font-size: 0.88rem;
@@ -236,9 +190,7 @@ input, select, textarea {
     font-family: inherit;
 }
 
-input::placeholder, textarea::placeholder {
-    color: var(--texto-terciario);
-}
+input::placeholder, textarea::placeholder { color: var(--texto-terciario); }
 
 input:focus, select:focus, textarea:focus {
     border-color: var(--cor-roxo);
@@ -250,10 +202,7 @@ input:hover:not(:focus), select:hover:not(:focus), textarea:hover:not(:focus) {
     border-color: var(--borda-hover);
 }
 
-textarea {
-    resize: vertical;
-    min-height: 80px;
-}
+textarea { resize: vertical; min-height: 80px; }
 
 .checkbox-container {
     display: flex;
@@ -269,12 +218,6 @@ textarea {
     accent-color: var(--cor-roxo);
     cursor: pointer;
     flex-shrink: 0;
-}
-
-.checkbox-container label {
-    font-size: 0.88rem;
-    cursor: pointer;
-    line-height: 1.4;
 }
 
 /* ==========================================
@@ -297,30 +240,10 @@ textarea {
     box-shadow: 0 4px 14px rgba(138, 43, 226, 0.3);
 }
 
-.botao-principal::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.botao-principal:hover::before {
-    left: 100%;
-}
-
 .botao-principal:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 22px rgba(138, 43, 226, 0.45);
     background: var(--gradiente-neo-hover);
-}
-
-.botao-principal:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(138, 43, 226, 0.3);
 }
 
 .botao-principal:disabled {
@@ -328,21 +251,6 @@ textarea {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-}
-
-.botao-principal:disabled::before {
-    display: none;
-}
-
-/* Botões secundários (fundo escuro, como os de fechar) */
-button[style*="background: #333"],
-button[style*="background:#333"] {
-    transition: var(--transition) !important;
-}
-
-button[style*="background: #333"]:hover,
-button[style*="background:#333"]:hover {
-    background: #444 !important;
 }
 
 /* ==========================================
@@ -368,18 +276,6 @@ button[style*="background:#333"]:hover {
     box-shadow: var(--sombra-suave);
 }
 
-.card-plano::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--gradiente-neo);
-    opacity: 0;
-    transition: var(--transition);
-}
-
 .card-plano:hover {
     border-color: var(--cor-azul);
     transform: translateY(-6px);
@@ -387,25 +283,8 @@ button[style*="background:#333"]:hover {
     background: var(--cor-card-hover);
 }
 
-.card-plano:hover::before {
-    opacity: 1;
-}
-
-.card-plano h3 {
-    color: var(--cor-azul);
-    margin-bottom: 12px;
-    font-size: 1.25rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-}
-
-.card-plano .preco {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 18px;
-    letter-spacing: -0.02em;
-}
+.card-plano h3 { color: var(--cor-azul); margin-bottom: 12px; font-size: 1.25rem; }
+.card-plano .preco { font-size: 1.6rem; font-weight: 700; color: white; margin-bottom: 18px; }
 
 .card-plano .btn-selecionar-plano,
 .card-plano button:not(.botao-principal) {
@@ -432,43 +311,49 @@ button[style*="background:#333"]:hover {
 }
 
 /* ==========================================
-   8. PAINEL DO SUBSITE
+   8. BOTÃO COMPARAR ASSINATURAS
+   ========================================== */
+#btn-comparar-planos {
+    background: transparent;
+    color: var(--cor-azul);
+    border: 1px solid var(--cor-azul);
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+}
+
+#btn-comparar-planos:hover {
+    background: var(--cor-azul);
+    color: #000;
+    transform: translateY(-2px);
+}
+
+/* ==========================================
+   9. PAINEL DO SUBSITE
    ========================================== */
 #tela-subsite > div:nth-child(2) {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     width: 100%;
 }
 
-/* Cards de navegação do subsite (Festas, Catálogo, Kits, Contratos, Relatórios) */
 #tela-subsite > div:nth-child(2) > div {
     transition: var(--transition);
     position: relative;
     overflow: hidden;
 }
 
-#tela-subsite > div:nth-child(2) > div::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at top right, rgba(138, 43, 226, 0.08), transparent 60%);
-    opacity: 0;
-    transition: var(--transition);
-    pointer-events: none;
-}
-
 #tela-subsite > div:nth-child(2) > div:hover {
     border-color: var(--borda-hover) !important;
     transform: translateY(-4px);
     box-shadow: var(--sombra-media);
-}
-
-#tela-subsite > div:nth-child(2) > div:hover::before {
-    opacity: 1;
 }
 
 #tela-subsite > div:nth-child(2) > div h3 {
@@ -478,7 +363,57 @@ button[style*="background:#333"]:hover {
 }
 
 /* ==========================================
-   9. CAIXAS DE TERMOS E INFORMAÇÕES
+   10. CARD ORÇAMENTO INTELIGENTE (NOVO)
+   ========================================== */
+.card-orcamento-inteligente {
+    background: linear-gradient(135deg, rgba(138,43,226,0.18) 0%, rgba(0,210,255,0.10) 100%), #121212 !important;
+    border: 1px solid var(--cor-roxo) !important;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    padding: 25px;
+    transition: var(--transition);
+}
+
+.card-orcamento-inteligente::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(138,43,226,0.25), transparent 60%);
+    pointer-events: none;
+}
+
+.card-orcamento-inteligente:hover {
+    border-color: #b57bff !important;
+    box-shadow: 0 0 25px rgba(138,43,226,0.45);
+    transform: translateY(-3px);
+}
+
+.card-orcamento-inteligente h3 {
+    color: var(--cor-roxo) !important;
+}
+
+.card-orcamento-inteligente .btn-orcamento {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--gradiente-neo);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    z-index: 1;
+}
+
+.card-orcamento-inteligente .btn-orcamento:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(138,43,226,0.4);
+}
+
+/* ==========================================
+   11. CAIXAS DE TERMOS E INFORMAÇÕES
    ========================================== */
 .caixa-termos {
     background: var(--cor-card);
@@ -491,9 +426,7 @@ button[style*="background:#333"]:hover {
     transition: var(--transition);
 }
 
-.caixa-termos:hover {
-    border-color: var(--borda-hover);
-}
+.caixa-termos:hover { border-color: var(--borda-hover); }
 
 .caixa-termos p {
     text-align: left;
@@ -503,10 +436,7 @@ button[style*="background:#333"]:hover {
     line-height: 1.6;
 }
 
-.caixa-termos p strong {
-    color: var(--texto-principal);
-    font-weight: 600;
-}
+.caixa-termos p strong { color: var(--texto-principal); font-weight: 600; }
 
 .caixa-termos h3 {
     color: var(--texto-principal);
@@ -516,78 +446,12 @@ button[style*="background:#333"]:hover {
 }
 
 /* ==========================================
-   10. PAINEL DE ADMIN
-   ========================================== */
-#tela-admin-login {
-    max-width: 420px;
-    margin: 40px auto;
-    background: var(--cor-card);
-    background-image: var(--gradiente-card);
-    padding: 32px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--borda-sutil);
-    box-shadow: var(--sombra-media);
-}
-
-.tabela-clientes {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    background: var(--cor-card);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: var(--sombra-suave);
-}
-
-.tabela-clientes th, .tabela-clientes td {
-    padding: 14px 16px;
-    text-align: left;
-    border-bottom: 1px solid var(--borda-sutil);
-    font-size: 0.9rem;
-}
-
-.tabela-clientes th {
-    background: var(--cor-fundo-alt);
-    color: var(--cor-azul);
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.06em;
-}
-
-.tabela-clientes tr {
-    transition: var(--transition);
-}
-
-.tabela-clientes tbody tr:hover {
-    background: rgba(0, 210, 255, 0.04);
-}
-
-.status-pendente {
-    color: #ff9800;
-    font-weight: 600;
-    background: rgba(255, 152, 0, 0.1);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    display: inline-block;
-}
-
-.status-ativo {
-    color: #00c853;
-    font-weight: 600;
-    background: rgba(0, 200, 83, 0.1);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    display: inline-block;
-}
-
-/* ==========================================
-   11. MODAIS
+   12. MODAIS
    ========================================== */
 [id^="modal-"] {
     animation: fadeIn 0.25s ease-out;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 [id^="modal-"] > div {
@@ -596,26 +460,15 @@ button[style*="background:#333"]:hover {
 }
 
 @keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Scrollbar estilizada dentro dos modais */
 [id^="modal-"] > div::-webkit-scrollbar,
-#modal-comparar > div::-webkit-scrollbar {
-    width: 8px;
-}
+#modal-comparar > div::-webkit-scrollbar { width: 8px; }
 
 [id^="modal-"] > div::-webkit-scrollbar-track,
-#modal-comparar > div::-webkit-scrollbar-track {
-    background: transparent;
-}
+#modal-comparar > div::-webkit-scrollbar-track { background: transparent; }
 
 [id^="modal-"] > div::-webkit-scrollbar-thumb,
 #modal-comparar > div::-webkit-scrollbar-thumb {
@@ -624,52 +477,14 @@ button[style*="background:#333"]:hover {
 }
 
 [id^="modal-"] > div::-webkit-scrollbar-thumb:hover,
-#modal-comparar > div::-webkit-scrollbar-thumb:hover {
-    background: var(--cor-roxo);
-}
-
-/* Botão de fechar (X) dos modais */
-button[id^="btn-fechar-modal-comparar"],
-button[id^="btn-fechar-neo-wave"] {
-    transition: var(--transition);
-}
-
-button[id^="btn-fechar-modal-comparar"]:hover,
-button[id^="btn-fechar-neo-wave"]:hover {
-    color: var(--texto-principal);
-    transform: scale(1.1);
-}
+#modal-comparar > div::-webkit-scrollbar-thumb:hover { background: var(--cor-roxo); }
 
 /* ==========================================
-   12. TABELAS DE RELATÓRIOS
-   ========================================== */
-#tabela-relatorio tr {
-    transition: var(--transition);
-}
-
-#tabela-relatorio tr:hover {
-    background: rgba(0, 210, 255, 0.04);
-}
-
-/* ==========================================
-   13. LOADING OVERLAY
-   ========================================== */
-.loading-overlay {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-.spinner {
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--cor-azul);
-    border-right-color: var(--cor-roxo);
-}
-
-/* ==========================================
-   14. NEO WAVE CHAT
+   13. NEO WAVE CHAT (FLUTUANTE)
    ========================================== */
 .neo-wave-btn {
     transition: var(--transition);
+    animation: none !important;
 }
 
 .neo-wave-btn:hover {
@@ -689,7 +504,7 @@ button[id^="btn-fechar-neo-wave"]:hover {
 }
 
 /* ==========================================
-   15. LISTA DE SUBSITES
+   14. LISTA DE SUBSITES
    ========================================== */
 #lista-subsites li {
     transition: var(--transition);
@@ -702,7 +517,7 @@ button[id^="btn-fechar-neo-wave"]:hover {
 }
 
 /* ==========================================
-   16. BOTÕES DE AÇÃO EM CARDS DE FESTA
+   15. CARDS DE FESTA
    ========================================== */
 #lista-festas-criadas > div {
     transition: var(--transition);
@@ -715,29 +530,19 @@ button[id^="btn-fechar-neo-wave"]:hover {
 }
 
 /* ==========================================
-   17. SCROLLBAR GLOBAL
+   16. SCROLLBAR GLOBAL
    ========================================== */
-::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--cor-fundo);
-}
-
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--cor-fundo); }
 ::-webkit-scrollbar-thumb {
     background: var(--borda-sutil);
     border-radius: 5px;
     border: 2px solid var(--cor-fundo);
 }
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--cor-roxo);
-}
+::-webkit-scrollbar-thumb:hover { background: var(--cor-roxo); }
 
 /* ==========================================
-   18. SELEÇÃO DE TEXTO
+   17. SELEÇÃO DE TEXTO
    ========================================== */
 ::selection {
     background: rgba(138, 43, 226, 0.4);
@@ -745,87 +550,36 @@ button[id^="btn-fechar-neo-wave"]:hover {
 }
 
 /* ==========================================
-   19. RESPONSIVIDADE
+   18. RESPONSIVIDADE
    ========================================== */
 @media (max-width: 768px) {
-    header {
-        padding: 28px 16px 16px;
-    }
-
-    .logo {
-        max-width: 130px;
-    }
-
-    h2 {
-        font-size: 1.55rem;
-        margin-bottom: 22px;
-    }
-
-    h1 {
-        font-size: 1.6rem;
-    }
-
-    main {
-        padding: 16px;
-    }
-
-    form {
-        padding: 22px;
-    }
-
-    .container-planos {
-        grid-template-columns: 1fr;
-        gap: 14px;
-    }
-
-    .card-plano {
-        padding: 22px 18px;
-    }
-
-    #tela-subsite > div:nth-child(2) {
-        grid-template-columns: 1fr;
-    }
-
-    .caixa-termos {
-        padding: 20px;
-    }
+    header { padding: 28px 16px 16px; }
+    .logo { max-width: 130px; }
+    h2 { font-size: 1.55rem; margin-bottom: 22px; }
+    h1 { font-size: 1.6rem; }
+    main { padding: 16px; }
+    form { padding: 22px; }
+    .container-planos { grid-template-columns: 1fr; gap: 14px; }
+    .card-plano { padding: 22px 18px; }
+    #tela-subsite > div:nth-child(2) { grid-template-columns: 1fr; }
+    .caixa-termos { padding: 20px; }
 }
 
 @media (max-width: 480px) {
-    .logo {
-        max-width: 110px;
-    }
-
-    h2 {
-        font-size: 1.35rem;
-    }
-
-    h1 {
-        font-size: 1.4rem;
-    }
-
-    .botao-principal {
-        padding: 13px 18px;
-        font-size: 0.92rem;
-    }
-
-    input, select, textarea {
-        padding: 12px 14px;
-        font-size: 0.9rem;
-    }
-
-    .card-plano .preco {
-        font-size: 1.4rem;
-    }
+    .logo { max-width: 110px; }
+    h2 { font-size: 1.35rem; }
+    h1 { font-size: 1.4rem; }
+    .botao-principal { padding: 13px 18px; font-size: 0.92rem; }
+    input, select, textarea { padding: 12px 14px; font-size: 0.9rem; }
+    .card-plano .preco { font-size: 1.4rem; }
+    #btn-comparar-planos { padding: 10px 18px; font-size: 0.9rem; }
 }
 
 /* ==========================================
-   20. ACESSIBILIDADE - REDUÇÃO DE MOVIMENTO
+   19. ACESSIBILIDADE
    ========================================== */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
