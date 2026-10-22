@@ -23,7 +23,7 @@ function mostrarTela(id) {
 // ==========================================
 // 2. LOGIN E LOGOUT
 // ==========================================
-document.getElementById('form-admin-login').addEventListener('submit', async (e) => {
+document.getElementById('form-admin-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
         await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value);
@@ -32,7 +32,7 @@ document.getElementById('form-admin-login').addEventListener('submit', async (e)
     }
 });
 
-document.getElementById('btn-admin-sair').addEventListener('click', async () => {
+document.getElementById('btn-admin-sair')?.addEventListener('click', async () => {
     await signOut(auth);
 });
 
@@ -44,8 +44,8 @@ async function carregarClientes() {
     const tabelaUpgrades = document.getElementById('lista-upgrades');
     if(!tabela || !tabelaUpgrades) return;
 
-    tabela.innerHTML = '<tr><td colspan="5">Buscando clientes...</td></tr>';
-    tabelaUpgrades.innerHTML = '<tr><td colspan="4">Buscando pedidos...</td></tr>';
+    tabela.innerHTML = '<tr><td colspan="4" class="admin-tabela-vazia">Buscando clientes...</td></tr>';
+    tabelaUpgrades.innerHTML = '<tr><td colspan="3" class="admin-tabela-vazia">Buscando pedidos...</td></tr>';
 
     try {
         const querySnapshot = await getDocs(collection(db, "usuarios"));
@@ -55,7 +55,7 @@ async function carregarClientes() {
         let temUpgrade = false;
 
         if (querySnapshot.empty) {
-            tabela.innerHTML = '<tr><td colspan="5">Nenhum cliente.</td></tr>';
+            tabela.innerHTML = '<tr><td colspan="4" class="admin-tabela-vazia">Nenhum cliente.</td></tr>';
             return;
         }
 
@@ -65,24 +65,40 @@ async function carregarClientes() {
             
             // 1. LISTA NORMAL DE CLIENTES
             const tr = document.createElement('tr');
-            const statusClass = cliente.statusPagamento === "pendente" ? "status-pendente" : "status-ativo";
-            let statusTexto = cliente.statusPagamento === "pendente" ? "Pendente" : (cliente.statusPagamento === "ativo" ? "Ativo" : "Upgrade Pendente");
+            
+            // Configura a Badge de Status
+            let badgeClass = "badge-ativo";
+            let statusTexto = "Ativo";
+            
+            if (cliente.statusPagamento === "pendente") {
+                badgeClass = "badge-pendente"; statusTexto = "Pendente";
+            } else if (cliente.statusPagamento === "upgrade_pendente") {
+                badgeClass = "badge-pendente"; statusTexto = "Upgrade Solicitado";
+            }
 
             let botaoAcao = "";
             if (cliente.statusPagamento === "pendente") {
-                botaoAcao = `<button class="btn-liberar" data-id="${idCliente}" style="background: #00c853; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">Liberar</button>`;
+                botaoAcao = `<button class="btn-acao btn-pago btn-liberar" data-id="${idCliente}">✅ Liberar</button>`;
             } else if (cliente.statusPagamento === "upgrade_pendente") {
-                botaoAcao = `<span style="color:#00d2ff; font-weight:bold;">Aguardando</span>`;
+                botaoAcao = `<span class="badge-status badge-pendente">Aguardando</span>`;
             } else {
-                botaoAcao = "Já liberado";
+                botaoAcao = `<span style="color: #888; font-size: 0.85rem;">Já liberado</span>`;
             }
 
             tr.innerHTML = `
-                <td>${cliente.nome}</td>
-                <td>${cliente.email}</td>
-                <td>${cliente.planoPreferido.toUpperCase()}</td>
-                <td class="${statusClass}">${statusTexto}</td>
-                <td>${botaoAcao}</td>
+                <td data-label="Cliente">
+                    <span class="cliente-nome">${cliente.nome}</span>
+                    <span class="cliente-email">${cliente.email}</span>
+                </td>
+                <td data-label="Plano">
+                    <span class="cliente-plano">${(cliente.planoPreferido || '').toUpperCase()}</span>
+                </td>
+                <td data-label="Status">
+                    <span class="badge-status ${badgeClass}">${statusTexto}</span>
+                </td>
+                <td data-label="Ação" class="texto-centro">
+                    ${botaoAcao}
+                </td>
             `;
             tabela.appendChild(tr);
 
@@ -91,17 +107,23 @@ async function carregarClientes() {
                 temUpgrade = true;
                 const trUp = document.createElement('tr');
                 trUp.innerHTML = `
-                    <td>${cliente.nome}</td>
-                    <td>${cliente.email}</td>
-                    <td>${cliente.planoPreferido.toUpperCase()}</td>
-                    <td><button class="btn-aprovar-upgrade" data-id="${idCliente}" style="background: #00c853; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">Aprovar</button></td>
+                    <td data-label="Cliente">
+                        <span class="cliente-nome">${cliente.nome}</span>
+                        <span class="cliente-email">${cliente.email}</span>
+                    </td>
+                    <td data-label="Plano Solicitado">
+                        <span class="cliente-plano">ELITE PREMIUM</span>
+                    </td>
+                    <td data-label="Ação" class="texto-centro">
+                        <button class="btn-acao btn-pago btn-aprovar-upgrade" data-id="${idCliente}">✅ Aprovar</button>
+                    </td>
                 `;
                 tabelaUpgrades.appendChild(trUp);
             }
         });
 
         if (!temUpgrade) {
-            tabelaUpgrades.innerHTML = '<tr><td colspan="4">Nenhum pedido de upgrade no momento.</td></tr>';
+            tabelaUpgrades.innerHTML = '<tr><td colspan="3" class="admin-tabela-vazia">Nenhum pedido de upgrade no momento.</td></tr>';
         }
 
         // Eventos de Liberar Normal
@@ -127,7 +149,7 @@ async function carregarClientes() {
 
     } catch (error) {
         console.error(error);
-        tabela.innerHTML = '<tr><td colspan="5" style="color:red;">Erro ao carregar.</td></tr>';
+        tabela.innerHTML = '<tr><td colspan="4" class="admin-tabela-vazia" style="color:red;">Erro ao carregar.</td></tr>';
     }
 }
 
