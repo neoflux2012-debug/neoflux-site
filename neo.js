@@ -12,7 +12,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ==========================================
-// 2. CONFIGURAÇÃO
+// 2. CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
@@ -26,10 +26,15 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// ⚠️ COLOQUE AQUI O SEU E-MAIL DE ADMIN
+const EMAIL_ADMIN_MASTER = "neoflux2012@gmail.com"; 
+
 let subsiteAtualId = "";
 let planoAtual = "";
 let festasGlobais = [];
 let kitsDoSubsite = []; 
+let clientesAdminGlobais = [];
+let modoAusenteAtivo = false;
 
 // ==========================================
 // 3. REGRAS E TEXTOS
@@ -194,7 +199,6 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
-    // NOVO: Mostrar card do Analista apenas para Elite+
     const cardAnalista = document.getElementById('card-analista');
     if (cardAnalista) cardAnalista.style.display = regras.analista ? 'block' : 'none';
 
@@ -301,14 +305,12 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     const dataFesta = document.getElementById('festa-data').value;
     const nomeCliente = document.getElementById('festa-nome').value;
 
-    // ==========================================
     // DETECTOR DE CONFLITO DE DATAS
-    // ==========================================
     if (!idEdicao) {
         const festasNoMesmoDia = festasGlobais.filter(f => f.data === dataFesta);
         if (festasNoMesmoDia.length > 0) {
             let nomes = festasNoMesmoDia.map(f => f.nome).join(", ");
-            const continuar = confirm(`⚠️ ATENÇÃO: Já existe(m) festa(s) agendada(s) para o dia ${dataFesta.split('-').reverse().join('/')}.\n\nCliente(s): ${nomes}\n\nDeseja continuar agendando mesmo assim? (Clique em OK se for usar peças diferentes, ou Cancelar se for conflito).`);
+            const continuar = confirm(`⚠️ ATENÇÃO: Já existe(m) festa(s) agendada(s) para o dia ${dataFesta.split('-').reverse().join('/')}.\n\nCliente(s): ${nomes}\n\nDeseja continuar agendando mesmo assim?`);
             if (!continuar) { carregar(false); return; }
         }
     }
@@ -469,12 +471,21 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 });
 
 // ==========================================
-// 10. OBSERVADOR DE ESTADO
+// 10. OBSERVADOR DE ESTADO E ADMIN
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
         if (!user.emailVerified) { mostrarTela('tela-verificacao'); } 
-        else { carregarDadosCliente(user.uid); mostrarTela('tela-cliente'); }
+        else {
+            if (user.email === EMAIL_ADMIN_MASTER) {
+                document.getElementById('btn-neo-wave').style.display = 'none';
+                carregarPainelAdmin();
+                mostrarTela('tela-admin-painel');
+            } else {
+                carregarDadosCliente(user.uid); 
+                mostrarTela('tela-cliente');
+            }
+        }
     } else {
         const telaAtual = document.querySelector('.tela.ativa');
         if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas', 'tela-termos', 'tela-pagamento', 'tela-planos'].includes(telaAtual.id)) {
@@ -639,7 +650,7 @@ async function gerarRelatorioAnalista() {
         for (const [kit, qtd] of Object.entries(kitsContagem)) { if (qtd > maxVendas) { maxVendas = qtd; kitTop = kit; } }
         document.getElementById('analista-kit-top').textContent = kitTop;
 
-        // Gráfico 1: Pico de Vendas
+        // Gráfico 1
         const ctxPico = document.getElementById('graficoPicoVendas').getContext('2d');
         if (chartPicoInstance) chartPicoInstance.destroy();
         const diasOrdenados = Object.keys(faturamentoPorDia).sort();
@@ -650,7 +661,7 @@ async function gerarRelatorioAnalista() {
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ` R$ ${context.parsed.y.toFixed(2).replace('.', ',')}`; } } } }, scales: { y: { beginAtZero: true, grid: { color: '#222' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
         });
 
-        // Gráfico 2: Kits Mais Vendidos
+        // Gráfico 2
         const ctxKits = document.getElementById('graficoKitsVendidos').getContext('2d');
         if (chartKitsInstance) chartKitsInstance.destroy();
         const kitsOrdenados = Object.entries(kitsContagem).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -663,7 +674,7 @@ async function gerarRelatorioAnalista() {
 }
 
 // ==========================================
-// 13. GERADOR DE RECIBO (DENTRO DO ANALISTA)
+// 13. GERADOR DE RECIBO
 // ==========================================
 async function carregarFestasParaRecibo() {
     const select = document.getElementById('recibo-festa-select');
@@ -682,9 +693,7 @@ async function carregarFestasParaRecibo() {
             opt.textContent = `${f.nome} - ${f.data.split('-').reverse().join('/')}`;
             select.appendChild(opt);
         });
-    } catch (err) {
-        console.error("Erro ao carregar festas para recibo:", err);
-    }
+    } catch (err) { console.error("Erro ao carregar festas para recibo:", err); }
 }
 
 document.getElementById('recibo-festa-select')?.addEventListener('change', atualizarPreviewRecibo);
@@ -695,10 +704,7 @@ async function atualizarPreviewRecibo() {
     const tipo = document.getElementById('recibo-tipo').value;
     const preview = document.getElementById('recibo-preview');
     
-    if (!idFesta) {
-        preview.style.display = 'none';
-        return;
-    }
+    if (!idFesta) { preview.style.display = 'none'; return; }
 
     try {
         const docSnap = await getDoc(doc(db, "festas", idFesta));
@@ -717,9 +723,7 @@ async function atualizarPreviewRecibo() {
         document.getElementById('recibo-data-evento').textContent = festa.data ? festa.data.split('-').reverse().join('/') : '—';
         
         preview.style.display = 'block';
-    } catch (err) {
-        console.error("Erro ao gerar preview do recibo:", err);
-    }
+    } catch (err) { console.error("Erro ao gerar preview do recibo:", err); }
 }
 
 document.getElementById('btn-gerar-recibo')?.addEventListener('click', () => {
@@ -766,3 +770,237 @@ document.getElementById('btn-imprimir-recibo')?.addEventListener('click', () => 
     janela.document.close();
     setTimeout(() => { janela.print(); }, 500);
 });
+
+// ==========================================
+// 14. PAINEL ADMIN MASTER E AUTOPILOT
+// ==========================================
+async function carregarPainelAdmin() {
+    carregar(true);
+    try {
+        const snap = await getDocs(collection(db, "usuarios"));
+        clientesAdminGlobais = [];
+        snap.forEach(doc => { clientesAdminGlobais.push({ id: doc.id, ...doc.data() }); });
+        
+        atualizarMonitorAdmin();
+        renderizarTabelaAdmin();
+        await carregarEstadoAutopilot();
+    } catch (err) { console.error("Erro ao carregar admin:", err); } 
+    finally { carregar(false); }
+}
+
+function atualizarMonitorAdmin() {
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    let vencemHoje = 0; let vencem7 = 0; let atrasados = 0;
+
+    clientesAdminGlobais.forEach(c => {
+        if (c.statusPagamento === 'suspenso' || !c.vencimento) return;
+        const dataVenc = new Date(c.vencimento + 'T00:00:00');
+        const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
+        if (diffDias < 0) atrasados++;
+        else if (diffDias === 0) vencemHoje++;
+        else if (diffDias <= 7) vencem7++;
+    });
+
+    document.getElementById('monitor-vencem-hoje').textContent = vencemHoje;
+    document.getElementById('monitor-vencem-7').textContent = vencem7;
+    document.getElementById('monitor-atrasados').textContent = atrasados;
+}
+
+function renderizarTabelaAdmin() {
+    const tbody = document.getElementById('lista-admin-clientes');
+    if (!tbody) return;
+
+    const busca = document.getElementById('admin-busca-cliente').value.toLowerCase();
+    const filtro = document.getElementById('admin-filtro-status').value;
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+
+    tbody.innerHTML = "";
+    let filtrados = clientesAdminGlobais.filter(c => {
+        const nome = (c.nome || '').toLowerCase();
+        const email = (c.email || '').toLowerCase();
+        return nome.includes(busca) || email.includes(busca);
+    });
+
+    if (filtro) {
+        filtrados = filtrados.filter(c => {
+            if (filtro === 'vencido') {
+                if (!c.vencimento) return false;
+                const v = new Date(c.vencimento + 'T00:00:00');
+                return v < hoje && c.statusPagamento !== 'suspenso';
+            }
+            return c.statusPagamento === filtro;
+        });
+    }
+
+    if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #888;">Nenhum cliente encontrado.</td></tr>';
+        return;
+    }
+
+    filtrados.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid #333";
+        let vencStr = "—"; let statusBadge = "";
+        
+        if (c.vencimento) {
+            vencStr = c.vencimento.split('-').reverse().join('/');
+            const v = new Date(c.vencimento + 'T00:00:00');
+            const diffDias = Math.ceil((v - hoje) / (1000 * 60 * 60 * 24));
+            
+            if (c.statusPagamento === 'suspenso') statusBadge = '<span style="background: rgba(231,76,60,0.2); color: #e74c3c; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Suspenso</span>';
+            else if (diffDias < 0) statusBadge = '<span style="background: rgba(231,76,60,0.2); color: #e74c3c; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Vencido</span>';
+            else if (c.statusPagamento === 'ativo') statusBadge = '<span style="background: rgba(0,200,83,0.2); color: #00c853; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Ativo</span>';
+        } else {
+            statusBadge = '<span style="background: rgba(255,152,0,0.2); color: #ff9800; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Pendente</span>';
+        }
+
+        tr.innerHTML = `
+            <td style="padding: 12px;"><strong style="color: white;">${c.nome || 'Sem nome'}</strong><br><span style="font-size: 0.8rem; color: #888;">${c.email}</span></td>
+            <td style="padding: 12px;"><b style="color: #00d2ff;">${(c.planoPreferido || '').toUpperCase()}</b></td>
+            <td style="padding: 12px;">${vencStr}</td>
+            <td style="padding: 12px;">${statusBadge}</td>
+            <td style="padding: 12px; text-align: center;">
+                <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="window.adminConfirmarPagamento('${c.id}')" style="padding: 6px 10px; background: #00c853; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">✅ Pago</button>
+                    <button onclick="window.adminSuspender('${c.id}')" style="padding: 6px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">🛑 Suspender</button>
+                    <button onclick="window.adminAlterarPlano('${c.id}')" style="padding: 6px 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">🔄 Plano</button>
+                </div>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+document.getElementById('admin-busca-cliente')?.addEventListener('input', renderizarTabelaAdmin);
+document.getElementById('admin-filtro-status')?.addEventListener('change', renderizarTabelaAdmin);
+
+window.adminConfirmarPagamento = async function(uid) {
+    const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
+    const novaData = new Date(); novaData.setDate(novaData.getDate() + 30);
+    const vencFormatado = novaData.toISOString().split('T')[0];
+    if (!confirm(`Confirmar pagamento de ${cliente.nome}?\n\nNovo vencimento: ${vencFormatado.split('-').reverse().join('/')}`)) return;
+    try { await updateDoc(doc(db, "usuarios", uid), { statusPagamento: "ativo", vencimento: vencFormatado }); alert("✅ Pagamento confirmado!"); carregarPainelAdmin(); } 
+    catch (e) { alert("Erro: " + e.message); }
+};
+
+window.adminSuspender = async function(uid) {
+    const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
+    if (!confirm(`Suspender o acesso de ${cliente.nome}?`)) return;
+    try { await updateDoc(doc(db, "usuarios", uid), { statusPagamento: "suspenso" }); alert("🛑 Cliente suspenso."); carregarPainelAdmin(); } 
+    catch (e) { alert("Erro: " + e.message); }
+};
+
+window.adminAlterarPlano = async function(uid) {
+    const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
+    const novoPlano = prompt(`Alterar plano de ${cliente.nome}:\n\nDigite: start, pro, elite ou elite_premium`, cliente.planoPreferido);
+    if (!novoPlano) return;
+    const planoLimpo = novoPlano.toLowerCase().trim();
+    if (!['start', 'pro', 'elite', 'elite_premium'].includes(planoLimpo)) return alert("Plano inválido.");
+    try { await updateDoc(doc(db, "usuarios", uid), { planoPreferido: planoLimpo }); alert(`✅ Plano alterado para ${planoLimpo.toUpperCase()}`); carregarPainelAdmin(); } 
+    catch (e) { alert("Erro: " + e.message); }
+};
+
+document.getElementById('btn-monitor-whatsapp')?.addEventListener('click', () => {
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    let lista = "🔔 *Neo Wave Monitor - Cobranças*\n\n"; let tem = false;
+    clientesAdminGlobais.forEach(c => {
+        if (c.statusPagamento === 'suspenso' || !c.vencimento) return;
+        const v = new Date(c.vencimento + 'T00:00:00'); const diff = Math.ceil((v - hoje) / (1000 * 60 * 60 * 24));
+        if (diff < 0) { lista += `🔴 *${c.nome}* - VENCIDO há ${Math.abs(diff)} dia(s) (Plano ${c.planoPreferido.toUpperCase()})\n`; tem = true; } 
+        else if (diff === 0) { lista += `🟠 *${c.nome}* - Vence HOJE (Plano ${c.planoPreferido.toUpperCase()})\n`; tem = true; } 
+        else if (diff <= 7) { lista += `🟡 *${c.nome}* - Vence em ${diff} dia(s) (Plano ${c.planoPreferido.toUpperCase()})\n`; tem = true; }
+    });
+    if (!tem) return alert("Nenhuma cobrança pendente. 🎉");
+    navigator.clipboard.writeText(lista).then(() => alert("✅ Lista copiada!")).catch(() => alert("Erro ao copiar."));
+});
+
+document.getElementById('btn-admin-logout')?.addEventListener('click', async () => { await signOut(auth); mostrarTela('tela-boas-vindas'); });
+
+// AUTOPILOT
+async function carregarEstadoAutopilot() {
+    try {
+        const snap = await getDoc(doc(db, "config_admin", "autopilot"));
+        if (snap.exists()) { modoAusenteAtivo = snap.data().ativo || false; atualizarBotaoAusente(); }
+    } catch (e) { console.warn("Config autopilot não encontrada."); }
+}
+
+function atualizarBotaoAusente() {
+    const btn = document.getElementById('btn-toggle-ausente');
+    const painel = document.getElementById('painel-despacho');
+    if (!btn) return;
+
+    if (modoAusenteAtivo) {
+        btn.style.background = '#f39c12'; btn.style.color = '#000';
+        btn.innerHTML = '<i data-lucide="zap" style="width: 16px; vertical-align: middle;"></i> Modo Ausente ATIVO';
+        painel.style.display = 'block'; gerarAcoesAutopilot();
+    } else {
+        btn.style.background = '#333'; btn.style.color = '#ccc';
+        btn.innerHTML = '<i data-lucide="power" style="width: 16px; vertical-align: middle;"></i> Ativar Modo Ausente';
+        painel.style.display = 'none';
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+document.getElementById('btn-toggle-ausente')?.addEventListener('click', async () => {
+    modoAusenteAtivo = !modoAusenteAtivo;
+    try { await setDoc(doc(db, "config_admin", "autopilot"), { ativo: modoAusenteAtivo, atualizadoEm: new Date() }); atualizarBotaoAusente(); } 
+    catch (e) { alert("Erro: " + e.message); modoAusenteAtivo = !modoAusenteAtivo; }
+});
+
+function gerarAcoesAutopilot() {
+    const container = document.getElementById('lista-despacho');
+    const tbodyVenc = document.getElementById('tabela-vencimentos-corpo');
+    if (!container || !tbodyVenc) return;
+
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    let acoes = []; let vencimentos = [];
+
+    clientesAdminGlobais.forEach(c => {
+        if (c.statusPagamento === 'suspenso' || !c.vencimento) return;
+        const v = new Date(c.vencimento + 'T00:00:00');
+        const diff = Math.ceil((v - hoje) / (1000 * 60 * 60 * 24));
+
+        vencimentos.push({ nome: c.nome, plano: (c.planoPreferido || '—').toUpperCase(), data: c.vencimento.split('-').reverse().join('/'), dias: diff, status: diff < 0 ? 'vencido' : (diff === 0 ? 'hoje' : (diff <= 7 ? 'proximo' : 'ok')) });
+
+        if (diff < 0) acoes.push({ cliente: c, tipo: 'vencido', dias: Math.abs(diff), mensagem: `Olá, ${c.nome}! Tudo bem? 💜\n\nNotamos que seu plano *${c.planoPreferido.toUpperCase()}* na Neo Flux venceu há ${Math.abs(diff)} dia(s).\n\nPara continuar tendo acesso, basta renovar. Qualquer dúvida, estamos por aqui! 🚀` });
+        else if (diff === 0) acoes.push({ cliente: c, tipo: 'hoje', dias: 0, mensagem: `Olá, ${c.nome}! Tudo bem? 💜\n\nPassando para avisar que seu plano *${c.planoPreferido.toUpperCase()}* na Neo Flux vence *hoje*. Renove agora! 🚀` });
+        else if (diff <= 7) acoes.push({ cliente: c, tipo: 'proximo', dias: diff, mensagem: `Olá, ${c.nome}! Tudo bem? 💜\n\nSeu plano *${c.planoPreferido.toUpperCase()}* na Neo Flux vence em ${diff} dia(s). Fica o lembrete carinhoso! 💜` });
+    });
+
+    // Render Ações
+    if (acoes.length === 0) container.innerHTML = '<p style="color: #00c853; text-align: center; padding: 15px;">✅ Tudo em ordem!</p>';
+    else {
+        container.innerHTML = "";
+        acoes.forEach(acao => {
+            const c = acao.cliente;
+            const cor = acao.tipo === 'vencido' ? '#e74c3c' : (acao.tipo === 'hoje' ? '#ff9800' : '#00d2ff');
+            const emoji = acao.tipo === 'vencido' ? '🔴' : (acao.tipo === 'hoje' ? '🟠' : '🟡');
+            const div = document.createElement('div');
+            div.style.cssText = `background: #121212; border-left: 4px solid ${cor}; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;`;
+            div.innerHTML = `<div><strong style="color: white;">${emoji} ${c.nome}</strong><p style="margin: 2px 0 0 0; color: #888; font-size: 0.8rem;">${acao.tipo === 'vencido' ? `Atrasado ${acao.dias} dia(s)` : (acao.tipo === 'hoje' ? 'Vence hoje' : `Vence em ${acao.dias} dia(s)`)}</p></div><button onclick="window.enviarCobrancaAutopilot('${c.id}', '${acao.mensagem.replace(/'/g, "\\'")}')" style="padding: 8px 15px; background: #25D366; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">Enviar</button>`;
+            container.appendChild(div);
+        });
+    }
+
+    // Render Tabela
+    vencimentos.sort((a, b) => a.dias - b.dias);
+    if (vencimentos.length === 0) tbodyVenc.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 15px; color: #888;">Nenhum vencimento cadastrado.</td></tr>';
+    else {
+        tbodyVenc.innerHTML = "";
+        vencimentos.forEach(v => {
+            let cor = "#00c853"; let texto = `Em ${v.dias} dias`;
+            if (v.status === 'vencido') { cor = "#e74c3c"; texto = `Atrasado ${Math.abs(v.dias)} dia(s)`; } 
+            else if (v.status === 'hoje') { cor = "#ff9800"; texto = "Vence HOJE"; } 
+            else if (v.status === 'proximo') { cor = "#f39c12"; texto = `Faltam ${v.dias} dias`; }
+            const tr = document.createElement('tr'); tr.style.borderBottom = "1px solid #222";
+            tr.innerHTML = `<td style="padding: 10px; color: white;"><strong>${v.nome}</strong></td><td style="padding: 10px; color: #00d2ff;">${v.plano}</td><td style="padding: 10px;">${v.data}</td><td style="padding: 10px; text-align: right;"><span style="background: ${cor}22; color: ${cor}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; border: 1px solid ${cor}55;">${texto}</span></td>`;
+            tbodyVenc.appendChild(tr);
+        });
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+window.enviarCobrancaAutopilot = function(uid, mensagem) {
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
+    const hoje = new Date().toISOString().split('T')[0];
+    setDoc(doc(db, "historico_cobrancas", `${uid}_${hoje}`), { uid: uid, data: hoje, enviadoEm: new Date() }).catch(e => console.warn(e));
+};
