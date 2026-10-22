@@ -995,26 +995,28 @@ function gerarAcoesAutopilot() {
         });
     }
 
-    // Render Tabela
+       // Render Tabela
     vencimentos.sort((a, b) => a.dias - b.dias);
-    if (vencimentos.length === 0) tbodyVenc.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 15px; color: #888;">Nenhum vencimento cadastrado.</td></tr>';
-    else {
+    if (vencimentos.length === 0) {
+        tbodyVenc.innerHTML = '<tr><td colspan="4" class="admin-tabela-vazia">Nenhum vencimento cadastrado.</td></tr>';
+    } else {
         tbodyVenc.innerHTML = "";
         vencimentos.forEach(v => {
-            let cor = "#00c853"; let texto = `Em ${v.dias} dias`;
-            if (v.status === 'vencido') { cor = "#e74c3c"; texto = `Atrasado ${Math.abs(v.dias)} dia(s)`; } 
-            else if (v.status === 'hoje') { cor = "#ff9800"; texto = "Vence HOJE"; } 
-            else if (v.status === 'proximo') { cor = "#f39c12"; texto = `Faltam ${v.dias} dias`; }
-            const tr = document.createElement('tr'); tr.style.borderBottom = "1px solid #222";
-            tr.innerHTML = `<td style="padding: 10px; color: white;"><strong>${v.nome}</strong></td><td style="padding: 10px; color: #00d2ff;">${v.plano}</td><td style="padding: 10px;">${v.data}</td><td style="padding: 10px; text-align: right;"><span style="background: ${cor}22; color: ${cor}; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; border: 1px solid ${cor}55;">${texto}</span></td>`;
+            let badgeClass = "badge-ativo";
+            let texto = `Em ${v.dias} dias`;
+            
+            if (v.status === 'vencido') { badgeClass = "badge-vencido"; texto = `Atrasado ${Math.abs(v.dias)} dia(s)`; } 
+            else if (v.status === 'hoje') { badgeClass = "badge-pendente"; texto = "Vence HOJE"; } 
+            else if (v.status === 'proximo') { badgeClass = "badge-pendente"; texto = `Faltam ${v.dias} dias`; }
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td data-label="Cliente"><span class="cliente-nome">${v.nome}</span></td>
+                <td data-label="Plano"><span class="cliente-plano">${v.plano}</span></td>
+                <td data-label="Vencimento">${v.data}</td>
+                <td data-label="Situação" class="texto-direita">
+                    <span class="badge-status ${badgeClass}">${texto}</span>
+                </td>`;
             tbodyVenc.appendChild(tr);
         });
     }
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-window.enviarCobrancaAutopilot = function(uid, mensagem) {
-    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
-    const hoje = new Date().toISOString().split('T')[0];
-    setDoc(doc(db, "historico_cobrancas", `${uid}_${hoje}`), { uid: uid, data: hoje, enviadoEm: new Date() }).catch(e => console.warn(e));
-};
