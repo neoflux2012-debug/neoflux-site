@@ -833,38 +833,52 @@ function renderizarTabelaAdmin() {
     }
 
     if (filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #888;">Nenhum cliente encontrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="admin-tabela-vazia">Nenhum cliente encontrado.</td></tr>';
         return;
     }
 
     filtrados.forEach(c => {
         const tr = document.createElement('tr');
-        tr.style.borderBottom = "1px solid #333";
-        let vencStr = "—"; let statusBadge = "";
+        
+        // Lógica para formatar o vencimento e a badge de status
+        let vencStr = "—"; 
+        let badgeClass = "badge-pendente";
+        let badgeText = "Pendente";
         
         if (c.vencimento) {
             vencStr = c.vencimento.split('-').reverse().join('/');
             const v = new Date(c.vencimento + 'T00:00:00');
             const diffDias = Math.ceil((v - hoje) / (1000 * 60 * 60 * 24));
             
-            if (c.statusPagamento === 'suspenso') statusBadge = '<span style="background: rgba(231,76,60,0.2); color: #e74c3c; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Suspenso</span>';
-            else if (diffDias < 0) statusBadge = '<span style="background: rgba(231,76,60,0.2); color: #e74c3c; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Vencido</span>';
-            else if (c.statusPagamento === 'ativo') statusBadge = '<span style="background: rgba(0,200,83,0.2); color: #00c853; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Ativo</span>';
-        } else {
-            statusBadge = '<span style="background: rgba(255,152,0,0.2); color: #ff9800; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Pendente</span>';
+            if (c.statusPagamento === 'suspenso') {
+                badgeClass = "badge-suspenso"; badgeText = "Suspenso";
+            } else if (diffDias < 0) {
+                badgeClass = "badge-vencido"; badgeText = "Vencido";
+            } else if (c.statusPagamento === 'ativo') {
+                badgeClass = "badge-ativo"; badgeText = "Ativo";
+            }
+        } else if (c.statusPagamento === 'suspenso') {
+            badgeClass = "badge-suspenso"; badgeText = "Suspenso";
         }
 
         tr.innerHTML = `
-            <td style="padding: 12px;"><strong style="color: white;">${c.nome || 'Sem nome'}</strong><br><span style="font-size: 0.8rem; color: #888;">${c.email}</span></td>
-            <td style="padding: 12px;"><b style="color: #00d2ff;">${(c.planoPreferido || '').toUpperCase()}</b></td>
-            <td style="padding: 12px;">${vencStr}</td>
-            <td style="padding: 12px;">${statusBadge}</td>
-            <td style="padding: 12px; text-align: center;">
-                <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="window.adminConfirmarPagamento('${c.id}')" style="padding: 6px 10px; background: #00c853; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">✅ Pago</button>
-                    <button onclick="window.adminSuspender('${c.id}')" style="padding: 6px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">🛑 Suspender</button>
-                    <button onclick="window.adminAlterarPlano('${c.id}')" style="padding: 6px 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">🔄 Plano</button>
-                </div>
+            <td data-label="Cliente">
+                <span class="cliente-nome">${c.nome || 'Sem nome'}</span>
+                <span class="cliente-email">${c.email}</span>
+            </td>
+            <td data-label="Plano">
+                <span class="cliente-plano">${(c.planoPreferido || '').toUpperCase()}</span>
+            </td>
+            <td data-label="Vencimento">
+                ${vencStr}
+            </td>
+            <td data-label="Status">
+                <span class="badge-status ${badgeClass}">${badgeText}</span>
+            </td>
+            <td data-label="Ações" class="texto-centro">
+                <button onclick="window.adminConfirmarPagamento('${c.id}')" class="btn-acao btn-pago">✅ Pago</button>
+                <button onclick="window.adminSuspender('${c.id}')" class="btn-acao btn-suspender">🛑 Suspender</button>
+                <button onclick="window.adminAlterarPlano('${c.id}')" class="btn-acao btn-plano">🔄 Plano</button>
             </td>`;
         tbody.appendChild(tr);
     });
