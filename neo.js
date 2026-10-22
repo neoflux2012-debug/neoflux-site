@@ -84,7 +84,6 @@ document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { 
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
 document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
 
-// Botões do Comparar Assinaturas
 document.getElementById('btn-comparar-planos')?.addEventListener('click', () => { document.getElementById('modal-comparar').style.display = 'flex'; });
 document.getElementById('btn-fechar-modal-comparar')?.addEventListener('click', () => { document.getElementById('modal-comparar').style.display = 'none'; });
 document.getElementById('btn-fechar-modal-comparar-footer')?.addEventListener('click', () => { document.getElementById('modal-comparar').style.display = 'none'; });
@@ -194,7 +193,6 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
-    // NOVO: Mostrar card do Analista apenas para Elite+
     const cardAnalista = document.getElementById('card-analista');
     if (cardAnalista) cardAnalista.style.display = regras.analista ? 'block' : 'none';
 
@@ -217,59 +215,271 @@ async function abrirSubsite(id) {
 }
 
 // ==========================================
-// 7. FESTAS E FRETE
+// 7. FESTAS, FRETE, DEVOLUÇÃO E PASTAS
 // ==========================================
 async function carregarFestas(id) {
     const container = document.getElementById('lista-festas-criadas'); if(!container) return;
-    container.innerHTML = ""; festasGlobais = [];
+    const containerPastas = document.getElementById('lista-pastas-container');
+    container.innerHTML = ""; 
+    if (containerPastas) containerPastas.innerHTML = "";
+    festasGlobais = [];
+    
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+    
+    // 1. Busca as festas no banco
     const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
-
     snap.forEach(doc => {
-        const festa = doc.data(); festa.id = doc.id; festasGlobais.push(festa);
-        const total = parseFloat(festa.total) || 0; const sinal = parseFloat(festa.sinal) || 0;
-        const falta = total - sinal;
-        const valorFaltaFormatado = falta > 0 ? `R$ ${falta.toFixed(2).replace('.', ',')}` : 'Pago';
+        const festa = doc.data(); 
+        festa.id = doc.id; 
+        festasGlobais.push(festa);
+    });
 
-        const blocoValores = regras.valores ? `
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="truck" style="width: 16px;"></i> Frete</p><p style="color: #00c853; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.frete || '0,00'}</p></div>
-                <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="dollar-sign" style="width: 16px;"></i> Total</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.total || '0,00'}</p></div>
-                <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="wallet" style="width: 16px;"></i> Sinal</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.sinal || '0,00'}</p></div>
-            </div>` : `<div><p style="color: #888; font-size: 0.8rem;">Valores disponíveis no plano Pro ou superior.</p></div>`;
+    // 2. Busca as pastas no banco
+    let pastas = [];
+    const snapPastas = await getDocs(query(collection(db, "pastas"), where("idSubsite", "==", id)));
+    snapPastas.forEach(doc => {
+        pastas.push({ id: doc.id, ...doc.data() });
+    });
 
-        const botaoContrato = regras.contratos ? `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
+    // 3. Descobre quais festas já estão agrupadas
+    let idsFestasAgrupadas = [];
+    pastas.forEach(p => { if (p.festas) idsFestasAgrupadas = idsFestasAgrupadas.concat(p.festas); });
 
-        const pecasStr = festa.pecas && festa.pecas.length > 0 ? festa.pecas.join(", ") : "Nenhuma";
-        const blocoPecas = festa.pecas && festa.pecas.length > 0 ? `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;"><p style="color: #888; font-size: 0.8rem; margin: 0 0 4px 0;"><i data-lucide="package" style="width: 14px; vertical-align: middle;"></i> Peças:</p><p style="color: #00d2ff; font-size: 0.85rem; margin: 0;">${pecasStr}</p></div>` : '';
+    // 4. Renderiza as pastas
+    if (containerPastas) {
+        pastas.forEach(pasta => {
+            const divPasta = document.createElement('div');
+            divPasta.style.cssText = "background: #0a0a0a; border: 1px solid #8a2be2; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(138,43,226,0.1);";
+            
+            const header = document.createElement('div');
+            header.style.cssText = "display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding-bottom: 10px;";
+            header.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="folder" style="color: #b57bff; width: 24px;"></i>
+                    <h4 style="color: white; margin: 0; font-size: 1.1rem;">${pasta.nome}</h4>
+                    <span style="background: rgba(138,43,226,0.2); color: #b57bff; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">${pasta.festas ? pasta.festas.length : 0} festas</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="event.stopPropagation(); window.apagarPasta('${pasta.id}', '${id}')" style="background: rgba(231,76,60,0.1); border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;"><i data-lucide="trash-2" style="width: 14px; vertical-align: middle;"></i></button>
+                    <button class="btn-toggle-pasta" style="background: rgba(138,43,226,0.2); border: 1px solid #8a2be2; color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;"><i data-lucide="chevron-down" style="width: 14px; vertical-align: middle;"></i></button>
+                </div>
+            `;
+            divPasta.appendChild(header);
 
-        const card = document.createElement('div');
-        card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative;";
-        card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
-                <div style="display: flex; align-items: center; gap: 10px;"><div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;"><i data-lucide="party-popper" style="color: #00d2ff; width: 20px; height: 20px;"></i></div><div><h4 style="color: white; margin: 0; font-size: 1.1rem;">${festa.nome}</h4><small style="color: #888;">Evento #${festa.id.substring(0, 4)}</small></div></div>
-                <span style="background: rgba(255, 152, 0, 0.2); color: #ff9800; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ff9800;">PENDENTE</span>
+            const conteudo = document.createElement('div');
+            conteudo.style.cssText = "margin-top: 15px; display: none; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;";
+            
+            // Renderiza os cards de festas dentro da pasta
+            if (pasta.festas) {
+                pasta.festas.forEach(idFesta => {
+                    const f = festasGlobais.find(x => x.id === idFesta);
+                    if (f) conteudo.appendChild(renderizarCardFesta(f, regras));
+                });
+            }
+            divPasta.appendChild(conteudo);
+
+            // Evento para abrir/fechar pasta
+            const btnToggle = header.querySelector('.btn-toggle-pasta');
+            btnToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = conteudo.style.display === 'none';
+                conteudo.style.display = isHidden ? 'grid' : 'none';
+                btnToggle.innerHTML = isHidden ? '<i data-lucide="chevron-up" style="width: 14px; vertical-align: middle;"></i>' : '<i data-lucide="chevron-down" style="width: 14px; vertical-align: middle;"></i>';
+                lucide.createIcons();
+            });
+
+            containerPastas.appendChild(divPasta);
+        });
+    }
+
+    // 5. Renderiza as festas que NÃO estão em nenhuma pasta
+    const festasNormais = festasGlobais.filter(f => !idsFestasAgrupadas.includes(f.id));
+    festasNormais.forEach(festa => {
+        container.appendChild(renderizarCardFesta(festa, regras));
+    });
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // Pesquisa
+    const inputPesquisa = document.getElementById('pesquisa-festas');
+    if (inputPesquisa) {
+        inputPesquisa.addEventListener('input', (e) => {
+            const termo = e.target.value.toLowerCase();
+            container.querySelectorAll('.card-festa').forEach(card => {
+                card.style.display = card.innerText.toLowerCase().includes(termo) ? 'block' : 'none';
+            });
+        });
+    }
+}
+
+// ==========================================
+// FUNÇÃO AUXILIAR: MONTA O CARD DA FESTA
+// ==========================================
+function renderizarCardFesta(festa, regras) {
+    const total = parseFloat(festa.total) || 0; 
+    const sinal = parseFloat(festa.sinal) || 0;
+    const falta = total - sinal;
+    const valorFaltaFormatado = falta > 0 ? `R$ ${falta.toFixed(2).replace('.', ',')}` : 'Pago';
+
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const dataFesta = new Date(festa.data + 'T00:00:00');
+    const dataPassou = dataFesta < hoje;
+
+    const blocoValores = regras.valores ? `
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="truck" style="width: 16px;"></i> Frete</p><p style="color: #00c853; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.frete || '0,00'}</p></div>
+            <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="dollar-sign" style="width: 16px;"></i> Total</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.total || '0,00'}</p></div>
+            <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="wallet" style="width: 16px;"></i> Sinal</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.sinal || '0,00'}</p></div>
+        </div>` : `<div><p style="color: #888; font-size: 0.8rem;">Valores disponíveis no plano Pro ou superior.</p></div>`;
+
+    const botaoContrato = regras.contratos ? `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 1; min-width: 100px; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
+
+    const pecasStr = festa.pecas && festa.pecas.length > 0 ? festa.pecas.join(", ") : "Nenhuma";
+    const blocoPecas = festa.pecas && festa.pecas.length > 0 ? `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;"><p style="color: #888; font-size: 0.8rem; margin: 0 0 4px 0;"><i data-lucide="package" style="width: 14px; vertical-align: middle;"></i> Peças:</p><p style="color: #00d2ff; font-size: 0.85rem; margin: 0;">${pecasStr}</p></div>` : '';
+
+    // Lógica de Devolução
+    let areaDevolucao = "";
+    if (festa.itensDevolvidos) {
+        areaDevolucao = `<div style="width: 100%; padding: 12px; background: rgba(0,200,83,0.1); border: 1px solid #00c853; color: #00c853; border-radius: 6px; text-align: center; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;"><i data-lucide="check-circle" style="width: 18px;"></i> Devolução Registrada</div>`;
+    } else if (dataPassou && festa.pecas && festa.pecas.length > 0) {
+        areaDevolucao = `<button onclick="window.registrarDevolucao('${festa.id}')" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #8a2be2, #9b59b6); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 10px rgba(138,43,226,0.3);"><i data-lucide="package-check" style="width: 18px;"></i> Registrar Devolução</button>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'card-festa';
+    card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative; transition: 0.3s;";
+    
+    card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;"><i data-lucide="party-popper" style="color: #00d2ff; width: 20px; height: 20px;"></i></div>
+                <div><h4 style="color: white; margin: 0; font-size: 1.1rem;">${festa.nome}</h4><small style="color: #888;">Evento #${festa.id.substring(0, 4)}</small></div>
             </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="background: rgba(255, 152, 0, 0.2); color: #ff9800; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ff9800;">PENDENTE</span>
+                <button onclick="this.closest('.card-festa').classList.toggle('minimizado'); this.querySelector('i').setAttribute('data-lucide', this.closest('.card-festa').classList.contains('minimizado') ? 'chevron-down' : 'chevron-up'); lucide.createIcons();" style="background: rgba(255,255,255,0.05); border: 1px solid #333; color: #ccc; cursor: pointer; padding: 6px 8px; border-radius: 6px;"><i data-lucide="chevron-up" style="width: 18px;"></i></button>
+            </div>
+        </div>
+        <div class="card-conteudo" style="display: block;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')}</p></div>
                     <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 16px;"></i> CPF</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.cpf || '—'}</p></div>
                     <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="palette" style="width: 16px;"></i> Tema</p><p style="color: #00d2ff; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.tema}</p></div>
-                </div>${blocoValores}
+                </div>
+                ${blocoValores}
             </div>
             ${blocoPecas}
             ${regras.valores ? `<div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-top: 10px; margin-bottom: 15px;"><span style="color: #888; font-size: 0.8rem;">Falta Pagar: </span><span style="color: #e74c3c; font-weight: bold; font-size: 1rem;">${valorFaltaFormatado}</span></div>` : ''}
-            <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px; margin-top: 10px;">
+            ${areaDevolucao ? `<div style="margin-top: 10px; margin-bottom: 15px;">${areaDevolucao}</div>` : ''}
+            <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px; margin-top: 10px; flex-wrap: wrap;">
                 ${botaoContrato}
-                <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="edit" style="width: 16px;"></i> Editar</button>
-                <button onclick="window.apagarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="trash-2" style="width: 16px;"></i> Apagar</button>
-            </div>`;
-        container.appendChild(card);
-    });
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    const inputPesquisa = document.getElementById('pesquisa-festas');
-    if (inputPesquisa) inputPesquisa.addEventListener('input', (e) => { const termo = e.target.value.toLowerCase(); container.querySelectorAll('div').forEach(card => { card.style.display = card.innerText.toLowerCase().includes(termo) ? 'block' : 'none'; }); });
+                <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; min-width: 100px; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="edit" style="width: 16px;"></i> Editar</button>
+                <button onclick="window.apagarFesta('${festa.id}')" style="flex: 1; min-width: 100px; padding: 10px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="trash-2" style="width: 16px;"></i> Apagar</button>
+            </div>
+        </div>`;
+    return card;
 }
+
+// Injeta o CSS do "minimizado" uma vez só
+if (!document.getElementById('style-card-minimizado')) {
+    const style = document.createElement('style');
+    style.id = 'style-card-minimizado';
+    style.innerHTML = `.card-festa.minimizado .card-conteudo { display: none !important; }`;
+    document.head.appendChild(style);
+}
+
+// --- LÓGICA DE REGISTRAR DEVOLUÇÃO ---
+window.registrarDevolucao = async function(idFesta) {
+    if (!confirm("Tem certeza que deseja registrar a devolução? O estoque das peças será reposto automaticamente.")) return;
+    try {
+        const festa = festasGlobais.find(f => f.id === idFesta);
+        if (!festa || !festa.pecas || festa.pecas.length === 0) return alert("Esta festa não tem peças para devolver.");
+        carregar(true);
+
+        await updateDoc(doc(db, "festas", idFesta), { itensDevolvidos: true, dataDevolucao: new Date() });
+
+        for (const nomePeca of festa.pecas) {
+            const q = query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId), where("nome", "==", nomePeca));
+            const snapCat = await getDocs(q);
+            if (!snapCat.empty) {
+                const pecaDoc = snapCat.docs[0];
+                const qtdAtual = parseInt(pecaDoc.data().quantidade) || 0;
+                const qtdUsada = parseInt(festa.pecasQtd && festa.pecasQtd[nomePeca] ? festa.pecasQtd[nomePeca] : 1);
+                await updateDoc(doc(db, "catalogo", pecaDoc.id), { quantidade: qtdAtual + qtdUsada });
+            }
+        }
+        alert("✅ Devolução registrada e estoque atualizado!");
+        carregarFestas(subsiteAtualId);
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao registrar devolução: " + e.message);
+    } finally {
+        carregar(false);
+    }
+};
+
+// --- LÓGICA DE PASTAS ---
+document.getElementById('btn-abrir-modal-pasta')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-criar-pasta');
+    const containerCheck = document.getElementById('lista-checkboxes-festas');
+    containerCheck.innerHTML = "";
+    
+    festasGlobais.forEach(f => {
+        const label = document.createElement('label');
+        label.style.cssText = "display: flex; align-items: center; gap: 10px; cursor: pointer; color: #ccc; padding: 5px 0; font-size: 0.9rem;";
+        label.innerHTML = `<input type="checkbox" value="${f.id}" class="chk-festa-pasta" style="width: 18px; height: 18px; accent-color: #8a2be2;"> ${f.nome} - ${f.data.split('-').reverse().join('/')}`;
+        containerCheck.appendChild(label);
+    });
+    modal.style.display = 'flex';
+});
+
+document.getElementById('btn-cancelar-pasta')?.addEventListener('click', () => {
+    document.getElementById('modal-criar-pasta').style.display = 'none';
+});
+
+document.getElementById('btn-salvar-pasta')?.addEventListener('click', async () => {
+    const nome = document.getElementById('nome-nova-pasta').value.trim();
+    if (!nome) return alert("Digite o nome da pasta.");
+    
+    const selecionadas = [];
+    document.querySelectorAll('.chk-festa-pasta:checked').forEach(cb => selecionadas.push(cb.value));
+    if (selecionadas.length === 0) return alert("Selecione pelo menos uma festa.");
+
+    carregar(true);
+    try {
+        await addDoc(collection(db, "pastas"), {
+            idSubsite: subsiteAtualId,
+            nome: nome,
+            festas: selecionadas,
+            criadoEm: new Date()
+        });
+        alert("✅ Pasta criada com sucesso!");
+        document.getElementById('modal-criar-pasta').style.display = 'none';
+        document.getElementById('nome-nova-pasta').value = "";
+        carregarFestas(subsiteAtualId);
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao criar pasta: " + e.message);
+    } finally {
+        carregar(false);
+    }
+});
+
+window.apagarPasta = async function(idPasta, idSubsite) {
+    if (confirm("Apagar esta pasta? As festas voltarão para a lista normal.")) {
+        try {
+            await deleteDoc(doc(db, "pastas", idPasta));
+            carregarFestas(idSubsite);
+        } catch (e) {
+            alert("Erro ao apagar pasta: " + e.message);
+        }
+    }
+};
+
+// ==========================================
+// 8. RESTO DO ARQUIVO (ORÇAMENTOS, KITS, ETC)
+// ==========================================
 
 window.apagarFesta = async function(id) { if(confirm("Tem certeza que deseja apagar esta festa?")) { await deleteDoc(doc(db, "festas", id)); carregarFestas(subsiteAtualId); } };
 
@@ -301,14 +511,12 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     const dataFesta = document.getElementById('festa-data').value;
     const nomeCliente = document.getElementById('festa-nome').value;
 
-    // ==========================================
     // DETECTOR DE CONFLITO DE DATAS
-    // ==========================================
     if (!idEdicao) {
         const festasNoMesmoDia = festasGlobais.filter(f => f.data === dataFesta);
         if (festasNoMesmoDia.length > 0) {
             let nomes = festasNoMesmoDia.map(f => f.nome).join(", ");
-            const continuar = confirm(`⚠️ ATENÇÃO: Já existe(m) festa(s) agendada(s) para o dia ${dataFesta.split('-').reverse().join('/')}.\n\nCliente(s): ${nomes}\n\nDeseja continuar agendando mesmo assim? (Clique em OK se for usar peças diferentes, ou Cancelar se for conflito).`);
+            const continuar = confirm(`⚠️ ATENÇÃO: Já existe(m) festa(s) agendada(s) para o dia ${dataFesta.split('-').reverse().join('/')}.\n\nCliente(s): ${nomes}\n\nDeseja continuar agendando mesmo assim?`);
             if (!continuar) { carregar(false); return; }
         }
     }
@@ -343,9 +551,6 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     } catch (error) { alert("Erro ao salvar: " + error.message); } finally { carregar(false); }
 });
 
-// ==========================================
-// 8. MODAIS DE CATÁLOGO, KITS, CONTRATOS E RELATÓRIOS
-// ==========================================
 document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => { document.getElementById('modal-catalogo').style.display = 'flex'; carregarCatalogo(); });
 document.getElementById('btn-add-item')?.addEventListener('click', async () => {
     const nome = document.getElementById('cat-nome').value; const cat = document.getElementById('cat-categoria').value;
@@ -429,9 +634,6 @@ async function carregarContratos() {
 }
 window.apagarContrato = async function(id) { if(confirm("Tem certeza que deseja apagar este modelo de contrato?")) { await deleteDoc(doc(db, "contratos", id)); carregarContratos(); } };
 
-// ==========================================
-// 9. FECHAR MODAIS E NEO WAVE CHAT
-// ==========================================
 document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => { btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; }); });
 document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
 document.getElementById('btn-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'flex');
@@ -458,10 +660,10 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
         else if (msg.includes('preco') || msg.includes('valor do kit')) resposta = "Para o Orçamento Inteligente funcionar certinho, sempre coloque o **Preço do Modelo** quando for cadastrar um Kit novo! Assim eu já puxo o valor automaticamente. 💰";
         else if (msg.includes('kit')) resposta = "No card **Kits**, você pode cadastrar novos modelos com nome, foto e preço! Esses kits ficam salvos e depois aparecem no Orçamento Inteligente. 🎁";
         else if (msg.includes('contrato')) resposta = "Para gerar contratos, vá no card **Contratos** (laranja). Você pode subir o PDF do seu modelo, colocar a logo da sua empresa e usar em qualquer festa. O módulo está disponível no plano **Elite Premium**. ✍️";
-        else if (msg.includes('relatorio') || msg.includes('planilha') || msg.includes('venda')) resposta = "No card **Relatórios** (verde), você consegue ver o resumo de vendas do mês e o faturamento das festas agendadas. Ótimo pra manter o controle! 📊";
-        else if (msg.includes('plano') || msg.includes('start') || msg.includes('pro') || msg.includes('elite') || msg.includes('upgrade')) resposta = "Você pode comparar os planos na tela inicial clicando em **'Comparar Assinaturas'**. O **Start** é básico, o **Pro** libera a sugestão de mensagem, o **Elite** libera o chat comigo e o Analista, e o **Elite Premium** libera os contratos. 🚀";
+        else if (msg.includes('relatorio') || msg.includes('planilha') || msg.includes('venda')) resposta = "No card **Relatórios** (verde), você consegue ver o resumo de vendas do mês e o faturamento das festas agendadas. Ótimo pra manter o controle financeiro! 📊";
+        else if (msg.includes('plano') || msg.includes('start') || msg.includes('pro') || msg.includes('elite') || msg.includes('upgrade')) resposta = "Você pode comparar os planos na tela inicial clicando em **'Comparar Assinaturas'**. O plano **Start** é mais básico, o **Pro** já libera a sugestão de mensagem, o **Elite** libera o chat comigo e o **Elite Premium** libera os contratos. 🚀";
         else if (msg.includes('agendar') || msg.includes('festa')) resposta = "Para agendar uma festa, clique em **'Agendar Festa'** (card laranja). Lá você preenche os dados do cliente, escolhe a data, seleciona o kit e a calculadora de frete faz o resto! 🎉";
-        else if (msg.includes('ola') || msg.includes('oi') || msg.includes('bom dia') || msg.includes('boa tarde') || msg.includes('boa noite')) resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Posso te ajudar a entender sobre Orçamentos, Kits, Histórico, Contratos, Analista ou Planos. Como posso ajudar?";
+        else if (msg.includes('ola') || msg.includes('oi') || msg.includes('bom dia') || msg.includes('boa tarde') || msg.includes('boa noite')) resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Posso te ajudar a entender sobre Orçamentos, Kits, Histórico, Contratos, Analista ou Planos. Como posso ajudar hoje?";
         else if (msg.includes('obrigado') || msg.includes('obrigada') || msg.includes('valeu') || msg.includes('vlw')) resposta = "Por nada! 💜 Estou sempre aqui se precisar. Bom trabalho com a Neo Flux! 🚀";
 
         body.innerHTML += `<div class="msg-bot">${resposta}</div>`; body.scrollTop = body.scrollHeight;
@@ -469,12 +671,21 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 });
 
 // ==========================================
-// 10. OBSERVADOR DE ESTADO
+// 10. OBSERVADOR DE ESTADO E ADMIN
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
         if (!user.emailVerified) { mostrarTela('tela-verificacao'); } 
-        else { carregarDadosCliente(user.uid); mostrarTela('tela-cliente'); }
+        else {
+            if (user.email === "neoflux2012@gmail.com") {
+                document.getElementById('btn-neo-wave').style.display = 'none';
+                carregarPainelAdmin();
+                mostrarTela('tela-admin-painel');
+            } else {
+                carregarDadosCliente(user.uid); 
+                mostrarTela('tela-cliente');
+            }
+        }
     } else {
         const telaAtual = document.querySelector('.tela.ativa');
         if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas', 'tela-termos', 'tela-pagamento', 'tela-planos'].includes(telaAtual.id)) {
@@ -639,7 +850,7 @@ async function gerarRelatorioAnalista() {
         for (const [kit, qtd] of Object.entries(kitsContagem)) { if (qtd > maxVendas) { maxVendas = qtd; kitTop = kit; } }
         document.getElementById('analista-kit-top').textContent = kitTop;
 
-        // Gráfico 1: Pico de Vendas
+        // Gráfico 1
         const ctxPico = document.getElementById('graficoPicoVendas').getContext('2d');
         if (chartPicoInstance) chartPicoInstance.destroy();
         const diasOrdenados = Object.keys(faturamentoPorDia).sort();
@@ -650,7 +861,7 @@ async function gerarRelatorioAnalista() {
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ` R$ ${context.parsed.y.toFixed(2).replace('.', ',')}`; } } } }, scales: { y: { beginAtZero: true, grid: { color: '#222' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
         });
 
-        // Gráfico 2: Kits Mais Vendidos
+        // Gráfico 2
         const ctxKits = document.getElementById('graficoKitsVendidos').getContext('2d');
         if (chartKitsInstance) chartKitsInstance.destroy();
         const kitsOrdenados = Object.entries(kitsContagem).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -663,7 +874,7 @@ async function gerarRelatorioAnalista() {
 }
 
 // ==========================================
-// 13. GERADOR DE RECIBO (DENTRO DO ANALISTA)
+// 13. GERADOR DE RECIBO
 // ==========================================
 async function carregarFestasParaRecibo() {
     const select = document.getElementById('recibo-festa-select');
@@ -682,9 +893,7 @@ async function carregarFestasParaRecibo() {
             opt.textContent = `${f.nome} - ${f.data.split('-').reverse().join('/')}`;
             select.appendChild(opt);
         });
-    } catch (err) {
-        console.error("Erro ao carregar festas para recibo:", err);
-    }
+    } catch (err) { console.error("Erro ao carregar festas para recibo:", err); }
 }
 
 document.getElementById('recibo-festa-select')?.addEventListener('change', atualizarPreviewRecibo);
@@ -695,10 +904,7 @@ async function atualizarPreviewRecibo() {
     const tipo = document.getElementById('recibo-tipo').value;
     const preview = document.getElementById('recibo-preview');
     
-    if (!idFesta) {
-        preview.style.display = 'none';
-        return;
-    }
+    if (!idFesta) { preview.style.display = 'none'; return; }
 
     try {
         const docSnap = await getDoc(doc(db, "festas", idFesta));
@@ -717,9 +923,7 @@ async function atualizarPreviewRecibo() {
         document.getElementById('recibo-data-evento').textContent = festa.data ? festa.data.split('-').reverse().join('/') : '—';
         
         preview.style.display = 'block';
-    } catch (err) {
-        console.error("Erro ao gerar preview do recibo:", err);
-    }
+    } catch (err) { console.error("Erro ao gerar preview do recibo:", err); }
 }
 
 document.getElementById('btn-gerar-recibo')?.addEventListener('click', () => {
