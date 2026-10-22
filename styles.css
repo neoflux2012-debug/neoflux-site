@@ -1,6 +1,5 @@
 /* ==========================================
    NEO FLUX - CSS PREMIUM v3.0
-   Compatível com o HTML atual + Orçamento Inteligente
    ========================================== */
 
 /* ==========================================
@@ -101,7 +100,7 @@ main {
 }
 
 main:has(#tela-subsite.ativa) { max-width: 1200px !important; }
-main:has(#tela-admin-painel.ativa) { max-width: 1000px !important; }
+main:has(#tela-admin-painel.ativa) { max-width: 1400px !important; }
 
 .tela {
     display: none;
@@ -363,7 +362,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   10. CARD ORÇAMENTO INTELIGENTE (NOVO)
+   10. CARD ORÇAMENTO INTELIGENTE
    ========================================== */
 .card-orcamento-inteligente {
     background: linear-gradient(135deg, rgba(138,43,226,0.18) 0%, rgba(0,210,255,0.10) 100%), #121212 !important;
@@ -389,9 +388,7 @@ textarea { resize: vertical; min-height: 80px; }
     transform: translateY(-3px);
 }
 
-.card-orcamento-inteligente h3 {
-    color: var(--cor-roxo) !important;
-}
+.card-orcamento-inteligente h3 { color: var(--cor-roxo) !important; }
 
 .card-orcamento-inteligente .btn-orcamento {
     width: 100%;
@@ -413,7 +410,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   11. CAIXAS DE TERMOS E INFORMAÇÕES
+   11. CAIXAS DE TERMOS
    ========================================== */
 .caixa-termos {
     background: var(--cor-card);
@@ -480,7 +477,7 @@ textarea { resize: vertical; min-height: 80px; }
 #modal-comparar > div::-webkit-scrollbar-thumb:hover { background: var(--cor-roxo); }
 
 /* ==========================================
-   13. NEO WAVE CHAT (FLUTUANTE)
+   13. NEO WAVE CHAT
    ========================================== */
 .neo-wave-btn {
     transition: var(--transition);
@@ -506,9 +503,7 @@ textarea { resize: vertical; min-height: 80px; }
 /* ==========================================
    14. LISTA DE SUBSITES
    ========================================== */
-#lista-subsites li {
-    transition: var(--transition);
-}
+#lista-subsites li { transition: var(--transition); }
 
 #lista-subsites li:hover {
     border-color: var(--borda-hover) !important;
@@ -519,9 +514,7 @@ textarea { resize: vertical; min-height: 80px; }
 /* ==========================================
    15. CARDS DE FESTA
    ========================================== */
-#lista-festas-criadas > div {
-    transition: var(--transition);
-}
+#lista-festas-criadas > div { transition: var(--transition); }
 
 #lista-festas-criadas > div:hover {
     border-color: var(--borda-hover) !important;
@@ -541,16 +534,13 @@ textarea { resize: vertical; min-height: 80px; }
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--cor-roxo); }
 
-/* ==========================================
-   17. SELEÇÃO DE TEXTO
-   ========================================== */
 ::selection {
     background: rgba(138, 43, 226, 0.4);
     color: white;
 }
 
 /* ==========================================
-   18. RESPONSIVIDADE
+   17. RESPONSIVIDADE GERAL
    ========================================== */
 @media (max-width: 768px) {
     header { padding: 28px 16px 16px; }
@@ -576,7 +566,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   19. ACESSIBILIDADE
+   18. ACESSIBILIDADE
    ========================================== */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -584,5 +574,572 @@ textarea { resize: vertical; min-height: 80px; }
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
+    }
+}
+
+/* ==========================================
+   19. PAINEL ADMIN — SEÇÃO NOVA E MODERNA
+   ========================================== */
+
+#tela-admin-painel {
+    padding: 10px 0;
+}
+
+/* Header do Admin */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-titulo {
+    color: var(--cor-azul);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.admin-titulo i {
+    color: var(--cor-azul);
+    filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.5));
+    width: 32px;
+    height: 32px;
+}
+
+.botao-admin-sair {
+    width: auto;
+    padding: 12px 22px;
+    background: #333;
+    font-size: 0.9rem;
+}
+
+/* ===== Neo Wave Monitor ===== */
+.admin-card-monitor {
+    background: linear-gradient(135deg, rgba(243,156,18,0.15) 0%, rgba(230,126,34,0.10) 100%), #121212;
+    border: 1px solid #f39c12;
+    border-radius: 14px;
+    padding: 26px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 20px rgba(243, 156, 18, 0.08);
+}
+
+.admin-card-monitor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.admin-card-monitor-titulo {
+    color: #f39c12;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.admin-card-monitor-titulo i {
+    color: #f39c12;
+    width: 24px;
+    height: 24px;
+}
+
+.admin-card-monitor-subtitulo {
+    margin: 0;
+    color: #ccc;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.admin-monitor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.admin-monitor-stat {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 18px 16px;
+    text-align: center;
+    transition: all 0.25s ease;
+}
+
+.admin-monitor-stat:hover {
+    border-color: #555;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.admin-monitor-stat-label {
+    margin: 0;
+    color: #888;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.admin-monitor-stat-valor {
+    margin: 8px 0 0 0;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.admin-stat-laranja { color: #ff9800; }
+.admin-stat-azul { color: var(--cor-azul); }
+.admin-stat-vermelho { color: #e74c3c; }
+
+.botao-admin-whatsapp {
+    margin-top: 20px;
+    width: auto;
+    padding: 12px 22px;
+    background: #25D366;
+    font-size: 0.88rem;
+}
+
+.botao-admin-whatsapp:hover {
+    background: #1eb85a;
+}
+
+/* ===== Neo Wave Autopilot ===== */
+.admin-card-autopilot {
+    background: #0a0a0a;
+    border: 1px dashed #f39c12;
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 25px;
+}
+
+.admin-autopilot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-autopilot-titulo {
+    color: #f39c12;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.admin-autopilot-titulo i { width: 20px; height: 20px; }
+
+.admin-autopilot-subtitulo {
+    color: #888;
+    font-size: 0.8rem;
+    margin: 5px 0 0 0;
+    text-align: left;
+}
+
+.admin-btn-ausente {
+    padding: 11px 22px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    background: #333;
+    color: #ccc;
+    transition: all 0.3s ease;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.admin-btn-ausente:hover {
+    background: #444;
+    color: white;
+}
+
+.admin-painel-despacho {
+    display: none;
+    margin-top: 24px;
+    border-top: 1px solid #333;
+    padding-top: 24px;
+}
+
+.admin-despacho-titulo {
+    color: white;
+    margin: 0 0 16px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.admin-lista-despacho {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+}
+
+.admin-tabela-titulo {
+    color: white;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.admin-tabela-titulo i { color: #f39c12; width: 18px; height: 18px; }
+
+.admin-tabela-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--borda-sutil);
+    background: var(--cor-card);
+}
+
+/* ===== TABELAS ADMIN (o grande fix) ===== */
+.tabela-admin {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    color: #ccc;
+    font-size: 0.88rem;
+    min-width: 650px;
+}
+
+.tabela-admin thead {
+    background: #0a0a0a;
+    border-bottom: 2px solid #333;
+}
+
+.tabela-admin th {
+    padding: 16px 18px;
+    color: #888;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.tabela-admin td {
+    padding: 16px 18px;
+    border-bottom: 1px solid #222;
+    vertical-align: middle;
+    line-height: 1.5;
+}
+
+.tabela-admin tbody tr {
+    transition: background 0.2s ease;
+}
+
+.tabela-admin tbody tr:hover {
+    background: rgba(0, 210, 255, 0.04);
+}
+
+.tabela-admin tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Nome + email na mesma célula com espaçamento */
+.tabela-admin .cliente-nome {
+    color: white;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.92rem;
+}
+
+.tabela-admin .cliente-email {
+    color: #888;
+    font-size: 0.78rem;
+    display: block;
+}
+
+.tabela-admin .cliente-plano {
+    color: var(--cor-azul);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+}
+
+/* Badges de status (pílulas) */
+.tabela-admin .badge-status {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.tabela-admin .badge-ativo {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
+    border: 1px solid rgba(0, 200, 83, 0.4);
+}
+
+.tabela-admin .badge-pendente {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ff9800;
+    border: 1px solid rgba(255, 152, 0, 0.4);
+}
+
+.tabela-admin .badge-vencido {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.tabela-admin .badge-suspenso {
+    background: rgba(150, 150, 150, 0.15);
+    color: #bbb;
+    border: 1px solid rgba(150, 150, 150, 0.4);
+}
+
+/* Botões de ação da tabela */
+.tabela-admin .btn-acao {
+    padding: 7px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 2px;
+    white-space: nowrap;
+}
+
+.tabela-admin .btn-acao:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tabela-admin .btn-pago {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
+    border: 1px solid #00c853;
+}
+
+.tabela-admin .btn-pago:hover {
+    background: #00c853;
+    color: white;
+}
+
+.tabela-admin .btn-suspender {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+}
+
+.tabela-admin .btn-suspender:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+.tabela-admin .btn-plano {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    border: 1px solid #3498db;
+}
+
+.tabela-admin .btn-plano:hover {
+    background: #3498db;
+    color: white;
+}
+
+/* Alinhamentos auxiliares */
+.tabela-admin .texto-centro { text-align: center; }
+.tabela-admin .texto-direita { text-align: right; }
+
+.tabela-admin .admin-tabela-vazia {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* ===== Caixa de Clientes ===== */
+.admin-caixa-clientes {
+    background: var(--cor-card);
+    border: 1px solid var(--borda-sutil);
+    border-radius: 14px;
+    padding: 26px;
+}
+
+.admin-clientes-titulo {
+    color: white;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--borda-sutil);
+}
+
+.admin-clientes-titulo i {
+    color: var(--cor-azul);
+    width: 22px;
+    height: 22px;
+}
+
+/* ===== Filtros ===== */
+.admin-filtros {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-input-busca {
+    flex: 1;
+    min-width: 220px;
+    padding: 12px 16px;
+    background: #000;
+    border: 1px solid var(--borda-sutil);
+    color: white;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.admin-input-busca:focus {
+    border-color: var(--cor-roxo);
+    box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.15);
+    outline: none;
+}
+
+.admin-select-filtro {
+    padding: 12px 16px;
+    background: #000;
+    border: 1px solid var(--borda-sutil);
+    color: white;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-select-filtro:focus {
+    border-color: var(--cor-roxo);
+    outline: none;
+}
+
+/* ==========================================
+   20. RESPONSIVIDADE DO PAINEL ADMIN
+   ========================================== */
+@media (max-width: 900px) {
+    main:has(#tela-admin-painel.ativa) { max-width: 100% !important; }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-titulo { font-size: 1.5rem; }
+    .botao-admin-sair { width: 100%; }
+
+    .admin-monitor-grid { grid-template-columns: 1fr; }
+    .admin-monitor-stat-valor { font-size: 1.6rem; }
+
+    .admin-autopilot-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-btn-ausente { width: 100%; justify-content: center; }
+
+    /* Tabela Admin vira cards em mobile */
+    .tabela-admin {
+        min-width: 100%;
+        display: block;
+    }
+
+    .tabela-admin thead { display: none; }
+
+    .tabela-admin tbody,
+    .tabela-admin tr,
+    .tabela-admin td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabela-admin tr {
+        background: #0a0a0a;
+        border: 1px solid var(--borda-sutil);
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 12px;
+    }
+
+    .tabela-admin td {
+        padding: 8px 0;
+        border-bottom: 1px dashed #222;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+
+    .tabela-admin td:last-child { border-bottom: none; }
+
+    .tabela-admin td::before {
+        content: attr(data-label);
+        color: #888;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-right: 12px;
+    }
+
+    .tabela-admin .btn-acao {
+        flex: 1;
+        justify-content: center;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    #tela-admin-painel { padding: 5px 0; }
+
+    .admin-card-monitor,
+    .admin-card-autopilot,
+    .admin-caixa-clientes {
+        padding: 18px;
+    }
+
+    .admin-titulo { font-size: 1.3rem; }
+    .admin-titulo i { width: 26px; height: 26px; }
+
+    .admin-monitor-stat-valor { font-size: 1.5rem; }
+
+    .admin-filtros { flex-direction: column; }
+    .admin-input-busca { min-width: 100%; }
+
+    .tabela-admin .btn-acao {
+        font-size: 0.72rem;
+        padding: 9px 6px;
     }
 }
