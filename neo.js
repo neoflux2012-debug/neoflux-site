@@ -29,6 +29,7 @@ const db = getFirestore(app);
 let subsiteAtualId = "";
 let planoAtual = "";
 let festasGlobais = [];
+let kitsDoSubsite = []; // cache dos kits para o Orçamento Inteligente
 
 // ==========================================
 // 3. REGRAS E TEXTOS
@@ -37,16 +38,16 @@ const termosPlanos = {
     start: `<h3>Plano Start</h3><p>Ideal para começar. Inclui 1 subsite, 1 login por subsite e armazenamento local.</p>`,
     pro: `<h3>Plano Pro</h3><p>Para quem quer crescer. Inclui 1 subsite, até 2 logins, armazenamento em nuvem e agendamento de reuniões.</p>`,
     elite: `<h3>Plano Elite</h3><p>A experiência completa. Múltiplos subsites, múltiplos logins, nuvem completa e reuniões ilimitadas.</p>`,
-    elite_premium: `<h3>Elite Premium</h3><p>Todas as ferramentas do Elite + Gerador de Contratos exclusivo.</p>`
+    elite_premium: `<h3>Plano Elite Premium</h3><p>Todas as ferramentas do Elite + Gerador de Contratos exclusivo.</p>`
 };
 
 const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
 
 const recursosPlanos = {
-    start: { kits: false, relatorios: false, assistente: false, valores: false, contratos: false },
-    pro: { kits: true, relatorios: true, assistente: false, valores: true, contratos: false },
-    elite: { kits: true, relatorios: true, assistente: true, valores: true, contratos: false },
-    elite_premium: { kits: true, relatorios: true, assistente: true, valores: true, contratos: true }
+    start:         { kits: false, relatorios: false, assistente: false, valores: false, contratos: false, sugestaoMensagem: false },
+    pro:           { kits: true,  relatorios: true,  assistente: false, valores: true,  contratos: false, sugestaoMensagem: true  },
+    elite:         { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true  },
+    elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true  }
 };
 
 // ==========================================
@@ -58,15 +59,14 @@ function mostrarTela(id) {
     todasAsTelas.forEach(t => t.classList.remove('ativa'));
     const tela = document.getElementById(id);
     if (tela) tela.classList.add('ativa');
-    
-    // Força o recarregamento da imagem do QR Code
+
     if (id === 'tela-pagamento') {
         const imgQr = document.getElementById('img-qrcode');
         if (imgQr) {
             imgQr.src = `./qrcode.png?t=${new Date().getTime()}`;
         }
     }
-    
+
     window.scrollTo(0, 0);
 }
 
@@ -87,19 +87,15 @@ document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { 
 document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
 document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
 
-// ==========================================
-// BOTÃO COMPARAR ASSINATURAS (AQUI ESTÁ A NOVIDADE)
-// ==========================================
+// Botões do Comparar Assinaturas
 document.getElementById('btn-comparar-planos')?.addEventListener('click', () => {
     const modal = document.getElementById('modal-comparar');
     if (modal) modal.style.display = 'flex';
 });
-
 document.getElementById('btn-fechar-modal-comparar')?.addEventListener('click', () => {
     const modal = document.getElementById('modal-comparar');
     if (modal) modal.style.display = 'none';
 });
-
 document.getElementById('btn-fechar-modal-comparar-footer')?.addEventListener('click', () => {
     const modal = document.getElementById('modal-comparar');
     if (modal) modal.style.display = 'none';
@@ -114,11 +110,11 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const card = e.target.closest('.card-plano');
         planoAtual = card.getAttribute('data-plano');
-        
+
         const nomePlano = card.querySelector('h3').textContent;
         document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
         document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual] || "";
-        
+
         mostrarTela('tela-termos');
     });
 });
@@ -128,30 +124,27 @@ document.getElementById('form-termos')?.addEventListener('submit', (e) => {
     mostrarTela('tela-criar-conta'); 
 });
 
-// --- CADASTRO ---
 document.getElementById('form-cadastro-final')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
-    
     try {
         const email = document.getElementById('email-cadastro').value;
         const senha = document.getElementById('senha-cadastro').value;
         const nome = document.getElementById('nome-cliente').value;
-        
+
         const cred = await createUserWithEmailAndPassword(auth, email, senha);
         await updateProfile(cred.user, { displayName: nome });
         await sendEmailVerification(cred.user);
-        
+
         await setDoc(doc(db, "usuarios", cred.user.uid), {
             nome: nome, 
             email: email, 
             planoPreferido: planoAtual, 
             statusPagamento: "pendente"
         });
-        
+
         document.getElementById('resumo-nome-pagamento').textContent = nome;
         mostrarTela('tela-pagamento');
-        
     } catch (error) { 
         alert("Erro ao cadastrar: " + error.message); 
     } finally { 
@@ -159,11 +152,9 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
     }
 });
 
-// --- LOGIN ---
 document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
-    
     try {
         await signInWithEmailAndPassword(
             auth, 
@@ -200,7 +191,7 @@ async function carregarDadosCliente(uid) {
             document.getElementById('cliente-nome').textContent = dados.nome;
             document.getElementById('cliente-plano').textContent = dados.planoPreferido.toUpperCase();
             document.getElementById('cliente-status').textContent = dados.statusPagamento;
-            
+
             const limite = limitesPlanos[planoAtual] || 1;
             await carregarSubsites(uid, limite);
         }
@@ -213,10 +204,10 @@ async function carregarSubsites(uid, limite) {
     if(!lista) return;
     lista.innerHTML = "";
     const snap = await getDocs(query(collection(db, "subsites"), where("idDono", "==", uid)));
-    
+
     const btnCriar = document.getElementById('btn-criar-subsite');
     const inputTitulo = document.getElementById('titulo-subsite');
-    
+
     if (btnCriar && inputTitulo) {
         if (snap.size >= limite) {
             btnCriar.disabled = true; inputTitulo.disabled = true;
@@ -268,7 +259,7 @@ async function abrirSubsite(id) {
         btnKits.disabled = !regras.kits;
         btnKits.style.background = regras.kits ? "var(--gradiente-neo)" : "#333";
     }
-    
+
     const btnRel = document.getElementById('btn-relatorios');
     if(btnRel) {
         btnRel.disabled = !regras.relatorios;
@@ -283,6 +274,17 @@ async function abrirSubsite(id) {
 
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
+
+    // Card Orçamento Inteligente: badge de bloqueio se Start
+    const cardOrc = document.getElementById('card-orcamento-inteligente');
+    if (cardOrc) {
+        const badge = cardOrc.querySelector('#orc-badge-plano-card');
+        if (!regras.sugestaoMensagem) {
+            if (badge) badge.style.display = 'inline-block';
+        } else {
+            if (badge) badge.style.display = 'none';
+        }
+    }
 
     const datalist = document.getElementById('lista-kits-salvos');
     if(datalist) {
@@ -310,6 +312,7 @@ async function abrirSubsite(id) {
 
     carregarFestas(id);
     carregarContratos();
+    carregarKitsDoSubsite(id); // <-- carrega kits no cache p/ Orçamento Inteligente
     mostrarTela('tela-subsite');
 }
 
@@ -321,10 +324,10 @@ async function carregarFestas(id) {
     if(!container) return;
     container.innerHTML = "";
     festasGlobais = [];
-    
+
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
     const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
-    
+
     snap.forEach(doc => {
         const festa = doc.data();
         festa.id = doc.id;
@@ -334,7 +337,7 @@ async function carregarFestas(id) {
         const sinal = parseFloat(festa.sinal) || 0;
         const falta = total - sinal;
         const valorFaltaFormatado = falta > 0 ? `R$ ${falta.toFixed(2).replace('.', ',')}` : 'Pago';
-        
+
         const blocoValores = regras.valores ? `
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <div>
@@ -364,7 +367,7 @@ async function carregarFestas(id) {
 
         const card = document.createElement('div');
         card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative;";
-        
+
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -417,7 +420,7 @@ async function carregarFestas(id) {
         `;
         container.appendChild(card);
     });
-    
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     const inputPesquisa = document.getElementById('pesquisa-festas');
@@ -454,7 +457,7 @@ window.editarFesta = function(id) {
     document.getElementById('festa-obs').value = festa.obs || "";
     document.getElementById('festa-total').value = festa.total || "0.00";
     document.getElementById('festa-sinal').value = festa.sinal || "0.00";
-    
+
     const selectPecas = document.getElementById('festa-pecas');
     if (selectPecas && festa.pecas) {
         for (let i = 0; i < selectPecas.options.length; i++) {
@@ -487,7 +490,7 @@ window.gerarContrato = async function(idFesta) {
 
     const contrato = contratos[indexEscolhido];
     const janela = window.open('', '_blank');
-    
+
     const logoNeoFlux = "https://neoflux2012-debug.github.io/neoflux-site/logo.png";
 
     janela.document.write(`
@@ -502,7 +505,7 @@ window.gerarContrato = async function(idFesta) {
                 .content-print iframe { width: 100%; height: 100%; border: none; min-height: 800px; }
                 .footer-print { background: white; text-align: center; padding: 20px; position: relative; border-top: 1px solid #ccc; }
                 .footer-print img { max-height: 40px; opacity: 0.3; }
-                
+
                 @media print {
                     body { background: white; }
                     .header-print { position: fixed; top: 0; width: 100%; border: none; }
@@ -547,7 +550,7 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     e.preventDefault();
     carregar(true);
     const idEdicao = document.getElementById('festa-id-edicao').value;
-    
+
     const selectPecas = document.getElementById('festa-pecas');
     const pecasSelecionadas = [];
     if (selectPecas) {
@@ -633,7 +636,7 @@ document.getElementById('btn-relatorios')?.addEventListener('click', () => {
     document.getElementById('modal-relatorios').style.display = 'flex';
     const tbody = document.getElementById('tabela-relatorio');
     tbody.innerHTML = "";
-    
+
     const hoje = new Date();
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
@@ -648,7 +651,7 @@ document.getElementById('btn-relatorios')?.addEventListener('click', () => {
                     <td style="padding: 10px;">${f.tema}</td>
                     <td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td>
                 </tr>`;
-            
+
             totalMes += parseFloat(f.total) || 0;
         }
     });
@@ -660,11 +663,13 @@ document.getElementById('btn-relatorios')?.addEventListener('click', () => {
     document.getElementById('total-mes').textContent = `R$ ${totalMes.toFixed(2).replace('.', ',')}`;
 });
 
+// KITS — agora com preço
 document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
     const nome = document.getElementById('kit-nome').value;
     const modelo = document.getElementById('kit-modelo').value;
+    const preco = parseFloat(document.getElementById('kit-preco').value) || 0;
     const fileInput = document.getElementById('kit-imagem');
 
     let base64Imagem = "";
@@ -689,7 +694,13 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
     }
 
     try {
-        await addDoc(collection(db, "kits"), { idSubsite: subsiteAtualId, nome: nome, modelo: modelo, imagem: base64Imagem });
+        await addDoc(collection(db, "kits"), {
+            idSubsite: subsiteAtualId,
+            nome: nome,
+            modelo: modelo,
+            preco: preco,
+            imagem: base64Imagem
+        });
         alert("Kit salvo!");
         document.getElementById('form-kit').reset();
         document.getElementById('modal-kits').style.display = 'none';
@@ -755,7 +766,6 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
     finally { carregar(false); }
 });
 
-// CARREGAR CONTRATOS COM BOTÃO DE APAGAR
 async function carregarContratos() {
     const lista = document.getElementById('lista-contratos');
     if(!lista) return;
@@ -763,7 +773,7 @@ async function carregarContratos() {
     const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
     lista.innerHTML = "";
     if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum contrato cadastrado.</li>";
-    
+
     snap.forEach(doc => {
         const item = doc.data();
         const li = document.createElement('li');
@@ -816,7 +826,7 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 });
 
 // ==========================================
-// 10. OBSERVADOR DE ESTADO (DEFINITIVO)
+// 10. OBSERVADOR DE ESTADO
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -832,4 +842,186 @@ onAuthStateChanged(auth, (user) => {
             mostrarTela('tela-boas-vindas');
         }
     }
+});
+
+// ==========================================
+// 11. ORÇAMENTO INTELIGENTE (NOVO)
+// ==========================================
+
+// Carrega kits do subsite para o cache e para o select do orçamento
+async function carregarKitsDoSubsite(idSubsite) {
+    kitsDoSubsite = [];
+    const select = document.getElementById('orc-kit');
+    if (select) {
+        select.innerHTML = '<option value="">Carregando kits...</option>';
+    }
+    try {
+        const snap = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", idSubsite)));
+        snap.forEach(d => {
+            kitsDoSubsite.push({ id: d.id, ...d.data() });
+        });
+        if (select) {
+            select.innerHTML = '<option value="">— Selecione um kit —</option>';
+            if (kitsDoSubsite.length === 0) {
+                select.innerHTML = '<option value="">Nenhum kit cadastrado</option>';
+            }
+            kitsDoSubsite.forEach(k => {
+                const opt = document.createElement('option');
+                opt.value = k.id;
+                opt.textContent = k.nome || 'Sem nome';
+                select.appendChild(opt);
+            });
+        }
+    } catch (err) {
+        console.error("Erro ao carregar kits para orçamento:", err);
+        if (select) select.innerHTML = '<option value="">Erro ao carregar kits</option>';
+    }
+}
+
+// Abrir modal
+document.getElementById('btn-abrir-orcamento-inteligente')?.addEventListener('click', () => {
+    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+    if (!regras.kits) {
+        alert("O módulo Kits está disponível a partir do plano Pro.");
+        return;
+    }
+
+    // Reset do modal
+    document.getElementById('orc-cliente').value = '';
+    document.getElementById('orc-valor').value = '';
+    document.getElementById('orc-obs').value = '';
+    document.getElementById('orc-mensagem').value = '';
+    document.getElementById('orc-preview-kit').style.display = 'none';
+    document.getElementById('orc-aviso-preco').style.display = 'none';
+
+    // Bloqueio da sugestão no Start
+    const bloqueio = document.getElementById('orc-bloqueio-plano');
+    const btnGerar = document.getElementById('btn-gerar-orcamento');
+    if (!regras.sugestaoMensagem) {
+        bloqueio.style.display = 'block';
+        btnGerar.disabled = false; // ainda pode gerar orçamento "manual"
+        btnGerar.innerHTML = '<i data-lucide="file-text" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento (manual)';
+    } else {
+        bloqueio.style.display = 'none';
+        btnGerar.disabled = false;
+        btnGerar.innerHTML = '<i data-lucide="sparkles" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento';
+    }
+
+    // Recarrega kits (garante dados atualizados)
+    carregarKitsDoSubsite(subsiteAtualId);
+
+    const modal = document.getElementById('modal-orcamento-inteligente');
+    if (modal) modal.style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+
+// Fechar modal
+['btn-fechar-modal-orcamento', 'btn-fechar-modal-orcamento-footer'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => {
+        document.getElementById('modal-orcamento-inteligente').style.display = 'none';
+    });
+});
+
+// Preview do kit escolhido
+document.getElementById('orc-kit')?.addEventListener('change', (e) => {
+    const id = e.target.value;
+    const preview = document.getElementById('orc-preview-kit');
+    const aviso = document.getElementById('orc-aviso-preco');
+    const inputValor = document.getElementById('orc-valor');
+
+    if (!id) {
+        preview.style.display = 'none';
+        aviso.style.display = 'none';
+        inputValor.value = '';
+        return;
+    }
+
+    const kit = kitsDoSubsite.find(k => k.id === id);
+    if (!kit) return;
+
+    document.getElementById('orc-preview-nome').textContent = kit.nome || '—';
+    document.getElementById('orc-preview-modelo').textContent = kit.modelo || 'Itens conforme cadastro';
+    const precoKit = parseFloat(kit.preco) || 0;
+    document.getElementById('orc-preview-preco').textContent = precoKit > 0 ? `R$ ${precoKit.toFixed(2).replace('.', ',')}` : 'Não cadastrado';
+
+    preview.style.display = 'block';
+
+    if (precoKit > 0) {
+        inputValor.value = precoKit.toFixed(2);
+        aviso.style.display = 'none';
+    } else {
+        inputValor.value = '';
+        aviso.style.display = 'block';
+    }
+});
+
+// Gera mensagem no estilo escolhido
+function gerarTextoOrcamento(estilo, cliente, kit, valor, obs) {
+    const nomeKit = kit.nome || 'Kit';
+    const itens = kit.modelo || 'Itens conforme cadastro';
+    const precoFmt = valor > 0 ? `R$ ${valor.toFixed(2).replace('.', ',')}` : 'a combinar';
+    const obsTxt = obs ? `\nObservações: ${obs}` : '';
+
+    if (estilo === 'carinhoso') {
+        return `Olá, ${cliente}! Tudo bem? 💜\n\nSomos da Neo Flux e preparamos seu orçamento com muito carinho!\n\n🎉 Kit: ${nomeKit}\n✨ Itens inclusos: ${itens}\n💰 Valor: ${precoFmt}${obsTxt}\n\nSerá um prazer fazer parte desse momento especial! Estamos à disposição para qualquer dúvida.`;
+    }
+    if (estilo === 'direto') {
+        return `Olá, ${cliente}.\n\nKit: ${nomeKit}\nItens: ${itens}\nValor: ${precoFmt}${obsTxt}\n\nPodemos confirmar?`;
+    }
+    // profissional
+    return `Olá, ${cliente}.\n\nSegue o orçamento referente ao ${nomeKit}.\nItens inclusos: ${itens}.\nValor total: ${precoFmt}.${obsTxt}\n\nFicamos à disposição para esclarecimentos.`;
+}
+
+// Botão Gerar
+document.getElementById('btn-gerar-orcamento')?.addEventListener('click', () => {
+    const cliente = document.getElementById('orc-cliente').value.trim();
+    const idKit = document.getElementById('orc-kit').value;
+    const valor = parseFloat(document.getElementById('orc-valor').value) || 0;
+    const obs = document.getElementById('orc-obs').value.trim();
+    const estilo = document.getElementById('orc-estilo').value;
+
+    if (!cliente) return alert("Informe o nome do cliente.");
+    if (!idKit) return alert("Selecione um kit.");
+    const kit = kitsDoSubsite.find(k => k.id === idKit);
+    if (!kit) return alert("Kit não encontrado.");
+    if (!valor || valor <= 0) return alert("Informe o valor do orçamento antes de gerar.");
+
+    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+
+    // Bloqueio no Start: mensagem genérica sem os templates Neo Wave
+    if (!regras.sugestaoMensagem) {
+        const textoManual = `Olá, ${cliente}.\n\nKit: ${kit.nome || 'Kit'}\nItens: ${kit.modelo || 'Itens conforme cadastro'}\nValor: R$ ${valor.toFixed(2).replace('.', ',')}${obs ? '\nObservações: ' + obs : ''}`;
+        document.getElementById('orc-mensagem').value = textoManual;
+        document.getElementById('orc-mensagem').readOnly = false;
+        return;
+    }
+
+    const texto = gerarTextoOrcamento(estilo, cliente, kit, valor, obs);
+    const textarea = document.getElementById('orc-mensagem');
+    textarea.value = texto;
+    textarea.readOnly = false;
+});
+
+// Copiar
+document.getElementById('btn-copiar-orcamento')?.addEventListener('click', async () => {
+    const texto = document.getElementById('orc-mensagem').value;
+    if (!texto.trim()) return alert("Gere o orçamento antes de copiar.");
+    try {
+        await navigator.clipboard.writeText(texto);
+        alert("✅ Mensagem copiada!");
+    } catch (e) {
+        // Fallback
+        const ta = document.getElementById('orc-mensagem');
+        ta.select();
+        document.execCommand('copy');
+        alert("✅ Mensagem copiada!");
+    }
+});
+
+// WhatsApp
+document.getElementById('btn-whatsapp-orcamento')?.addEventListener('click', () => {
+    const texto = document.getElementById('orc-mensagem').value;
+    if (!texto.trim()) return alert("Gere o orçamento antes de abrir o WhatsApp.");
+    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
 });
