@@ -36,7 +36,7 @@
             border-radius: 12px;
             padding: 25px;
             transition: 0.3s;
-            display: none;
+            display: none; /* Escondido por padrão, o JS mostra se for Elite */
         }
         .card-analista:hover {
             border-color: #ffb347 !important;
@@ -279,123 +279,6 @@
             </div>
 
             <div id="lista-festas-criadas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;"></div>
-        </section>
-
-        <!-- TELA 11: PAINEL ADMIN MASTER -->
-        <section id="tela-admin-painel" class="tela" style="max-width: 100%;">
-            <div class="admin-header">
-                <h1 class="admin-titulo">
-                    <i data-lucide="shield-check"></i> Painel Administrativo
-                </h1>
-                <button id="btn-admin-logout" class="botao-principal botao-admin-sair">Sair do Admin</button>
-            </div>
-
-            <!-- NEO WAVE MONITOR -->
-            <div class="admin-card-monitor">
-                <div class="admin-card-monitor-header">
-                    <h3 class="admin-card-monitor-titulo">
-                        <i data-lucide="bot"></i> Neo Wave Monitor
-                    </h3>
-                    <p class="admin-card-monitor-subtitulo">Seu assistente de cobranças e renovações.</p>
-                </div>
-                <div class="admin-monitor-grid">
-                    <div class="admin-monitor-stat">
-                        <p class="admin-monitor-stat-label">Vencem Hoje</p>
-                        <h3 class="admin-monitor-stat-valor admin-stat-laranja" id="monitor-vencem-hoje">0</h3>
-                    </div>
-                    <div class="admin-monitor-stat">
-                        <p class="admin-monitor-stat-label">Vencem em 7 dias</p>
-                        <h3 class="admin-monitor-stat-valor admin-stat-azul" id="monitor-vencem-7">0</h3>
-                    </div>
-                    <div class="admin-monitor-stat">
-                        <p class="admin-monitor-stat-label">Atrasados</p>
-                        <h3 class="admin-monitor-stat-valor admin-stat-vermelho" id="monitor-atrasados">0</h3>
-                    </div>
-                </div>
-                <button id="btn-monitor-whatsapp" class="botao-principal botao-admin-whatsapp">
-                    <i data-lucide="message-circle" style="width: 16px; vertical-align: middle;"></i> Copiar Lista de Cobrança (WhatsApp)
-                </button>
-            </div>
-
-            <!-- NEO WAVE AUTOPILOT -->
-            <div class="admin-card-autopilot">
-                <div class="admin-autopilot-header">
-                    <div>
-                        <h4 class="admin-autopilot-titulo">
-                            <i data-lucide="zap"></i> Neo Wave Autopilot
-                        </h4>
-                        <p class="admin-autopilot-subtitulo">Deixe o Neo Wave cuidar das cobranças enquanto você está fora.</p>
-                    </div>
-                    <button id="btn-toggle-ausente" class="admin-btn-ausente">
-                        <i data-lucide="power" style="width: 16px; vertical-align: middle;"></i> Ativar Modo Ausente
-                    </button>
-                </div>
-
-                <div id="painel-despacho" class="admin-painel-despacho">
-                    <h5 class="admin-despacho-titulo">⚡ Ações Sugeridas pelo Neo Wave:</h5>
-                    <div id="lista-despacho" class="admin-lista-despacho">
-                        <!-- Preenchido via JS -->
-                    </div>
-                    
-                    <!-- TABELA DE VENCIMENTOS -->
-                    <h5 class="admin-tabela-titulo">
-                        <i data-lucide="calendar-clock"></i> 
-                        Tabela de Vencimentos (Visão Geral)
-                    </h5>
-                    <div class="admin-tabela-wrapper">
-                        <table class="tabela-admin tabela-vencimentos">
-                            <thead>
-                                <tr>
-                                    <th>Cliente</th>
-                                    <th>Plano</th>
-                                    <th>Vencimento</th>
-                                    <th class="texto-direita">Situação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-vencimentos-corpo">
-                                <!-- Preenchido via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TABELA DE CLIENTES -->
-            <div class="caixa-termos admin-caixa-clientes">
-                <h3 class="admin-clientes-titulo">
-                    <i data-lucide="users"></i> Clientes Cadastrados
-                </h3>
-                
-                <!-- Filtros -->
-                <div class="admin-filtros">
-                    <input type="text" id="admin-busca-cliente" placeholder="🔍 Buscar por nome ou e-mail..." class="admin-input-busca">
-                    <select id="admin-filtro-status" class="admin-select-filtro">
-                        <option value="">Todos os Status</option>
-                        <option value="ativo">Ativos</option>
-                        <option value="pendente">Pendentes</option>
-                        <option value="vencido">Vencidos</option>
-                        <option value="suspenso">Suspensos</option>
-                    </select>
-                </div>
-
-                <!-- Tabela -->
-                <div class="admin-tabela-wrapper">
-                    <table class="tabela-admin tabela-clientes">
-                        <thead>
-                            <tr>
-                                <th>Cliente</th>
-                                <th>Plano</th>
-                                <th>Vencimento</th>
-                                <th>Status</th>
-                                <th class="texto-centro">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-admin-clientes">
-                            <tr><td colspan="5" class="admin-tabela-vazia">Carregando clientes...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </section>
 
         <!-- MODAL AGENDAR FESTA -->
