@@ -675,13 +675,14 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        if (!user.emailVerified) { mostrarTela('tela-verificacao'); } 
-        else {
+        if (!user.emailVerified) { 
+            mostrarTela('tela-verificacao'); 
+        } else {
+            // Se for o Admin Master, redireciona para a página exclusiva do admin
             if (user.email === "neoflux2012@gmail.com") {
-                document.getElementById('btn-neo-wave').style.display = 'none';
-                carregarPainelAdmin();
-                mostrarTela('tela-admin-painel');
+                window.location.href = "./admin.html";
             } else {
+                // Se for cliente, carrega os dados e vai para a área do cliente
                 carregarDadosCliente(user.uid); 
                 mostrarTela('tela-cliente');
             }
