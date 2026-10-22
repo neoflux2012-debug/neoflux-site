@@ -29,7 +29,7 @@ const db = getFirestore(app);
 let subsiteAtualId = "";
 let planoAtual = "";
 let festasGlobais = [];
-let kitsDoSubsite = []; // cache dos kits para o Orçamento Inteligente
+let kitsDoSubsite = []; 
 
 // ==========================================
 // 3. REGRAS E TEXTOS
@@ -66,7 +66,6 @@ function mostrarTela(id) {
             imgQr.src = `./qrcode.png?t=${new Date().getTime()}`;
         }
     }
-
     window.scrollTo(0, 0);
 }
 
@@ -110,11 +109,9 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const card = e.target.closest('.card-plano');
         planoAtual = card.getAttribute('data-plano');
-
         const nomePlano = card.querySelector('h3').textContent;
         document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
         document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual] || "";
-
         mostrarTela('tela-termos');
     });
 });
@@ -137,35 +134,22 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         await sendEmailVerification(cred.user);
 
         await setDoc(doc(db, "usuarios", cred.user.uid), {
-            nome: nome, 
-            email: email, 
-            planoPreferido: planoAtual, 
-            statusPagamento: "pendente"
+            nome: nome, email: email, planoPreferido: planoAtual, statusPagamento: "pendente"
         });
 
         document.getElementById('resumo-nome-pagamento').textContent = nome;
         mostrarTela('tela-pagamento');
-    } catch (error) { 
-        alert("Erro ao cadastrar: " + error.message); 
-    } finally { 
-        carregar(false); 
-    }
+    } catch (error) { alert("Erro ao cadastrar: " + error.message); } 
+    finally { carregar(false); }
 });
 
 document.getElementById('form-login')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
     try {
-        await signInWithEmailAndPassword(
-            auth, 
-            document.getElementById('email-login').value, 
-            document.getElementById('senha-login').value
-        );
-    } catch (error) { 
-        alert("E-mail ou senha incorretos."); 
-    } finally { 
-        carregar(false); 
-    }
+        await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value);
+    } catch (error) { alert("E-mail ou senha incorretos."); } 
+    finally { carregar(false); }
 });
 
 document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
@@ -191,7 +175,6 @@ async function carregarDadosCliente(uid) {
             document.getElementById('cliente-nome').textContent = dados.nome;
             document.getElementById('cliente-plano').textContent = dados.planoPreferido.toUpperCase();
             document.getElementById('cliente-status').textContent = dados.statusPagamento;
-
             const limite = limitesPlanos[planoAtual] || 1;
             await carregarSubsites(uid, limite);
         }
@@ -207,13 +190,9 @@ async function carregarSubsites(uid, limite) {
 
     const btnCriar = document.getElementById('btn-criar-subsite');
     const inputTitulo = document.getElementById('titulo-subsite');
-
     if (btnCriar && inputTitulo) {
-        if (snap.size >= limite) {
-            btnCriar.disabled = true; inputTitulo.disabled = true;
-        } else {
-            btnCriar.disabled = false; inputTitulo.disabled = false;
-        }
+        if (snap.size >= limite) { btnCriar.disabled = true; inputTitulo.disabled = true; } 
+        else { btnCriar.disabled = false; inputTitulo.disabled = false; }
     }
 
     snap.forEach(doc => {
@@ -225,8 +204,7 @@ async function carregarSubsites(uid, limite) {
             <div>
                 <button class="btn-acessar" data-id="${doc.id}" style="background: #00d2ff; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">Acessar</button>
                 <button class="btn-apagar" data-id="${doc.id}" style="background: #e74c3c; padding: 5px 10px; border: none; border-radius: 4px; color: white; cursor: pointer;">X</button>
-            </div>
-        `;
+            </div>`;
         lista.appendChild(li);
     });
 
@@ -255,36 +233,16 @@ async function abrirSubsite(id) {
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
 
     const btnKits = document.getElementById('btn-abrir-kits');
-    if(btnKits) {
-        btnKits.disabled = !regras.kits;
-        btnKits.style.background = regras.kits ? "var(--gradiente-neo)" : "#333";
-    }
+    if(btnKits) { btnKits.disabled = !regras.kits; btnKits.style.background = regras.kits ? "var(--gradiente-neo)" : "#333"; }
 
     const btnRel = document.getElementById('btn-relatorios');
-    if(btnRel) {
-        btnRel.disabled = !regras.relatorios;
-        btnRel.style.background = regras.relatorios ? "var(--gradiente-neo)" : "#333";
-    }
+    if(btnRel) { btnRel.disabled = !regras.relatorios; btnRel.style.background = regras.relatorios ? "var(--gradiente-neo)" : "#333"; }
 
     const btnContratos = document.getElementById('btn-abrir-contratos');
-    if(btnContratos) {
-        btnContratos.disabled = !regras.contratos;
-        btnContratos.style.background = regras.contratos ? "#e67e22" : "#333";
-    }
+    if(btnContratos) { btnContratos.disabled = !regras.contratos; btnContratos.style.background = regras.contratos ? "#e67e22" : "#333"; }
 
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
-
-    // Card Orçamento Inteligente: badge de bloqueio se Start
-    const cardOrc = document.getElementById('card-orcamento-inteligente');
-    if (cardOrc) {
-        const badge = cardOrc.querySelector('#orc-badge-plano-card');
-        if (!regras.sugestaoMensagem) {
-            if (badge) badge.style.display = 'inline-block';
-        } else {
-            if (badge) badge.style.display = 'none';
-        }
-    }
 
     const datalist = document.getElementById('lista-kits-salvos');
     if(datalist) {
@@ -312,19 +270,18 @@ async function abrirSubsite(id) {
 
     carregarFestas(id);
     carregarContratos();
-    carregarKitsDoSubsite(id); // <-- carrega kits no cache p/ Orçamento Inteligente
+    carregarKitsDoSubsite(id); 
     mostrarTela('tela-subsite');
 }
 
 // ==========================================
-// 7. FESTAS, FRETE E RELATÓRIOS
+// 7. FESTAS E FRETE
 // ==========================================
 async function carregarFestas(id) {
     const container = document.getElementById('lista-festas-criadas');
     if(!container) return;
     container.innerHTML = "";
     festasGlobais = [];
-
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
     const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
 
@@ -340,84 +297,43 @@ async function carregarFestas(id) {
 
         const blocoValores = regras.valores ? `
             <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div>
-                    <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="truck" style="width: 16px;"></i> Frete</p>
-                    <p style="color: #00c853; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.frete || '0,00'}</p>
-                </div>
-                <div>
-                    <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="dollar-sign" style="width: 16px;"></i> Total</p>
-                    <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.total || '0,00'}</p>
-                </div>
-                <div>
-                    <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="wallet" style="width: 16px;"></i> Sinal</p>
-                    <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.sinal || '0,00'}</p>
-                </div>
-            </div>
-        ` : `<div><p style="color: #888; font-size: 0.8rem;">Valores disponíveis no plano Pro ou superior.</p></div>`;
+                <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="truck" style="width: 16px;"></i> Frete</p><p style="color: #00c853; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.frete || '0,00'}</p></div>
+                <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="dollar-sign" style="width: 16px;"></i> Total</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.total || '0,00'}</p></div>
+                <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="wallet" style="width: 16px;"></i> Sinal</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.sinal || '0,00'}</p></div>
+            </div>` : `<div><p style="color: #888; font-size: 0.8rem;">Valores disponíveis no plano Pro ou superior.</p></div>`;
 
         const botaoContrato = regras.contratos ? 
             `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
 
         const pecasStr = festa.pecas && festa.pecas.length > 0 ? festa.pecas.join(", ") : "Nenhuma";
         const blocoPecas = festa.pecas && festa.pecas.length > 0 ? 
-            `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;">
-                <p style="color: #888; font-size: 0.8rem; margin: 0 0 4px 0;"><i data-lucide="package" style="width: 14px; vertical-align: middle;"></i> Peças:</p>
-                <p style="color: #00d2ff; font-size: 0.85rem; margin: 0;">${pecasStr}</p>
-            </div>` : '';
+            `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;"><p style="color: #888; font-size: 0.8rem; margin: 0 0 4px 0;"><i data-lucide="package" style="width: 14px; vertical-align: middle;"></i> Peças:</p><p style="color: #00d2ff; font-size: 0.85rem; margin: 0;">${pecasStr}</p></div>` : '';
 
         const card = document.createElement('div');
         card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative;";
-
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;">
-                        <i data-lucide="party-popper" style="color: #00d2ff; width: 20px; height: 20px;"></i>
-                    </div>
-                    <div>
-                        <h4 style="color: white; margin: 0; font-size: 1.1rem;">${festa.nome}</h4>
-                        <small style="color: #888;">Evento #${festa.id.substring(0, 4)}</small>
-                    </div>
+                    <div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;"><i data-lucide="party-popper" style="color: #00d2ff; width: 20px; height: 20px;"></i></div>
+                    <div><h4 style="color: white; margin: 0; font-size: 1.1rem;">${festa.nome}</h4><small style="color: #888;">Evento #${festa.id.substring(0, 4)}</small></div>
                 </div>
                 <span style="background: rgba(255, 152, 0, 0.2); color: #ff9800; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ff9800;">PENDENTE</span>
             </div>
-
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div>
-                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data</p>
-                        <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')}</p>
-                    </div>
-                    <div>
-                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 16px;"></i> CPF</p>
-                        <p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.cpf || '—'}</p>
-                    </div>
-                    <div>
-                        <p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="palette" style="width: 16px;"></i> Tema</p>
-                        <p style="color: #00d2ff; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.tema}</p>
-                    </div>
+                    <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')}</p></div>
+                    <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 16px;"></i> CPF</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.cpf || '—'}</p></div>
+                    <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="palette" style="width: 16px;"></i> Tema</p><p style="color: #00d2ff; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.tema}</p></div>
                 </div>
                 ${blocoValores}
             </div>
-
             ${blocoPecas}
-
-            ${regras.valores ? `
-            <div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-top: 10px; margin-bottom: 15px;">
-                <span style="color: #888; font-size: 0.8rem;">Falta Pagar: </span>
-                <span style="color: #e74c3c; font-weight: bold; font-size: 1rem;">${valorFaltaFormatado}</span>
-            </div>` : ''}
-
+            ${regras.valores ? `<div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-top: 10px; margin-bottom: 15px;"><span style="color: #888; font-size: 0.8rem;">Falta Pagar: </span><span style="color: #e74c3c; font-weight: bold; font-size: 1rem;">${valorFaltaFormatado}</span></div>` : ''}
             <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px; margin-top: 10px;">
                 ${botaoContrato}
-                <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;">
-                    <i data-lucide="edit" style="width: 16px;"></i> Editar
-                </button>
-                <button onclick="window.apagarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;">
-                    <i data-lucide="trash-2" style="width: 16px;"></i> Apagar
-                </button>
-            </div>
-        `;
+                <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="edit" style="width: 16px;"></i> Editar</button>
+                <button onclick="window.apagarFesta('${festa.id}')" style="flex: 1; padding: 10px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="trash-2" style="width: 16px;"></i> Apagar</button>
+            </div>`;
         container.appendChild(card);
     });
 
@@ -437,10 +353,7 @@ async function carregarFestas(id) {
 }
 
 window.apagarFesta = async function(id) {
-    if(confirm("Tem certeza que deseja apagar esta festa?")) {
-        await deleteDoc(doc(db, "festas", id));
-        carregarFestas(subsiteAtualId);
-    }
+    if(confirm("Tem certeza que deseja apagar esta festa?")) { await deleteDoc(doc(db, "festas", id)); carregarFestas(subsiteAtualId); }
 };
 
 window.editarFesta = function(id) {
@@ -457,79 +370,11 @@ window.editarFesta = function(id) {
     document.getElementById('festa-obs').value = festa.obs || "";
     document.getElementById('festa-total').value = festa.total || "0.00";
     document.getElementById('festa-sinal').value = festa.sinal || "0.00";
-
     const selectPecas = document.getElementById('festa-pecas');
     if (selectPecas && festa.pecas) {
-        for (let i = 0; i < selectPecas.options.length; i++) {
-            selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value);
-        }
+        for (let i = 0; i < selectPecas.options.length; i++) { selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value); }
     }
-
     document.getElementById('modal-agendar-festa').style.display = 'flex';
-};
-
-window.gerarContrato = async function(idFesta) {
-    const festa = festasGlobais.find(f => f.id === idFesta);
-    if (!festa) return;
-
-    const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
-    if (snap.empty) {
-        alert("Você ainda não cadastrou nenhum modelo de contrato. Vá em 'Contratos' no painel e cadastre um.");
-        return;
-    }
-
-    let opcoes = ""; let index = 1; const contratos = [];
-    snap.forEach(doc => {
-        const c = doc.data(); c.id = doc.id; contratos.push(c);
-        opcoes += `[${index}] ${c.nome}\n`; index++;
-    });
-
-    const escolha = prompt(`Qual modelo usar para ${festa.nome}?\n\n${opcoes}\nDigite o número:`);
-    const indexEscolhido = parseInt(escolha) - 1;
-    if (isNaN(indexEscolhido) || indexEscolhido < 0 || indexEscolhido >= contratos.length) return;
-
-    const contrato = contratos[indexEscolhido];
-    const janela = window.open('', '_blank');
-
-    const logoNeoFlux = "https://neoflux2012-debug.github.io/neoflux-site/logo.png";
-
-    janela.document.write(`
-        <html>
-        <head>
-            <title>Contrato - ${festa.nome}</title>
-            <style>
-                body { margin: 0; padding: 0; background: #e0e0e0; display: flex; flex-direction: column; min-height: 100vh; }
-                .header-print { background: white; text-align: center; padding: 20px; border-bottom: 1px solid #ccc; }
-                .header-print img { max-height: 80px; max-width: 200px; }
-                .content-print { flex: 1; }
-                .content-print iframe { width: 100%; height: 100%; border: none; min-height: 800px; }
-                .footer-print { background: white; text-align: center; padding: 20px; position: relative; border-top: 1px solid #ccc; }
-                .footer-print img { max-height: 40px; opacity: 0.3; }
-
-                @media print {
-                    body { background: white; }
-                    .header-print { position: fixed; top: 0; width: 100%; border: none; }
-                    .footer-print { position: fixed; bottom: 0; width: 100%; border: none; }
-                    .content-print iframe { margin-top: 100px; margin-bottom: 80px; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header-print">
-                ${contrato.logo ? `<img src="${contrato.logo}" alt="Logo Empresa">` : `<h3 style="color:#333; margin:0;">${festa.nome}</h3>`}
-            </div>
-
-            <div class="content-print">
-                <iframe src="${contrato.arquivo}"></iframe>
-            </div>
-
-            <div class="footer-print">
-                <img src="${logoNeoFlux}" alt="Neo Flux">
-                <p style="margin: 5px 0 0 0; font-size: 10px; color: #888;">Gerado por Neo Flux</p>
-            </div>
-        </body>
-        </html>
-    `);
 };
 
 function calcularFrete() {
@@ -541,77 +386,51 @@ function calcularFrete() {
     document.getElementById('total-frete').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
 }
 
-['frete-km', 'frete-preco', 'frete-consumo', 'frete-ida-volta'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', calcularFrete);
-});
+['frete-km', 'frete-preco', 'frete-consumo', 'frete-ida-volta'].forEach(id => { document.getElementById(id)?.addEventListener('input', calcularFrete); });
 document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
 
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     carregar(true);
     const idEdicao = document.getElementById('festa-id-edicao').value;
-
     const selectPecas = document.getElementById('festa-pecas');
     const pecasSelecionadas = [];
-    if (selectPecas) {
-        for (let i = 0; i < selectPecas.options.length; i++) {
-            if (selectPecas.options[i].selected) pecasSelecionadas.push(selectPecas.options[i].value);
-        }
-    }
+    if (selectPecas) { for (let i = 0; i < selectPecas.options.length; i++) { if (selectPecas.options[i].selected) pecasSelecionadas.push(selectPecas.options[i].value); } }
 
     const dadosFesta = {
-        idSubsite: subsiteAtualId,
-        nome: document.getElementById('festa-nome').value,
-        cpf: document.getElementById('festa-cpf').value,
-        telefone: document.getElementById('festa-telefone').value,
-        data: document.getElementById('festa-data').value,
-        tema: document.getElementById('festa-tema').value,
-        local: document.getElementById('festa-local').value,
-        obs: document.getElementById('festa-obs').value,
-        frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
-        total: document.getElementById('festa-total').value,
-        sinal: document.getElementById('festa-sinal').value,
-        pecas: pecasSelecionadas
+        idSubsite: subsiteAtualId, nome: document.getElementById('festa-nome').value, cpf: document.getElementById('festa-cpf').value,
+        telefone: document.getElementById('festa-telefone').value, data: document.getElementById('festa-data').value,
+        tema: document.getElementById('festa-tema').value, local: document.getElementById('festa-local').value,
+        obs: document.getElementById('festa-obs').value, frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
+        total: document.getElementById('festa-total').value, sinal: document.getElementById('festa-sinal').value, pecas: pecasSelecionadas
     };
 
     try {
-        if (idEdicao) {
-            await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
-            alert("Festa atualizada!");
-        } else {
-            await addDoc(collection(db, "festas"), dadosFesta);
-            alert("Festa agendada!");
-        }
+        if (idEdicao) { await updateDoc(doc(db, "festas", idEdicao), dadosFesta); alert("Festa atualizada!"); } 
+        else { await addDoc(collection(db, "festas"), dadosFesta); alert("Festa agendada!"); }
         document.getElementById('form-agendar-festa').reset();
         document.getElementById('festa-id-edicao').value = "";
         document.getElementById('titulo-modal-festa').textContent = "Agendar Nova Festa";
         document.getElementById('modal-agendar-festa').style.display = 'none';
         carregarFestas(subsiteAtualId);
-    } catch (error) { alert("Erro ao salvar: " + error.message); }
+    } catch (error) { alert("Erro ao salvar: " + error.message); } 
     finally { carregar(false); }
 });
 
 // ==========================================
 // 8. MODAIS DE CATÁLOGO, KITS E CONTRATOS
 // ==========================================
-document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => {
-    document.getElementById('modal-catalogo').style.display = 'flex';
-    carregarCatalogo();
-});
-
+document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => { document.getElementById('modal-catalogo').style.display = 'flex'; carregarCatalogo(); });
 document.getElementById('btn-add-item')?.addEventListener('click', async () => {
-    const nome = document.getElementById('cat-nome').value;
-    const cat = document.getElementById('cat-categoria').value;
+    const nome = document.getElementById('cat-nome').value; const cat = document.getElementById('cat-categoria').value;
     if (!nome) return alert("Digite o nome do item.");
     await addDoc(collection(db, "catalogo"), { idSubsite: subsiteAtualId, nome: nome, categoria: cat });
-    document.getElementById('cat-nome').value = "";
-    document.getElementById('cat-categoria').value = "";
+    document.getElementById('cat-nome').value = ""; document.getElementById('cat-categoria').value = "";
     carregarCatalogo();
 });
 
 async function carregarCatalogo() {
-    const lista = document.getElementById('lista-catalogo');
-    if(!lista) return;
+    const lista = document.getElementById('lista-catalogo'); if(!lista) return;
     lista.innerHTML = "<li>Carregando...</li>";
     const snap = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
     lista.innerHTML = "";
@@ -634,44 +453,25 @@ document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
 
 document.getElementById('btn-relatorios')?.addEventListener('click', () => {
     document.getElementById('modal-relatorios').style.display = 'flex';
-    const tbody = document.getElementById('tabela-relatorio');
-    tbody.innerHTML = "";
-
-    const hoje = new Date();
-    const mesAtual = hoje.getMonth();
-    const anoAtual = hoje.getFullYear();
-    let totalMes = 0;
-
+    const tbody = document.getElementById('tabela-relatorio'); tbody.innerHTML = "";
+    const hoje = new Date(); const mesAtual = hoje.getMonth(); const anoAtual = hoje.getFullYear(); let totalMes = 0;
     festasGlobais.forEach(f => {
         const dataFesta = new Date(f.data + 'T00:00:00');
         if (dataFesta.getMonth() === mesAtual && dataFesta.getFullYear() === anoAtual) {
-            tbody.innerHTML += `
-                <tr style="border-bottom: 1px solid #333;">
-                    <td style="padding: 10px;">${f.nome}</td>
-                    <td style="padding: 10px;">${f.tema}</td>
-                    <td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td>
-                </tr>`;
-
+            tbody.innerHTML += `<tr style="border-bottom: 1px solid #333;"><td style="padding: 10px;">${f.nome}</td><td style="padding: 10px;">${f.tema}</td><td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td></tr>`;
             totalMes += parseFloat(f.total) || 0;
         }
     });
-
-    if (tbody.innerHTML === "") {
-        tbody.innerHTML = "<tr><td colspan='3' style='padding: 10px; text-align: center; color: #888;'>Nenhuma festa agendada para este mês.</td></tr>";
-    }
-
+    if (tbody.innerHTML === "") { tbody.innerHTML = "<tr><td colspan='3' style='padding: 10px; text-align: center; color: #888;'>Nenhuma festa agendada para este mês.</td></tr>"; }
     document.getElementById('total-mes').textContent = `R$ ${totalMes.toFixed(2).replace('.', ',')}`;
 });
 
-// KITS — agora com preço
 document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    carregar(true);
+    e.preventDefault(); carregar(true);
     const nome = document.getElementById('kit-nome').value;
     const modelo = document.getElementById('kit-modelo').value;
     const preco = parseFloat(document.getElementById('kit-preco').value) || 0;
     const fileInput = document.getElementById('kit-imagem');
-
     let base64Imagem = "";
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
@@ -680,10 +480,8 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
             reader.onload = (ev) => {
                 const img = new Image();
                 img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 500;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * (MAX_WIDTH / img.width);
+                    const canvas = document.createElement('canvas'); const MAX_WIDTH = 500;
+                    canvas.width = MAX_WIDTH; canvas.height = img.height * (MAX_WIDTH / img.width);
                     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     resolve(canvas.toDataURL('image/jpeg', 0.7));
                 };
@@ -692,48 +490,25 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
             reader.readAsDataURL(file);
         });
     }
-
     try {
-        await addDoc(collection(db, "kits"), {
-            idSubsite: subsiteAtualId,
-            nome: nome,
-            modelo: modelo,
-            preco: preco,
-            imagem: base64Imagem
-        });
-        alert("Kit salvo!");
-        document.getElementById('form-kit').reset();
-        document.getElementById('modal-kits').style.display = 'none';
-        abrirSubsite(subsiteAtualId); 
-    } catch (error) { alert("Erro ao salvar kit: " + error.message); }
+        await addDoc(collection(db, "kits"), { idSubsite: subsiteAtualId, nome: nome, modelo: modelo, preco: preco, imagem: base64Imagem });
+        alert("Kit salvo!"); document.getElementById('form-kit').reset();
+        document.getElementById('modal-kits').style.display = 'none'; abrirSubsite(subsiteAtualId); 
+    } catch (error) { alert("Erro ao salvar kit: " + error.message); } 
     finally { carregar(false); }
 });
 
-// CONTRATOS
-document.getElementById('btn-abrir-contratos')?.addEventListener('click', () => {
-    document.getElementById('modal-contratos').style.display = 'flex';
-    carregarContratos();
-});
-
+document.getElementById('btn-abrir-contratos')?.addEventListener('click', () => { document.getElementById('modal-contratos').style.display = 'flex'; carregarContratos(); });
 document.getElementById('form-contrato')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    carregar(true);
+    e.preventDefault(); carregar(true);
     const nome = document.getElementById('contrato-nome').value;
     const fileInputArquivo = document.getElementById('contrato-arquivo');
     const fileInputLogo = document.getElementById('contrato-logo');
-
-    let base64Arquivo = "";
-    let base64Logo = "";
-
+    let base64Arquivo = ""; let base64Logo = "";
     if (fileInputArquivo.files.length > 0) {
         const file = fileInputArquivo.files[0];
-        base64Arquivo = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-        });
+        base64Arquivo = await new Promise((resolve) => { const reader = new FileReader(); reader.onloadend = () => resolve(reader.result); reader.readAsDataURL(file); });
     }
-
     if (fileInputLogo.files.length > 0) {
         const fileLogo = fileInputLogo.files[0];
         base64Logo = await new Promise((resolve) => {
@@ -741,10 +516,8 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
             reader.onload = (ev) => {
                 const img = new Image();
                 img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 400;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * (MAX_WIDTH / img.width);
+                    const canvas = document.createElement('canvas'); const MAX_WIDTH = 400;
+                    canvas.width = MAX_WIDTH; canvas.height = img.height * (MAX_WIDTH / img.width);
                     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
                     resolve(canvas.toDataURL('image/png'));
                 };
@@ -753,57 +526,40 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
             reader.readAsDataURL(fileLogo);
         });
     }
-
     try {
-        await addDoc(collection(db, "contratos"), { 
-            idSubsite: subsiteAtualId, nome: nome, arquivo: base64Arquivo,
-            tipo: fileInputArquivo.files[0].type, logo: base64Logo
-        });
-        alert("Contrato salvo!");
-        document.getElementById('form-contrato').reset();
-        carregarContratos();
-    } catch (error) { alert("Erro: " + error.message); }
+        await addDoc(collection(db, "contratos"), { idSubsite: subsiteAtualId, nome: nome, arquivo: base64Arquivo, tipo: fileInputArquivo.files[0].type, logo: base64Logo });
+        alert("Contrato salvo!"); document.getElementById('form-contrato').reset(); carregarContratos();
+    } catch (error) { alert("Erro: " + error.message); } 
     finally { carregar(false); }
 });
 
 async function carregarContratos() {
-    const lista = document.getElementById('lista-contratos');
-    if(!lista) return;
+    const lista = document.getElementById('lista-contratos'); if(!lista) return;
     lista.innerHTML = "<li>Carregando...</li>";
     const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
     lista.innerHTML = "";
     if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum contrato cadastrado.</li>";
-
     snap.forEach(doc => {
         const item = doc.data();
         const li = document.createElement('li');
         li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;";
-        li.innerHTML = `
-            <span><i data-lucide="file" style="width: 16px; vertical-align: middle; margin-right: 5px;"></i> ${item.nome}</span>
-            <button onclick="window.apagarContrato('${doc.id}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><i data-lucide="trash-2" style="width: 14px;"></i></button>
-        `;
+        li.innerHTML = `<span><i data-lucide="file" style="width: 16px; vertical-align: middle; margin-right: 5px;"></i> ${item.nome}</span><button onclick="window.apagarContrato('${doc.id}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><i data-lucide="trash-2" style="width: 14px;"></i></button>`;
         lista.appendChild(li);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 window.apagarContrato = async function(id) {
-    if(confirm("Tem certeza que deseja apagar este modelo de contrato?")) {
-        await deleteDoc(doc(db, "contratos", id));
-        carregarContratos();
-    }
+    if(confirm("Tem certeza que deseja apagar este modelo de contrato?")) { await deleteDoc(doc(db, "contratos", id)); carregarContratos(); }
 };
 
 // ==========================================
-// 9. BOTÕES DE FECHAR MODAIS E NEO WAVE
+// 9. FECHAR MODAIS E NEO WAVE
 // ==========================================
 document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.target.closest('[id^="modal-"]').style.display = 'none';
-    });
+    btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; });
 });
 document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
-
 document.getElementById('btn-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'flex');
 document.getElementById('btn-fechar-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'none');
 
@@ -812,16 +568,14 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
     const body = document.getElementById('neo-wave-body');
     if(!input.value) return;
     body.innerHTML += `<div class="msg-user">${input.value}</div>`;
-    const msg = input.value.toLowerCase();
-    input.value = "";
+    const msg = input.value.toLowerCase(); input.value = "";
     setTimeout(() => {
         let resposta = "Ainda estou aprendendo. Tente falar sobre 'agendar', 'kits', 'contratos' ou 'relatórios'.";
         if (msg.includes('agendar')) resposta = "Clique em 'Agendar Festa'!";
         if (msg.includes('kit')) resposta = "O gerador de kits está no card roxo.";
         if (msg.includes('contrato')) resposta = "Você pode cadastrar seus contratos no card laranja.";
         if (msg.includes('relatorio')) resposta = "Clique em 'Ver Planilha' para ver suas vendas.";
-        body.innerHTML += `<div class="msg-bot">${resposta}</div>`;
-        body.scrollTop = body.scrollHeight;
+        body.innerHTML += `<div class="msg-bot">${resposta}</div>`; body.scrollTop = body.scrollHeight;
     }, 600);
 });
 
@@ -830,12 +584,8 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 // ==========================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        if (!user.emailVerified) {
-            mostrarTela('tela-verificacao');
-        } else {
-            carregarDadosCliente(user.uid);
-            mostrarTela('tela-cliente');
-        }
+        if (!user.emailVerified) { mostrarTela('tela-verificacao'); } 
+        else { carregarDadosCliente(user.uid); mostrarTela('tela-cliente'); }
     } else {
         const telaAtual = document.querySelector('.tela.ativa');
         if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas', 'tela-termos', 'tela-pagamento', 'tela-planos'].includes(telaAtual.id)) {
@@ -845,183 +595,173 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ==========================================
-// 11. ORÇAMENTO INTELIGENTE (NOVO)
+// 11. ORÇAMENTO INTELIGENTE E HISTÓRICO (TODOS OS PLANOS)
 // ==========================================
-
-// Carrega kits do subsite para o cache e para o select do orçamento
 async function carregarKitsDoSubsite(idSubsite) {
     kitsDoSubsite = [];
     const select = document.getElementById('orc-kit');
-    if (select) {
-        select.innerHTML = '<option value="">Carregando kits...</option>';
-    }
+    if (select) select.innerHTML = '<option value="">Carregando kits...</option>';
     try {
         const snap = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", idSubsite)));
-        snap.forEach(d => {
-            kitsDoSubsite.push({ id: d.id, ...d.data() });
-        });
+        snap.forEach(d => { kitsDoSubsite.push({ id: d.id, ...d.data() }); });
         if (select) {
             select.innerHTML = '<option value="">— Selecione um kit —</option>';
-            if (kitsDoSubsite.length === 0) {
-                select.innerHTML = '<option value="">Nenhum kit cadastrado</option>';
-            }
+            if (kitsDoSubsite.length === 0) select.innerHTML = '<option value="">Nenhum kit cadastrado</option>';
             kitsDoSubsite.forEach(k => {
-                const opt = document.createElement('option');
-                opt.value = k.id;
-                opt.textContent = k.nome || 'Sem nome';
-                select.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = k.id; opt.textContent = k.nome || 'Sem nome'; select.appendChild(opt);
             });
         }
-    } catch (err) {
-        console.error("Erro ao carregar kits para orçamento:", err);
-        if (select) select.innerHTML = '<option value="">Erro ao carregar kits</option>';
-    }
+    } catch (err) { if (select) select.innerHTML = '<option value="">Erro ao carregar kits</option>'; }
 }
 
-// Abrir modal
 document.getElementById('btn-abrir-orcamento-inteligente')?.addEventListener('click', () => {
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
-    if (!regras.kits) {
-        alert("O módulo Kits está disponível a partir do plano Pro.");
-        return;
-    }
-
-    // Reset do modal
-    document.getElementById('orc-cliente').value = '';
-    document.getElementById('orc-valor').value = '';
-    document.getElementById('orc-obs').value = '';
-    document.getElementById('orc-mensagem').value = '';
-    document.getElementById('orc-preview-kit').style.display = 'none';
-    document.getElementById('orc-aviso-preco').style.display = 'none';
-
-    // Bloqueio da sugestão no Start
-    const bloqueio = document.getElementById('orc-bloqueio-plano');
-    const btnGerar = document.getElementById('btn-gerar-orcamento');
+    if (!regras.kits) return alert("O módulo Kits está disponível a partir do plano Pro.");
+    document.getElementById('orc-cliente').value = ''; document.getElementById('orc-valor').value = '';
+    document.getElementById('orc-obs').value = ''; document.getElementById('orc-mensagem').value = '';
+    document.getElementById('orc-preview-kit').style.display = 'none'; document.getElementById('orc-aviso-preco').style.display = 'none';
+    const bloqueio = document.getElementById('orc-bloqueio-plano'); const btnGerar = document.getElementById('btn-gerar-orcamento');
     if (!regras.sugestaoMensagem) {
-        bloqueio.style.display = 'block';
-        btnGerar.disabled = false; // ainda pode gerar orçamento "manual"
-        btnGerar.innerHTML = '<i data-lucide="file-text" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento (manual)';
+        bloqueio.style.display = 'block'; btnGerar.innerHTML = '<i data-lucide="file-text" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento (manual)';
     } else {
-        bloqueio.style.display = 'none';
-        btnGerar.disabled = false;
-        btnGerar.innerHTML = '<i data-lucide="sparkles" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento';
+        bloqueio.style.display = 'none'; btnGerar.innerHTML = '<i data-lucide="sparkles" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento';
     }
-
-    // Recarrega kits (garante dados atualizados)
     carregarKitsDoSubsite(subsiteAtualId);
-
-    const modal = document.getElementById('modal-orcamento-inteligente');
-    if (modal) modal.style.display = 'flex';
+    document.getElementById('modal-orcamento-inteligente').style.display = 'flex';
     if (typeof lucide !== 'undefined') lucide.createIcons();
 });
 
-// Fechar modal
 ['btn-fechar-modal-orcamento', 'btn-fechar-modal-orcamento-footer'].forEach(id => {
-    document.getElementById(id)?.addEventListener('click', () => {
-        document.getElementById('modal-orcamento-inteligente').style.display = 'none';
-    });
+    document.getElementById(id)?.addEventListener('click', () => { document.getElementById('modal-orcamento-inteligente').style.display = 'none'; });
 });
 
-// Preview do kit escolhido
 document.getElementById('orc-kit')?.addEventListener('change', (e) => {
-    const id = e.target.value;
-    const preview = document.getElementById('orc-preview-kit');
-    const aviso = document.getElementById('orc-aviso-preco');
-    const inputValor = document.getElementById('orc-valor');
-
-    if (!id) {
-        preview.style.display = 'none';
-        aviso.style.display = 'none';
-        inputValor.value = '';
-        return;
-    }
-
-    const kit = kitsDoSubsite.find(k => k.id === id);
-    if (!kit) return;
-
+    const id = e.target.value; const preview = document.getElementById('orc-preview-kit');
+    const aviso = document.getElementById('orc-aviso-preco'); const inputValor = document.getElementById('orc-valor');
+    if (!id) { preview.style.display = 'none'; aviso.style.display = 'none'; inputValor.value = ''; return; }
+    const kit = kitsDoSubsite.find(k => k.id === id); if (!kit) return;
     document.getElementById('orc-preview-nome').textContent = kit.nome || '—';
     document.getElementById('orc-preview-modelo').textContent = kit.modelo || 'Itens conforme cadastro';
     const precoKit = parseFloat(kit.preco) || 0;
     document.getElementById('orc-preview-preco').textContent = precoKit > 0 ? `R$ ${precoKit.toFixed(2).replace('.', ',')}` : 'Não cadastrado';
-
     preview.style.display = 'block';
-
-    if (precoKit > 0) {
-        inputValor.value = precoKit.toFixed(2);
-        aviso.style.display = 'none';
-    } else {
-        inputValor.value = '';
-        aviso.style.display = 'block';
-    }
+    if (precoKit > 0) { inputValor.value = precoKit.toFixed(2); aviso.style.display = 'none'; } 
+    else { inputValor.value = ''; aviso.style.display = 'block'; }
 });
 
-// Gera mensagem no estilo escolhido
 function gerarTextoOrcamento(estilo, cliente, kit, valor, obs) {
-    const nomeKit = kit.nome || 'Kit';
-    const itens = kit.modelo || 'Itens conforme cadastro';
+    const nomeKit = kit.nome || 'Kit'; const itens = kit.modelo || 'Itens conforme cadastro';
     const precoFmt = valor > 0 ? `R$ ${valor.toFixed(2).replace('.', ',')}` : 'a combinar';
     const obsTxt = obs ? `\nObservações: ${obs}` : '';
-
-    if (estilo === 'carinhoso') {
-        return `Olá, ${cliente}! Tudo bem? 💜\n\nSomos da Neo Flux e preparamos seu orçamento com muito carinho!\n\n🎉 Kit: ${nomeKit}\n✨ Itens inclusos: ${itens}\n💰 Valor: ${precoFmt}${obsTxt}\n\nSerá um prazer fazer parte desse momento especial! Estamos à disposição para qualquer dúvida.`;
-    }
-    if (estilo === 'direto') {
-        return `Olá, ${cliente}.\n\nKit: ${nomeKit}\nItens: ${itens}\nValor: ${precoFmt}${obsTxt}\n\nPodemos confirmar?`;
-    }
-    // profissional
+    if (estilo === 'carinhoso') return `Olá, ${cliente}! Tudo bem? 💜\n\nSomos da Neo Flux e preparamos seu orçamento com muito carinho!\n\n🎉 Kit: ${nomeKit}\n✨ Itens inclusos: ${itens}\n💰 Valor: ${precoFmt}${obsTxt}\n\nSerá um prazer fazer parte desse momento especial! Estamos à disposição para qualquer dúvida.`;
+    if (estilo === 'direto') return `Olá, ${cliente}.\n\nKit: ${nomeKit}\nItens: ${itens}\nValor: ${precoFmt}${obsTxt}\n\nPodemos confirmar?`;
     return `Olá, ${cliente}.\n\nSegue o orçamento referente ao ${nomeKit}.\nItens inclusos: ${itens}.\nValor total: ${precoFmt}.${obsTxt}\n\nFicamos à disposição para esclarecimentos.`;
 }
 
-// Botão Gerar
-document.getElementById('btn-gerar-orcamento')?.addEventListener('click', () => {
+document.getElementById('btn-gerar-orcamento')?.addEventListener('click', async () => {
     const cliente = document.getElementById('orc-cliente').value.trim();
     const idKit = document.getElementById('orc-kit').value;
     const valor = parseFloat(document.getElementById('orc-valor').value) || 0;
     const obs = document.getElementById('orc-obs').value.trim();
     const estilo = document.getElementById('orc-estilo').value;
-
-    if (!cliente) return alert("Informe o nome do cliente.");
-    if (!idKit) return alert("Selecione um kit.");
-    const kit = kitsDoSubsite.find(k => k.id === idKit);
-    if (!kit) return alert("Kit não encontrado.");
+    if (!cliente) return alert("Informe o nome do cliente."); if (!idKit) return alert("Selecione um kit.");
+    const kit = kitsDoSubsite.find(k => k.id === idKit); if (!kit) return alert("Kit não encontrado.");
     if (!valor || valor <= 0) return alert("Informe o valor do orçamento antes de gerar.");
-
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
-
-    // Bloqueio no Start: mensagem genérica sem os templates Neo Wave
     if (!regras.sugestaoMensagem) {
         const textoManual = `Olá, ${cliente}.\n\nKit: ${kit.nome || 'Kit'}\nItens: ${kit.modelo || 'Itens conforme cadastro'}\nValor: R$ ${valor.toFixed(2).replace('.', ',')}${obs ? '\nObservações: ' + obs : ''}`;
-        document.getElementById('orc-mensagem').value = textoManual;
-        document.getElementById('orc-mensagem').readOnly = false;
-        return;
+        document.getElementById('orc-mensagem').value = textoManual; document.getElementById('orc-mensagem').readOnly = false;
+        salvarOrcamentoHistorico(cliente, kit.nome, valor, textoManual, estilo); return;
     }
-
     const texto = gerarTextoOrcamento(estilo, cliente, kit, valor, obs);
-    const textarea = document.getElementById('orc-mensagem');
-    textarea.value = texto;
-    textarea.readOnly = false;
+    const textarea = document.getElementById('orc-mensagem'); textarea.value = texto; textarea.readOnly = false;
+    salvarOrcamentoHistorico(cliente, kit.nome, valor, texto, estilo);
 });
 
-// Copiar
+async function salvarOrcamentoHistorico(cliente, nomeKit, valor, mensagem, estilo) {
+    try {
+        await addDoc(collection(db, "historico_orcamentos"), { idSubsite: subsiteAtualId, cliente: cliente, kit: nomeKit, valor: valor, mensagem: mensagem, estilo: estilo, criadoEm: new Date() });
+        console.log("✅ Orçamento salvo no histórico.");
+    } catch (err) { console.error("Erro ao salvar no histórico:", err); }
+}
+
 document.getElementById('btn-copiar-orcamento')?.addEventListener('click', async () => {
     const texto = document.getElementById('orc-mensagem').value;
     if (!texto.trim()) return alert("Gere o orçamento antes de copiar.");
-    try {
-        await navigator.clipboard.writeText(texto);
-        alert("✅ Mensagem copiada!");
-    } catch (e) {
-        // Fallback
-        const ta = document.getElementById('orc-mensagem');
-        ta.select();
-        document.execCommand('copy');
-        alert("✅ Mensagem copiada!");
-    }
+    try { await navigator.clipboard.writeText(texto); alert("✅ Mensagem copiada!"); } 
+    catch (e) { const ta = document.getElementById('orc-mensagem'); ta.select(); document.execCommand('copy'); alert("✅ Mensagem copiada!"); }
 });
 
-// WhatsApp
 document.getElementById('btn-whatsapp-orcamento')?.addEventListener('click', () => {
     const texto = document.getElementById('orc-mensagem').value;
     if (!texto.trim()) return alert("Gere o orçamento antes de abrir o WhatsApp.");
-    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
-    window.open(url, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
 });
+
+// --- HISTÓRICO DE ORÇAMENTOS ---
+document.getElementById('btn-abrir-historico-orcamento')?.addEventListener('click', () => {
+    document.getElementById('modal-historico-orcamento').style.display = 'flex';
+    carregarHistoricoOrcamentos();
+});
+
+['btn-fechar-modal-historico', 'btn-fechar-modal-historico-footer'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => { document.getElementById('modal-historico-orcamento').style.display = 'none'; });
+});
+
+async function carregarHistoricoOrcamentos() {
+    const container = document.getElementById('lista-historico-orcamento');
+    if (!container) return;
+    container.innerHTML = '<p style="color: #888; text-align: center;">Buscando histórico...</p>';
+    try {
+        const dataCorte = new Date(); dataCorte.setDate(dataCorte.getDate() - 30);
+        const q = query(collection(db, "historico_orcamentos"), where("idSubsite", "==", subsiteAtualId));
+        const snap = await getDocs(q);
+        let orcamentos = []; let idsParaDeletar = [];
+
+        snap.forEach(doc => {
+            const data = doc.data();
+            const dataCriacao = data.criadoEm?.toDate ? data.criadoEm.toDate() : new Date(data.criadoEm);
+            if (dataCriacao >= dataCorte) { orcamentos.push({ id: doc.id, ...data, dataFormatada: dataCriacao.toLocaleDateString('pt-BR') }); } 
+            else { idsParaDeletar.push(doc.id); }
+        });
+
+        if (idsParaDeletar.length > 0) {
+            idsParaDeletar.forEach(async (id) => { try { await deleteDoc(doc(db, "historico_orcamentos", id)); } catch(e) {} });
+        }
+
+        orcamentos.sort((a, b) => {
+            const dA = a.criadoEm?.toDate ? a.criadoEm.toDate() : new Date(a.criadoEm);
+            const dB = b.criadoEm?.toDate ? b.criadoEm.toDate() : new Date(b.criadoEm);
+            return dB - dA;
+        });
+
+        if (orcamentos.length === 0) { container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Nenhum orçamento gerado nos últimos 30 dias.</p>'; return; }
+        container.innerHTML = '';
+        orcamentos.forEach(orc => {
+            const valorFmt = parseFloat(orc.valor).toFixed(2).replace('.', ',');
+            const card = document.createElement('div');
+            card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 8px;";
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;"><strong style="color: white; font-size: 1rem;">${orc.cliente}</strong><span style="color: #888; font-size: 0.8rem;">${orc.dataFormatada}</span></div>
+                <div style="font-size: 0.85rem; color: #ccc;">🎁 <b>Kit:</b> ${orc.kit} <br>💰 <b>Valor:</b> <span style="color: #00c853; font-weight: bold;">R$ ${valorFmt}</span></div>
+                <div style="background: #121212; padding: 10px; border-radius: 6px; font-size: 0.8rem; color: #aaa; white-space: pre-wrap; max-height: 100px; overflow-y: auto; border: 1px solid #222; margin-top: 4px;">${orc.mensagem}</div>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button onclick="window.copiarMensagemHistorico('${orc.id}')" style="flex: 1; padding: 8px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">📋 Copiar</button>
+                    <button onclick="window.enviarWhatsHistorico('${orc.id}')" style="flex: 1; padding: 8px; background: #25D366; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">📱 WhatsApp</button>
+                    <button onclick="window.apagarOrcamentoHistorico('${orc.id}')" style="padding: 8px 12px; background: rgba(231,76,60,0.2); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">🗑️</button>
+                </div>`;
+            container.appendChild(card);
+        });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    } catch (err) { container.innerHTML = '<p style="color: #e74c3c; text-align: center;">Erro ao carregar o histórico.</p>'; }
+}
+
+window.copiarMensagemHistorico = async function(id) {
+    try { const docSnap = await getDoc(doc(db, "historico_orcamentos", id)); if (docSnap.exists()) { await navigator.clipboard.writeText(docSnap.data().mensagem); alert("✅ Mensagem copiada!"); } } catch (e) { alert("Erro ao copiar."); }
+};
+window.enviarWhatsHistorico = async function(id) {
+    try { const docSnap = await getDoc(doc(db, "historico_orcamentos", id)); if (docSnap.exists()) { window.open(`https://wa.me/?text=${encodeURIComponent(docSnap.data().mensagem)}`, '_blank'); } } catch (e) { alert("Erro ao abrir WhatsApp."); }
+};
+window.apagarOrcamentoHistorico = async function(id) {
+    if (confirm("Apagar este orçamento do histórico?")) { try { await deleteDoc(doc(db, "historico_orcamentos", id)); carregarHistoricoOrcamentos(); } catch (e) { alert("Erro ao apagar."); } }
+};
