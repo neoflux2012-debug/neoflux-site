@@ -7,73 +7,27 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./CSS NEO FLUX.css">
+    <link rel="stylesheet" href="./styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        /* ============================================
+           APENAS ESTILOS ESPECÍFICOS DO NEO WAVE (CHAT)
+           Todo o resto do CSS está em ./styles.css
+           ============================================ */
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { border: 4px solid #333; border-top: 4px solid var(--cor-azul); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        .spinner { border: 4px solid #333; border-top: 4px solid #00d2ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .neo-wave-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--gradiente-neo); border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(138,43,226,0.5); display: flex; justify-content: center; align-items: center; z-index: 9998; }
+        .neo-wave-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 100%); border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(138,43,226,0.5); display: flex; justify-content: center; align-items: center; z-index: 9998; }
         .neo-wave-btn i { color: white; width: 30px; height: 30px; }
         .neo-wave-chat { position: fixed; bottom: 90px; right: 20px; width: 300px; height: 400px; background: #121212; border: 1px solid #333; border-radius: 12px; display: none; flex-direction: column; z-index: 9999; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .neo-wave-header { background: var(--gradiente-neo); padding: 15px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .neo-wave-header { background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 100%); padding: 15px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .neo-wave-body { flex: 1; padding: 15px; overflow-y: auto; color: #ccc; font-size: 0.85rem; display: flex; flex-direction: column; gap: 10px; }
         .msg-bot { background: #222; padding: 10px; border-radius: 8px; border-bottom-left-radius: 0; align-self: flex-start; max-width: 80%; }
-        .msg-user { background: var(--cor-azul); color: #000; padding: 10px; border-radius: 8px; border-bottom-right-radius: 0; align-self: flex-end; max-width: 80%; }
+        .msg-user { background: #00d2ff; color: #000; padding: 10px; border-radius: 8px; border-bottom-right-radius: 0; align-self: flex-end; max-width: 80%; }
         .neo-wave-input-area { display: flex; padding: 10px; border-top: 1px solid #333; }
         .neo-wave-input-area input { flex: 1; padding: 8px; border-radius: 20px; border: none; background: #000; color: white; outline: none; }
-        .neo-wave-input-area button { background: var(--gradiente-neo); border: none; border-radius: 50%; width: 35px; height: 35px; margin-left: 5px; cursor: pointer; color: white; }
-
-        /* CARD DESTAQUE ROXO — ORÇAMENTO INTELIGENTE */
-        .card-orcamento-inteligente {
-            background: linear-gradient(135deg, rgba(138,43,226,0.18) 0%, rgba(0,210,255,0.10) 100%), #121212;
-            border: 1px solid var(--cor-roxo) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .card-orcamento-inteligente::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at top right, rgba(138,43,226,0.25), transparent 60%);
-            pointer-events: none;
-        }
-        .card-orcamento-inteligente h3 { color: var(--cor-roxo) !important; }
-        .card-orcamento-inteligente .btn-orcamento {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: var(--gradiente-neo);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-            position: relative;
-            z-index: 1;
-        }
-        .card-orcamento-inteligente .btn-orcamento:hover { transform: translateY(-2px); }
-
-        /* Botão Comparar Assinaturas padronizado */
-        #btn-comparar-planos {
-            background: transparent;
-            color: var(--cor-azul);
-            border: 1px solid var(--cor-azul);
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1rem;
-        }
-        #btn-comparar-planos:hover {
-            background: var(--cor-azul);
-            color: #000;
-        }
+        .neo-wave-input-area button { background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 100%); border: none; border-radius: 50%; width: 35px; height: 35px; margin-left: 5px; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
@@ -123,12 +77,12 @@
             <div class="caixa-termos" style="max-height: none;">
                 <div id="texto-termos" style="margin-bottom: 20px;"></div>
 
-                <div style="background: rgba(138, 43, 226, 0.1); border: 1px solid var(--cor-roxo); padding: 15px; border-radius: 8px;">
-                    <p style="text-align: left; margin-bottom: 10px; color: var(--texto-principal);">
-                        <i data-lucide="external-link" style="width: 16px; vertical-align: middle; color: var(--cor-azul);"></i>
+                <div style="background: rgba(138, 43, 226, 0.1); border: 1px solid #8a2be2; padding: 15px; border-radius: 8px;">
+                    <p style="text-align: left; margin-bottom: 10px; color: #ffffff;">
+                        <i data-lucide="external-link" style="width: 16px; vertical-align: middle; color: #00d2ff;"></i>
                         Acesse o documento completo dos termos clicando no link abaixo:
                     </p>
-                    <a href="https://forms.gle/NVJLjChvsJdEyasD6" target="_blank" style="display: block; text-align: left; color: var(--cor-azul); font-weight: bold; text-decoration: underline; margin-bottom: 15px;">
+                    <a href="https://forms.gle/NVJLjChvsJdEyasD6" target="_blank" style="display: block; text-align: left; color: #00d2ff; font-weight: bold; text-decoration: underline; margin-bottom: 15px;">
                         Ler Termos de Contratação (Google Forms)
                     </a>
                     <p style="text-align: left; margin: 0; font-size: 0.85rem; color: #ccc;">
@@ -146,7 +100,7 @@
 
                 <div class="checkbox-container" style="margin-top: 10px;">
                     <input type="checkbox" id="aceite-termos" required>
-                    <label for="aceite-termos" style="font-weight: bold; color: var(--texto-principal);">
+                    <label for="aceite-termos" style="font-weight: bold; color: #ffffff;">
                         Li e aceito os Termos e Condições do site e do formulário.
                     </label>
                 </div>
@@ -229,7 +183,7 @@
         <!-- TELA 10: PAINEL DO SUBSITE -->
         <section id="tela-subsite" class="tela" style="max-width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1 id="nome-do-subsite" style="color: var(--cor-azul); margin: 0;">...</h1>
+                <h1 id="nome-do-subsite" style="color: #00d2ff; margin: 0;">...</h1>
                 <button id="btn-voltar-cliente" class="botao-principal" style="width: auto; background: #333;">Voltar</button>
             </div>
 
@@ -350,7 +304,7 @@
             </div>
         </div>
 
-        <!-- MODAL KITS (AGORA COM CAMPO DE PREÇO) -->
+        <!-- MODAL KITS (COM CAMPO DE PREÇO) -->
         <div id="modal-kits" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px;">
                 <h2 style="color: white; margin-top: 0;">Gerador de Kit</h2>
@@ -360,7 +314,6 @@
                     <label style="color: #ccc;">Modelo do Kit:</label>
                     <input type="text" id="kit-modelo" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px;">
 
-                    <!-- NOVO CAMPO DE PREÇO -->
                     <label style="color: #ccc;">Preço do Modelo do Kit (R$):</label>
                     <input type="number" id="kit-preco" step="0.01" min="0" placeholder="Ex: 150.00" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px;">
                     <p style="font-size: 0.78rem; color: #888; margin: 0 0 12px 0; text-align: left;">
@@ -430,21 +383,19 @@
             </div>
         </div>
 
-        <!-- ============================================
-             NOVO MODAL: ORÇAMENTO INTELIGENTE
-             ============================================ -->
+        <!-- MODAL ORÇAMENTO INTELIGENTE -->
         <div id="modal-orcamento-inteligente" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid var(--cor-roxo); padding: 30px; border-radius: 12px; width: 100%; max-width: 720px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 30px rgba(138,43,226,0.35);">
+            <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 720px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 30px rgba(138,43,226,0.35);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;">
-                        <i data-lucide="sparkles" style="color: var(--cor-roxo); width: 26px;"></i>
+                        <i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i>
                         Orçamento Inteligente
                     </h2>
                     <button id="btn-fechar-modal-orcamento" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
                 </div>
 
                 <p style="text-align: left; color: #a0a0a0; font-size: 0.85rem; margin-bottom: 18px;">
-                    <i data-lucide="bot" style="width: 14px; vertical-align: middle; color: var(--cor-roxo);"></i>
+                    <i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i>
                     O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do kit escolhido.
                 </p>
 
@@ -473,7 +424,7 @@
 
                 <div style="border-top: 1px solid #333; padding-top: 16px; margin-top: 6px;">
                     <label style="color: #ccc; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
-                        <i data-lucide="bot" style="width: 16px; color: var(--cor-roxo);"></i>
+                        <i data-lucide="bot" style="width: 16px; color: #8a2be2;"></i>
                         <strong>Mensagem do Neo Wave</strong>
                         <span id="orc-badge-plano" style="font-size: 0.7rem; background: rgba(138,43,226,0.2); color: #b57bff; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">Pro+</span>
                     </label>
@@ -534,7 +485,7 @@
         <div id="modal-comparar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="color: white; margin: 0; background: var(--gradiente-neo); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Comparar Assinaturas</h2>
+                    <h2 style="color: white; margin: 0; background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Comparar Assinaturas</h2>
                     <button id="btn-fechar-modal-comparar" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
                 </div>
 
@@ -544,8 +495,8 @@
                             <tr style="border-bottom: 2px solid #333;">
                                 <th style="padding: 15px; text-align: left; color: #888; font-weight: normal;">Recursos</th>
                                 <th style="padding: 15px; color: white; font-size: 1.1rem;">Start</th>
-                                <th style="padding: 15px; color: var(--cor-azul); font-size: 1.1rem;">Pro</th>
-                                <th style="padding: 15px; color: var(--cor-roxo); font-size: 1.1rem;">Elite</th>
+                                <th style="padding: 15px; color: #00d2ff; font-size: 1.1rem;">Pro</th>
+                                <th style="padding: 15px; color: #8a2be2; font-size: 1.1rem;">Elite</th>
                                 <th style="padding: 15px; color: #f39c12; font-size: 1.1rem;">Elite Premium</th>
                             </tr>
                         </thead>
