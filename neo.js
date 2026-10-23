@@ -44,8 +44,8 @@ const termosPlanos = {
 const limitesPlanos = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
 
 const recursosPlanos = {
-    start:         { kits: false, relatorios: false, assistente: false, valores: false, contratos: false, sugestaoMensagem: false, analista: false },
-    pro:           { kits: true,  relatorios: true,  assistente: false, valores: true,  contratos: false, sugestaoMensagem: true,  analista: false },
+    start:         { kits: false, relatorios: false, assistente: true,  valores: false, contratos: false, sugestaoMensagem: false, analista: false },
+    pro:           { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: false },
     elite:         { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: true  },
     elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  }
 };
@@ -202,16 +202,26 @@ async function abrirSubsite(id) {
         const snapKits = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", id)));
         snapKits.forEach(k => { const opt = document.createElement('option'); opt.value = k.data().nome; datalist.appendChild(opt); });
     }
-    const selectPecas = document.getElementById('festa-pecas');
-    if(selectPecas) {
-        selectPecas.innerHTML = "";
-        const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", id)));
-        snapCat.forEach(c => { const item = c.data(); const opt = document.createElement('option'); opt.value = item.nome; opt.textContent = `${item.nome} (${item.categoria})`; selectPecas.appendChild(opt); });
-    }
+    
+    await carregarPecasNoSelect(); // Carrega as peças inicialmente
     carregarFestas(id);
     carregarContratos();
     carregarKitsDoSubsite(id); 
     mostrarTela('tela-subsite');
+}
+
+async function carregarPecasNoSelect() {
+    const selectPecas = document.getElementById('festa-pecas');
+    if(!selectPecas) return;
+    selectPecas.innerHTML = "";
+    const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
+    snapCat.forEach(c => { 
+        const item = c.data(); 
+        const opt = document.createElement('option'); 
+        opt.value = item.nome; 
+        opt.textContent = `${item.nome} (${item.categoria})`; 
+        selectPecas.appendChild(opt); 
+    });
 }
 
 // ==========================================
@@ -226,7 +236,6 @@ async function carregarFestas(id) {
     
     const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
     
-    // 1. Busca as festas no banco
     const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
     snap.forEach(doc => {
         const festa = doc.data(); 
@@ -234,18 +243,15 @@ async function carregarFestas(id) {
         festasGlobais.push(festa);
     });
 
-    // 2. Busca as pastas no banco
     let pastas = [];
     const snapPastas = await getDocs(query(collection(db, "pastas"), where("idSubsite", "==", id)));
     snapPastas.forEach(doc => {
         pastas.push({ id: doc.id, ...doc.data() });
     });
 
-    // 3. Descobre quais festas já estão agrupadas
     let idsFestasAgrupadas = [];
     pastas.forEach(p => { if (p.festas) idsFestasAgrupadas = idsFestasAgrupadas.concat(p.festas); });
 
-    // 4. Renderiza as pastas
     if (containerPastas) {
         pastas.forEach(pasta => {
             const divPasta = document.createElement('div');
@@ -500,7 +506,6 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     const dataFesta = document.getElementById('festa-data').value;
     const nomeCliente = document.getElementById('festa-nome').value;
 
-    // DETECTOR DE CONFLITO DE DATAS
     if (!idEdicao) {
         const festasNoMesmoDia = festasGlobais.filter(f => f.data === dataFesta);
         if (festasNoMesmoDia.length > 0) {
@@ -639,20 +644,56 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
 
     setTimeout(() => {
         const typingEl = document.getElementById(idTyping); if (typingEl) typingEl.remove();
+        
+        const ehStart = (planoAtual === 'start');
         let resposta = "Ainda estou aprendendo, mas posso te ajudar com: Orçamento, Kits, Contratos, Relatórios, Histórico, Analista e Planos. O que você precisa?";
 
-        if (msg.includes('orcamento')) resposta = "O **Orçamento Inteligente** está no card roxo! Lá você escolhe o cliente, seleciona um Kit já cadastrado, e eu monto a mensagem perfeita pra você enviar no WhatsApp. 💜";
-        else if (msg.includes('historico')) resposta = "No card do **Orçamento Inteligente**, tem o botão **'Ver Histórico (30 dias)'**. Lá você encontra todos os orçamentos que gerou no último mês, pode copiar a mensagem de novo, reenviar ou apagar. 📚";
-        else if (msg.includes('analista') || msg.includes('grafico') || msg.includes('lucro') || msg.includes('estatistica')) resposta = "O **Neo Wave Analista** é exclusivo para planos Elite! É o card laranja. Ele te mostra o faturamento do mês, o pico de vendas em gráfico, quais modelos de kits você mais vendeu e ainda gera recibos! 📊✨";
-        else if (msg.includes('recibo')) resposta = "Dentro do **Neo Wave Analista**, tem o Gerador de Recibos. Você escolhe a festa, se é sinal ou quitação total, e o sistema monta o recibo pronto para imprimir ou salvar em PDF. 🧾";
-        else if (msg.includes('conflito') || msg.includes('data')) resposta = "O sistema agora tem um **Detector de Conflito de Datas**! Se você tentar agendar duas festas para o mesmo dia, ele vai avisar na hora para você não alugar a mesma peça para duas pessoas. 🛡️";
-        else if (msg.includes('preco') || msg.includes('valor do kit')) resposta = "Para o Orçamento Inteligente funcionar certinho, sempre coloque o **Preço do Modelo** quando for cadastrar um Kit novo! Assim eu já puxo o valor automaticamente. 💰";
-        else if (msg.includes('kit')) resposta = "No card **Kits**, você pode cadastrar novos modelos com nome, foto e preço! Esses kits ficam salvos e depois aparecem no Orçamento Inteligente. 🎁";
-        else if (msg.includes('contrato')) resposta = "Para gerar contratos, vá no card **Contratos** (laranja). Você pode subir o PDF do seu modelo, colocar a logo da sua empresa e usar em qualquer festa. O módulo está disponível no plano **Elite Premium**. ✍️";
-        else if (msg.includes('relatorio') || msg.includes('planilha') || msg.includes('venda')) resposta = "No card **Relatórios** (verde), você consegue ver o resumo de vendas do mês e o faturamento das festas agendadas. Ótimo pra manter o controle financeiro! 📊";
-        else if (msg.includes('plano') || msg.includes('start') || msg.includes('pro') || msg.includes('elite') || msg.includes('upgrade')) resposta = "Você pode comparar os planos na tela inicial clicando em **'Comparar Assinaturas'**. O plano **Start** é mais básico, o **Pro** já libera a sugestão de mensagem, o **Elite** libera o chat comigo e o **Elite Premium** libera os contratos. 🚀";
-        else if (msg.includes('agendar') || msg.includes('festa')) resposta = "Para agendar uma festa, clique em **'Agendar Festa'** (card laranja). Lá você preenche os dados do cliente, escolhe a data, seleciona o kit e a calculadora de frete faz o resto! 🎉";
-        else if (msg.includes('ola') || msg.includes('oi') || msg.includes('bom dia') || msg.includes('boa tarde') || msg.includes('boa noite')) resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Posso te ajudar a entender sobre Orçamentos, Kits, Histórico, Contratos, Analista ou Planos. Como posso ajudar hoje?";
+        if (msg.includes('orcamento')) {
+            if (ehStart) resposta = "🔒 O **Orçamento Inteligente** está disponível a partir do plano **Pro**. No Start, você pode gerenciar suas festas e catálogo manualmente.";
+            else resposta = "O **Orçamento Inteligente** está no card roxo! Lá você escolhe o cliente, seleciona um Kit já cadastrado, e eu monto a mensagem perfeita pra você enviar no WhatsApp. 💜";
+        }
+        else if (msg.includes('historico')) {
+            if (ehStart) resposta = "🔒 O **Histórico de Orçamentos** está disponível a partir do plano **Pro**.";
+            else resposta = "No card do **Orçamento Inteligente**, tem o botão **'Ver Histórico (30 dias)'**. Lá você encontra todos os orçamentos que gerou no último mês, pode copiar a mensagem de novo, reenviar ou apagar. 📚";
+        }
+        else if (msg.includes('analista') || msg.includes('grafico') || msg.includes('lucro') || msg.includes('estatistica')) {
+            if (ehStart || planoAtual === 'pro') resposta = "🔒 O **Neo Wave Analista** é exclusivo para planos **Elite e Elite Premium**. Ele te mostra o faturamento do mês, pico de vendas e kits mais vendidos! 📊✨";
+            else resposta = "O **Neo Wave Analista** é exclusivo para planos Elite! É o card laranja. Ele te mostra o faturamento do mês, o pico de vendas em gráfico, quais modelos de kits você mais vendeu e ainda gera recibos! 📊✨";
+        }
+        else if (msg.includes('recibo')) {
+            if (ehStart || planoAtual === 'pro') resposta = "🔒 O **Gerador de Recibos** está disponível apenas no plano **Elite Premium**.";
+            else resposta = "Dentro do **Neo Wave Analista**, tem o Gerador de Recibos. Você escolhe a festa, se é sinal ou quitação total, e o sistema monta o recibo pronto para imprimir ou salvar em PDF. 🧾";
+        }
+        else if (msg.includes('conflito') || msg.includes('data')) {
+            if (ehStart) resposta = "🔒 O **Detector de Conflito de Datas** está disponível a partir do plano **Pro**. No Start, você deve verificar manualmente suas festas.";
+            else resposta = "O sistema agora tem um **Detector de Conflito de Datas**! Se você tentar agendar duas festas para o mesmo dia, ele vai avisar na hora para você não alugar a mesma peça para duas pessoas. 🛡️";
+        }
+        else if (msg.includes('preco') || msg.includes('valor do kit')) {
+            if (ehStart) resposta = "🔒 O cadastro de **Preço do Modelo** nos kits está disponível a partir do plano **Pro**.";
+            else resposta = "Para o Orçamento Inteligente funcionar certinho, sempre coloque o **Preço do Modelo** quando for cadastrar um Kit novo! Assim eu já puxo o valor automaticamente. 💰";
+        }
+        else if (msg.includes('kit')) {
+            if (ehStart) resposta = "🔒 O módulo **Kits** está disponível a partir do plano **Pro**.";
+            else resposta = "No card **Kits**, você pode cadastrar novos modelos com nome, foto e preço! Esses kits ficam salvos e depois aparecem no Orçamento Inteligente. 🎁";
+        }
+        else if (msg.includes('contrato')) {
+            if (ehStart || planoAtual === 'pro' || planoAtual === 'elite') resposta = "🔒 O módulo **Contratos** está disponível apenas no plano **Elite Premium**.";
+            else resposta = "Para gerar contratos, vá no card **Contratos** (laranja). Você pode subir o PDF do seu modelo, colocar a logo da sua empresa e usar em qualquer festa. O módulo está disponível no plano **Elite Premium**. ✍️";
+        }
+        else if (msg.includes('relatorio') || msg.includes('planilha') || msg.includes('venda')) {
+            if (ehStart) resposta = "🔒 O módulo **Relatórios** está disponível a partir do plano **Pro**.";
+            else resposta = "No card **Relatórios** (verde), você consegue ver o resumo de vendas do mês e o faturamento das festas agendadas. Ótimo pra manter o controle financeiro! 📊";
+        }
+        else if (msg.includes('plano') || msg.includes('start') || msg.includes('pro') || msg.includes('elite') || msg.includes('upgrade')) {
+            resposta = "Você pode comparar os planos na tela inicial clicando em **'Comparar Assinaturas'**. O plano **Start** é mais básico, o **Pro** já libera a sugestão de mensagem, o **Elite** libera o chat comigo e o **Elite Premium** libera os contratos. 🚀";
+        }
+        else if (msg.includes('agendar') || msg.includes('festa')) {
+            resposta = "Para agendar uma festa, clique em **'Agendar Festa'** (card laranja). Lá você preenche os dados do cliente, escolhe a data, seleciona o kit e a calculadora de frete faz o resto! 🎉";
+        }
+        else if (msg.includes('ola') || msg.includes('oi') || msg.includes('bom dia') || msg.includes('boa tarde') || msg.includes('boa noite')) {
+            if (ehStart) resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Estou aqui para tirar dúvidas sobre o site. Como posso ajudar hoje? (Lembre-se: ferramentas como orçamento, kits e relatórios precisam de upgrade para o Pro!).";
+            else resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Posso te ajudar a entender sobre Orçamentos, Kits, Histórico, Contratos, Analista ou Planos. Como posso ajudar hoje?";
+        }
         else if (msg.includes('obrigado') || msg.includes('obrigada') || msg.includes('valeu') || msg.includes('vlw')) resposta = "Por nada! 💜 Estou sempre aqui se precisar. Bom trabalho com a Neo Flux! 🚀";
 
         body.innerHTML += `<div class="msg-bot">${resposta}</div>`; body.scrollTop = body.scrollHeight;
@@ -993,3 +1034,74 @@ document.getElementById('btn-imprimir-recibo')?.addEventListener('click', () => 
     janela.document.close();
     setTimeout(() => { janela.print(); }, 500);
 });
+
+// ==========================================
+// 14. VERIFICAÇÃO DE ESTOQUE POR DATA (ANTI-DUPLICIDADE)
+// ==========================================
+async function verificarEstoquePorData() {
+    const dataFesta = document.getElementById('festa-data').value;
+    const selectPecas = document.getElementById('festa-pecas');
+    if (!selectPecas) return;
+
+    if (!dataFesta) {
+        await carregarPecasNoSelect();
+        return;
+    }
+
+    carregar(true);
+    try {
+        const qFestas = query(
+            collection(db, "festas"), 
+            where("idSubsite", "==", subsiteAtualId), 
+            where("data", "==", dataFesta)
+        );
+        const snapFestas = await getDocs(qFestas);
+
+        const pecasUsadas = {};
+        snapFestas.forEach(doc => {
+            const festa = doc.data();
+            if (festa.itensDevolvidos) return; 
+
+            if (festa.pecas && Array.isArray(festa.pecas)) {
+                festa.pecas.forEach(nomePeca => {
+                    const qtd = (festa.pecasQtd && festa.pecasQtd[nomePeca]) ? parseInt(festa.pecasQtd[nomePeca]) : 1;
+                    if (!pecasUsadas[nomePeca]) pecasUsadas[nomePeca] = 0;
+                    pecasUsadas[nomePeca] += qtd;
+                });
+            }
+        });
+
+        const qCatalogo = query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId));
+        const snapCat = await getDocs(qCatalogo);
+
+        selectPecas.innerHTML = ""; 
+        snapCat.forEach(doc => {
+            const item = doc.data();
+            const nome = item.nome;
+            const estoqueTotal = parseInt(item.quantidade) || 1;
+            
+            const usadaNestaData = pecasUsadas[nome] || 0;
+            const disponivel = estoqueTotal - usadaNestaData;
+
+            const opt = document.createElement("option");
+            opt.value = nome;
+            
+            if (disponivel <= 0) {
+                opt.textContent = `${nome} (❌ ESGOTADO nesta data)`;
+                opt.disabled = true;
+                opt.style.color = "#e74c3c";
+            } else {
+                opt.textContent = `${nome} (${disponivel} disp.)`;
+            }
+            selectPecas.appendChild(opt);
+        });
+
+    } catch (error) {
+        console.error("Erro ao verificar estoque por data:", error);
+    } finally {
+        carregar(false);
+    }
+}
+
+// Escuta mudança de data no modal de agendamento para verificar estoque
+document.getElementById('festa-data')?.addEventListener('change', verificarEstoquePorData);
