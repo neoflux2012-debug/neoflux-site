@@ -191,6 +191,30 @@
             <button id="btn-ir-para-login" class="botao-principal">Já paguei, ir para o login</button>
         </section>
 
+        <!-- TELA EXTRA: ESCOLHA DO ADMIN -->
+        <section id="tela-escolha-admin" class="tela">
+            <h2>Portal do Administrador</h2>
+            <p>Bem-vindo, Master. Como deseja acessar o sistema hoje?</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                <!-- Opção 1: Painel Admin -->
+                <div class="card-plano" style="cursor: pointer; border-color: #f39c12;" onclick="window.location.href='./admin.html'">
+                    <i data-lucide="shield-check" style="color: #f39c12; width: 40px; height: 40px; margin-bottom: 15px;"></i>
+                    <h3 style="color: #f39c12;">Painel Administrativo</h3>
+                    <p style="font-size: 0.85rem; margin-bottom: 0;">Gerenciar clientes, cobranças, autopilot e relatórios gerais.</p>
+                </div>
+
+                <!-- Opção 2: Visão do Cliente -->
+                <div class="card-plano" style="cursor: pointer; border-color: #00d2ff;" onclick="window.entrarComoClienteAdmin()">
+                    <i data-lucide="user" style="color: #00d2ff; width: 40px; height: 40px; margin-bottom: 15px;"></i>
+                    <h3 style="color: #00d2ff;">Visão do Cliente</h3>
+                    <p style="font-size: 0.85rem; margin-bottom: 0;">Simular a experiência de um cliente normal (suporte).</p>
+                </div>
+            </div>
+            
+            <button id="btn-logout-admin-escolha" class="botao-principal" style="background: #333; margin-top: 30px;">Sair da Conta</button>
+        </section>
+
         <!-- TELA 9: ÁREA DO CLIENTE -->
         <section id="tela-cliente" class="tela">
             <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
