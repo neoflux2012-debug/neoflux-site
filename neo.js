@@ -31,7 +31,6 @@ let planoAtual = "";
 let festasGlobais = [];
 let kitsDoSubsite = []; 
 
-// 🔹 Variável global para receber o plano do FVM (vinda do fvm.js)
 window.neoflux_planoFVM = null;
 
 // ==========================================
@@ -49,23 +48,30 @@ const termosPlanos = {
     fvm_elite_premium: `<h3>Plano FVM Elite Premium</h3><p><strong>Faça Você Mesmo</strong> — avançado. Tudo do Elite + Gerador de Contratos exclusivo.</p>`
 };
 
-const limitesPlanos = { 
-    start: 1, pro: 1, elite: 999, elite_premium: 9999,
-    // 🔹 FVM
-    fvm_start: 1, fvm_pro: 1, fvm_elite: 999, fvm_elite_premium: 9999
-};
-
-const recursosPlanos = {
+// 🔹 ESPELHAMENTO AUTOMÁTICO (A regra do "fvm_start é igual a start")
+const limitesPlanosBase = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
+const recursosPlanosBase = {
     start:         { kits: false, relatorios: false, assistente: true,  valores: false, contratos: false, sugestaoMensagem: false, analista: false },
     pro:           { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: false },
     elite:         { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: true  },
-    elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  },
-    // 🔹 FVM
-    fvm_start:         { kits: false, relatorios: false, assistente: true,  valores: false, contratos: false, sugestaoMensagem: false, analista: false },
-    fvm_pro:           { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: false },
-    fvm_elite:         { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: true  },
-    fvm_elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  }
+    elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  }
 };
+
+function getRecursos(plano) {
+    if (plano.startsWith('fvm_')) {
+        const planoBase = plano.replace('fvm_', '');
+        return recursosPlanosBase[planoBase] || recursosPlanosBase.start;
+    }
+    return recursosPlanosBase[plano] || recursosPlanosBase.start;
+}
+
+function getLimite(plano) {
+    if (plano.startsWith('fvm_')) {
+        const planoBase = plano.replace('fvm_', '');
+        return limitesPlanosBase[planoBase] || 1;
+    }
+    return limitesPlanosBase[plano] || 1;
+}
 
 const nomesPlanos = {
     start: "Start", pro: "Pro", elite: "Elite", elite_premium: "Elite Premium",
@@ -180,13 +186,12 @@ async function carregarDadosCliente(uid) {
             document.getElementById('cliente-plano').textContent = (nomesPlanos[planoAtual] || planoAtual).toUpperCase();
             document.getElementById('cliente-status').textContent = dados.statusPagamento;
             
-            // 🔹 MOSTRAR BOTÃO DE TESTE SE FOR ADMIN
             const btnTestar = document.getElementById('btn-testar-plano');
             if (btnTestar) {
                 btnTestar.style.display = (auth.currentUser?.email === "neoflux2012@gmail.com") ? 'inline-block' : 'none';
             }
 
-            const limite = limitesPlanos[planoAtual] || 1;
+            const limite = getLimite(planoAtual);
             await carregarSubsites(uid, limite);
         }
     } catch (error) { console.error(error); } finally { carregar(false); }
@@ -224,8 +229,27 @@ document.getElementById('btn-criar-subsite')?.addEventListener('click', async ()
 async function abrirSubsite(id) {
     subsiteAtualId = id;
     const snap = await getDoc(doc(db, "subsites", id));
-    document.getElementById('nome-do-subsite').textContent = snap.data().titulo;
-    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+    const dadosSubsite = snap.data();
+    document.getElementById('nome-do-subsite').textContent = dadosSubsite.titulo;
+    
+    // 🔹 PERSONALIZAÇÃO FVM
+    if (planoAtual.startsWith('fvm_') && dadosSubsite.configFVM) {
+        const config = dadosSubsite.configFVM;
+        if (config.nicho) {
+            // Se ele já escolheu um nicho, personaliza os textos
+            document.getElementById('titulo-card-1').textContent = config.card1 || 'Projetos';
+            document.getElementById('titulo-card-2').textContent = config.card2 || 'Catálogo';
+            document.getElementById('titulo-card-3').textContent = config.card3 || 'Kits';
+            document.getElementById('titulo-card-4').textContent = config.card4 || 'Orçamento';
+            document.getElementById('titulo-lista-festas').textContent = config.card1 || 'Projetos';
+            document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${config.card1 || 'Projeto'}`;
+        }
+    } else if (planoAtual.startsWith('fvm_') && !dadosSubsite.configFVM) {
+        // Se for FVM e não tem config, abre o modal de onboarding
+        window.abrirModalNicho(id);
+    }
+
+    const regras = getRecursos(planoAtual);
 
     const btnKits = document.getElementById('btn-abrir-kits');
     if(btnKits) { btnKits.disabled = !regras.kits; btnKits.style.background = regras.kits ? "var(--gradiente-neo)" : "#333"; }
@@ -235,6 +259,12 @@ async function abrirSubsite(id) {
     if(btnContratos) { btnContratos.disabled = !regras.contratos; btnContratos.style.background = regras.contratos ? "#e67e22" : "#333"; }
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
+
+    // 🔹 FVM: ESCONDE O CARD DE CONTRATOS PARA PLANOS FVM
+    const cardContratos = document.getElementById('card-contratos');
+    if (cardContratos) {
+        cardContratos.style.display = planoAtual.startsWith('fvm_') ? 'none' : 'block';
+    }
 
     const cardAnalista = document.getElementById('card-analista');
     if (cardAnalista) cardAnalista.style.display = regras.analista ? 'block' : 'none';
@@ -277,7 +307,7 @@ async function carregarFestas(id) {
     if (containerPastas) containerPastas.innerHTML = "";
     festasGlobais = [];
     
-    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+    const regras = getRecursos(planoAtual);
     
     const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
     snap.forEach(doc => {
@@ -306,7 +336,7 @@ async function carregarFestas(id) {
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <i data-lucide="folder" style="color: #b57bff; width: 24px;"></i>
                     <h4 style="color: white; margin: 0; font-size: 1.1rem;">${pasta.nome}</h4>
-                    <span style="background: rgba(138,43,226,0.2); color: #b57bff; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">${pasta.festas ? pasta.festas.length : 0} festas</span>
+                    <span style="background: rgba(138,43,226,0.2); color: #b57bff; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">${pasta.festas ? pasta.festas.length : 0} itens</span>
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button onclick="event.stopPropagation(); window.apagarPasta('${pasta.id}', '${id}')" style="background: rgba(231,76,60,0.1); border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;"><i data-lucide="trash-2" style="width: 14px; vertical-align: middle;"></i></button>
@@ -605,7 +635,7 @@ async function carregarCatalogo() {
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
 document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
-    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+    const regras = getRecursos(planoAtual);
     document.getElementById('area-financeira-festa').style.display = regras.valores ? 'block' : 'none';
     document.getElementById('modal-agendar-festa').style.display = 'flex';
 });
@@ -730,8 +760,8 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
         else if (msg.includes('plano') || msg.includes('start') || msg.includes('pro') || msg.includes('elite') || msg.includes('upgrade')) {
             resposta = "Você pode comparar os planos na tela inicial clicando em **'Comparar Assinaturas'**. O plano **Start** é mais básico, o **Pro** já libera a sugestão de mensagem, o **Elite** libera o chat comigo e o **Elite Premium** libera os contratos. 🚀";
         }
-        else if (msg.includes('agendar') || msg.includes('festa')) {
-            resposta = "Para agendar uma festa, clique em **'Agendar Festa'** (card laranja). Lá você preenche os dados do cliente, escolhe a data, seleciona o kit e a calculadora de frete faz o resto! 🎉";
+        else if (msg.includes('agendar') || msg.includes('festa') || msg.includes('projeto') || msg.includes('pedido')) {
+            resposta = "Para criar um novo registro, clique no primeiro card (ex: Agendar Festa / Novo Projeto). Lá você preenche os dados do cliente, escolhe a data, seleciona os itens e a calculadora faz o resto! 🎉";
         }
         else if (msg.includes('ola') || msg.includes('oi') || msg.includes('bom dia') || msg.includes('boa tarde') || msg.includes('boa noite')) {
             if (ehStart) resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Estou aqui para tirar dúvidas sobre o site. Como posso ajudar hoje? (Lembre-se: ferramentas como orçamento, kits e relatórios precisam de upgrade para o Pro!).";
@@ -751,12 +781,10 @@ onAuthStateChanged(auth, (user) => {
         if (!user.emailVerified) { 
             mostrarTela('tela-verificacao'); 
         } else {
-            // 🔹 TRAVA DE PAGAMENTO E VERIFICAÇÃO DE ADMIN
             getDoc(doc(db, "usuarios", user.uid)).then(snap => {
                 const dados = snap.exists() ? snap.data() : { statusPagamento: "pendente" };
                 const isAdmin = (user.email === "neoflux2012@gmail.com");
 
-                // Se não for admin e o pagamento não estiver ativo, trava na tela de pagamento
                 if (!isAdmin && dados.statusPagamento !== "ativo") {
                     document.getElementById('resumo-nome-pagamento').textContent = dados.nome || user.displayName || "Cliente";
                     const resumoPlanoPag = document.getElementById('resumo-plano-pagamento');
@@ -765,7 +793,6 @@ onAuthStateChanged(auth, (user) => {
                     mostrarTela('tela-pagamento');
                     alert("Sua conta está com pagamento pendente. Pague o Pix e envie o comprovante para liberar o acesso.");
                 } else {
-                    // Se for Admin ou estiver ativo, libera o acesso
                     if (isAdmin) {
                         document.getElementById('btn-neo-wave').style.display = 'none';
                         mostrarTela('tela-escolha-admin');
@@ -807,14 +834,12 @@ window.adminTestarPlano = function() {
     
     planoAtual = novoLimpo;
     
-    // Atualiza a interface
     const nomeBonito = nomesPlanos[planoAtual] || planoAtual.toUpperCase();
     const clientePlano = document.getElementById('cliente-plano');
     if (clientePlano) clientePlano.textContent = nomeBonito.toUpperCase();
     
     alert(`✅ Interface atualizada para o plano: ${nomeBonito}\n\nEntre em um subsite para ver os recursos liberados!`);
     
-    // Se estiver na tela de subsites, recarrega os botões
     if (subsiteAtualId) {
         abrirSubsite(subsiteAtualId);
     }
@@ -869,7 +894,7 @@ async function carregarKitsDoSubsite(idSubsite) {
 }
 
 document.getElementById('btn-abrir-orcamento-inteligente')?.addEventListener('click', () => {
-    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+    const regras = getRecursos(planoAtual);
     if (!regras.kits) return alert("O módulo Kits está disponível a partir do plano Pro.");
     document.getElementById('orc-cliente').value = ''; document.getElementById('orc-valor').value = '';
     document.getElementById('orc-obs').value = ''; document.getElementById('orc-mensagem').value = '';
@@ -908,7 +933,7 @@ document.getElementById('btn-gerar-orcamento')?.addEventListener('click', async 
     if (!cliente) return alert("Informe o nome do cliente."); if (!idKit) return alert("Selecione um kit.");
     const kit = kitsDoSubsite.find(k => k.id === idKit); if (!kit) return alert("Kit não encontrado.");
     if (!valor || valor <= 0) return alert("Informe o valor do orçamento antes de gerar.");
-    const regras = recursosPlanos[planoAtual] || recursosPlanos.start;
+    const regras = getRecursos(planoAtual);
     if (!regras.sugestaoMensagem) {
         const textoManual = `Olá, ${cliente}.\n\nKit: ${kit.nome || 'Kit'}\nItens: ${kit.modelo || 'Itens conforme cadastro'}\nValor: R$ ${valor.toFixed(2).replace('.', ',')}${obs ? '\nObservações: ' + obs : ''}`;
         document.getElementById('orc-mensagem').value = textoManual; document.getElementById('orc-mensagem').readOnly = false;
@@ -1197,3 +1222,89 @@ async function verificarEstoquePorData() {
 }
 
 document.getElementById('festa-data')?.addEventListener('change', verificarEstoquePorData);
+
+// ==========================================
+// 🔹 FVM: LÓGICA DO MODAL DE NICHO
+// ==========================================
+window.abrirModalNicho = function(idSubsite) {
+    subsiteAtualId = idSubsite;
+    const modal = document.getElementById('modal-nicho-fvm');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.getElementById('grid-nichos-fvm').style.display = 'grid';
+        document.getElementById('area-personalizar-nicho').style.display = 'none';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+};
+
+window.selecionarNichoFVM = function(nicho) {
+    const mapNomes = {
+        alimentacao: { c1: 'Pedidos de Hoje', c2: 'Cardápio Digital', c3: 'Combos Fechados', c4: 'Calculadora de Vendas' },
+        artesanato: { c1: 'Encomendas', c2: 'Meus Produtos', c3: 'Kits de Materiais', c4: 'Orçamentos' },
+        beleza: { c1: 'Agendamentos', c2: 'Serviços', c3: 'Combos de Tratamento', c4: 'Orçamentos' },
+        servicos: { c1: 'Ordens de Serviço', c2: 'Materiais', c3: 'Pacotes de Serviço', c4: 'Orçamentos' },
+        moda: { c1: 'Pedidos / Encomendas', c2: 'Minhas Peças', c3: 'Combos / Looks', c4: 'Orçamentos' }
+    };
+
+    const nomes = mapNomes[nicho];
+    if (!nomes) return;
+
+    document.getElementById('titulo-card-1').textContent = nomes.c1;
+    document.getElementById('titulo-card-2').textContent = nomes.c2;
+    document.getElementById('titulo-card-3').textContent = nomes.c3;
+    document.getElementById('titulo-card-4').textContent = nomes.c4;
+    document.getElementById('titulo-lista-festas').textContent = nomes.c1;
+    document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${nomes.c1}`;
+
+    salvarNichoNoBanco(nicho, nomes.c1, nomes.c2, nomes.c3, nomes.c4);
+};
+
+window.abrirPersonalizacaoNicho = function() {
+    document.getElementById('grid-nichos-fvm').style.display = 'none';
+    document.getElementById('area-personalizar-nicho').style.display = 'block';
+};
+
+window.voltarGridNichos = function() {
+    document.getElementById('grid-nichos-fvm').style.display = 'grid';
+    document.getElementById('area-personalizar-nicho').style.display = 'none';
+};
+
+window.salvarNichoPersonalizado = async function() {
+    const nomeNicho = document.getElementById('custom-nicho-nome').value.trim();
+    const c1 = document.getElementById('custom-card-1').value.trim() || 'Projetos';
+    const c2 = document.getElementById('custom-card-2').value.trim() || 'Catálogo';
+    const c3 = document.getElementById('custom-card-3').value.trim() || 'Kits';
+    const c4 = document.getElementById('custom-card-4').value.trim() || 'Orçamentos';
+
+    if (!nomeNicho) return alert("Dê um nome ao seu nicho.");
+
+    document.getElementById('titulo-card-1').textContent = c1;
+    document.getElementById('titulo-card-2').textContent = c2;
+    document.getElementById('titulo-card-3').textContent = c3;
+    document.getElementById('titulo-card-4').textContent = c4;
+    document.getElementById('titulo-lista-festas').textContent = c1;
+    document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${c1}`;
+
+    await salvarNichoNoBanco(nomeNicho, c1, c2, c3, c4);
+};
+
+async function salvarNichoNoBanco(nicho, c1, c2, c3, c4) {
+    carregar(true);
+    try {
+        await updateDoc(doc(db, "subsites", subsiteAtualId), {
+            configFVM: {
+                nicho: nicho,
+                card1: c1,
+                card2: c2,
+                card3: c3,
+                card4: c4
+            }
+        });
+        alert("✅ Painel personalizado com sucesso!");
+        document.getElementById('modal-nicho-fvm').style.display = 'none';
+    } catch (e) {
+        alert("Erro ao salvar a personalização: " + e.message);
+    } finally {
+        carregar(false);
+    }
+}
