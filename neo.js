@@ -120,7 +120,6 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
         document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
         document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual] || "";
         
-        // 🔹 Atualiza o resumo do plano na tela de criar conta
         const resumoConta = document.getElementById('resumo-plano-conta');
         if (resumoConta) resumoConta.textContent = nomesPlanos[planoAtual] || nomePlano;
         
@@ -137,7 +136,6 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         const senha = document.getElementById('senha-cadastro').value;
         const nome = document.getElementById('nome-cliente').value;
 
-        // 🔹 FVM: Verifica se o plano veio do fvm.js e sobrescreve
         if (window.neoflux_planoFVM && window.neoflux_planoFVM.startsWith('fvm_')) {
             planoAtual = window.neoflux_planoFVM;
         }
@@ -149,7 +147,6 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         
         document.getElementById('resumo-nome-pagamento').textContent = nome;
         
-        // 🔹 Mostra o nome amigável do plano na tela de pagamento
         const resumoPlanoPag = document.getElementById('resumo-plano-pagamento');
         if (resumoPlanoPag) resumoPlanoPag.textContent = nomesPlanos[planoAtual] || planoAtual;
 
@@ -180,9 +177,15 @@ async function carregarDadosCliente(uid) {
             const dados = snap.data();
             planoAtual = dados.planoPreferido;
             document.getElementById('cliente-nome').textContent = dados.nome;
-            // 🔹 Nome amigável do plano no painel
             document.getElementById('cliente-plano').textContent = (nomesPlanos[planoAtual] || planoAtual).toUpperCase();
             document.getElementById('cliente-status').textContent = dados.statusPagamento;
+            
+            // 🔹 MOSTRAR BOTÃO DE TESTE SE FOR ADMIN
+            const btnTestar = document.getElementById('btn-testar-plano');
+            if (btnTestar) {
+                btnTestar.style.display = (auth.currentUser?.email === "neoflux2012@gmail.com") ? 'inline-block' : 'none';
+            }
+
             const limite = limitesPlanos[planoAtual] || 1;
             await carregarSubsites(uid, limite);
         }
@@ -748,16 +751,33 @@ onAuthStateChanged(auth, (user) => {
         if (!user.emailVerified) { 
             mostrarTela('tela-verificacao'); 
         } else {
-            if (user.email === "neoflux2012@gmail.com") {
-                document.getElementById('btn-neo-wave').style.display = 'none';
-                mostrarTela('tela-escolha-admin');
-            } else {
-                const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
-                if (btnVoltar) btnVoltar.style.display = 'none';
-                
-                carregarDadosCliente(user.uid); 
-                mostrarTela('tela-cliente');
-            }
+            // 🔹 TRAVA DE PAGAMENTO E VERIFICAÇÃO DE ADMIN
+            getDoc(doc(db, "usuarios", user.uid)).then(snap => {
+                const dados = snap.exists() ? snap.data() : { statusPagamento: "pendente" };
+                const isAdmin = (user.email === "neoflux2012@gmail.com");
+
+                // Se não for admin e o pagamento não estiver ativo, trava na tela de pagamento
+                if (!isAdmin && dados.statusPagamento !== "ativo") {
+                    document.getElementById('resumo-nome-pagamento').textContent = dados.nome || user.displayName || "Cliente";
+                    const resumoPlanoPag = document.getElementById('resumo-plano-pagamento');
+                    if (resumoPlanoPag) resumoPlanoPag.textContent = nomesPlanos[dados.planoPreferido] || dados.planoPreferido || "—";
+                    
+                    mostrarTela('tela-pagamento');
+                    alert("Sua conta está com pagamento pendente. Pague o Pix e envie o comprovante para liberar o acesso.");
+                } else {
+                    // Se for Admin ou estiver ativo, libera o acesso
+                    if (isAdmin) {
+                        document.getElementById('btn-neo-wave').style.display = 'none';
+                        mostrarTela('tela-escolha-admin');
+                    } else {
+                        const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
+                        if (btnVoltar) btnVoltar.style.display = 'none';
+                        
+                        carregarDadosCliente(user.uid); 
+                        mostrarTela('tela-cliente');
+                    }
+                }
+            });
         }
     } else {
         const telaAtual = document.querySelector('.tela.ativa');
@@ -766,6 +786,39 @@ onAuthStateChanged(auth, (user) => {
         }
     }
 });
+
+// ==========================================
+// 🔹 ADMIN MASTER: TESTAR PLANOS FACILMENTE
+// ==========================================
+const ADMIN_EMAIL = "neoflux2012@gmail.com";
+
+window.adminTestarPlano = function() {
+    if (auth.currentUser?.email !== ADMIN_EMAIL) return;
+    
+    const planos = ['start', 'pro', 'elite', 'elite_premium', 'fvm_start', 'fvm_pro', 'fvm_elite', 'fvm_elite_premium'];
+    const atual = planoAtual || 'start';
+    
+    const novo = prompt(`🎭 MODO TESTE (Admin Master)\n\nDigite o plano que deseja simular:\n${planos.join(', ')}\n\nPlano atual: ${atual.toUpperCase()}`, atual);
+    
+    if (!novo) return;
+    const novoLimpo = novo.toLowerCase().trim();
+    
+    if (!planos.includes(novoLimpo)) return alert("Plano inválido! Digite exatamente como na lista.");
+    
+    planoAtual = novoLimpo;
+    
+    // Atualiza a interface
+    const nomeBonito = nomesPlanos[planoAtual] || planoAtual.toUpperCase();
+    const clientePlano = document.getElementById('cliente-plano');
+    if (clientePlano) clientePlano.textContent = nomeBonito.toUpperCase();
+    
+    alert(`✅ Interface atualizada para o plano: ${nomeBonito}\n\nEntre em um subsite para ver os recursos liberados!`);
+    
+    // Se estiver na tela de subsites, recarrega os botões
+    if (subsiteAtualId) {
+        abrirSubsite(subsiteAtualId);
+    }
+};
 
 // --- FUNÇÃO PARA ENTRAR COMO CLIENTE (SIMULAÇÃO DO ADMIN) ---
 window.entrarComoClienteAdmin = async function() {
@@ -1143,5 +1196,4 @@ async function verificarEstoquePorData() {
     }
 }
 
-// Escuta mudança de data no modal de agendamento para verificar estoque
 document.getElementById('festa-data')?.addEventListener('change', verificarEstoquePorData);
