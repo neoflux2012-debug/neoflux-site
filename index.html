@@ -217,9 +217,14 @@
 
         <!-- TELA 9: ÁREA DO CLIENTE -->
         <section id="tela-cliente" class="tela">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <h2 style="margin: 0;">Área do Cliente</h2>
-                <button id="btn-pedir-upgrade" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem;">Fazer Upgrade</button>
+                <div style="display: flex; gap: 10px;">
+                    <!-- BOTÃO DE VOLTAR (SÓ APARECE PARA ADMIN) -->
+                    <button id="btn-voltar-escolha-admin" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #f39c12; display: none;">🔙 Voltar ao Portal Admin</button>
+                    
+                    <button id="btn-pedir-upgrade" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem;">Fazer Upgrade</button>
+                </div>
             </div>
             <div class="caixa-termos">
                 <p><strong>Nome:</strong> <span id="cliente-nome">...</span></p>
