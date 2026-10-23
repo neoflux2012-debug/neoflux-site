@@ -678,11 +678,10 @@ onAuthStateChanged(auth, (user) => {
         if (!user.emailVerified) { 
             mostrarTela('tela-verificacao'); 
         } else {
-            // Se for o Admin Master, redireciona para a página exclusiva do admin
             if (user.email === "neoflux2012@gmail.com") {
-                window.location.href = "./admin.html";
+                document.getElementById('btn-neo-wave').style.display = 'none';
+                mostrarTela('tela-escolha-admin');
             } else {
-                // Se for cliente, carrega os dados e vai para a área do cliente
                 carregarDadosCliente(user.uid); 
                 mostrarTela('tela-cliente');
             }
@@ -693,6 +692,26 @@ onAuthStateChanged(auth, (user) => {
             mostrarTela('tela-boas-vindas');
         }
     }
+});
+
+// --- FUNÇÃO PARA ENTRAR COMO CLIENTE (SIMULAÇÃO) ---
+window.entrarComoClienteAdmin = async function() {
+    const adminUid = auth.currentUser.uid;
+    carregar(true);
+    try {
+        await carregarDadosCliente(adminUid);
+        mostrarTela('tela-cliente');
+    } catch (e) {
+        alert("Erro ao carregar visão de cliente.");
+    } finally {
+        carregar(false);
+    }
+};
+
+// --- BOTÃO DE LOGOUT NA TELA DE ESCOLHA ---
+document.getElementById('btn-logout-admin-escolha')?.addEventListener('click', async () => {
+    await signOut(auth);
+    mostrarTela('tela-boas-vindas');
 });
 
 // ==========================================
