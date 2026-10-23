@@ -191,7 +191,10 @@ async function carregarDadosCliente(uid) {
                 btnTestar.style.display = (auth.currentUser?.email === "neoflux2012@gmail.com") ? 'inline-block' : 'none';
             }
 
-            const limite = getLimite(planoAtual);
+            // 🔹 Pega o limite correto (Admin Master tem limite infinito)
+            const isAdmin = auth.currentUser?.email === "neoflux2012@gmail.com";
+            const limite = isAdmin ? 9999 : getLimite(planoAtual);
+            
             await carregarSubsites(uid, limite);
         }
     } catch (error) { console.error(error); } finally { carregar(false); }
@@ -201,29 +204,79 @@ async function carregarSubsites(uid, limite) {
     const lista = document.getElementById('lista-subsites'); if(!lista) return;
     lista.innerHTML = "";
     const snap = await getDocs(query(collection(db, "subsites"), where("idDono", "==", uid)));
-    const btnCriar = document.getElementById('btn-criar-subsite'); const inputTitulo = document.getElementById('titulo-subsite');
+    
+    const btnCriar = document.getElementById('btn-criar-subsite'); 
+    const inputTitulo = document.getElementById('titulo-subsite');
+    
+    // 🔹 Habilita/Desabilita o botão de criar baseado no limite
     if (btnCriar && inputTitulo) {
-        if (snap.size >= limite) { btnCriar.disabled = true; inputTitulo.disabled = true; } else { btnCriar.disabled = false; inputTitulo.disabled = false; }
+        if (snap.size >= limite) { 
+            btnCriar.disabled = true; 
+            inputTitulo.disabled = true; 
+            btnCriar.textContent = "Limite Atingido";
+            btnCriar.style.opacity = "0.5";
+        } else { 
+            btnCriar.disabled = false; 
+            inputTitulo.disabled = false; 
+            btnCriar.textContent = "Criar";
+            btnCriar.style.opacity = "1";
+        }
     }
+    
     snap.forEach(doc => {
         const sub = doc.data();
         const li = document.createElement('li');
-        li.style.cssText = "border: 1px solid #333; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; background: #0a0a0a;";
-        li.innerHTML = `<strong>${sub.titulo}</strong><div><button class="btn-acessar" data-id="${doc.id}" style="background: #00d2ff; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">Acessar</button><button class="btn-apagar" data-id="${doc.id}" style="background: #e74c3c; padding: 5px 10px; border: none; border-radius: 4px; color: white; cursor: pointer;">X</button></div>`;
+        li.style.cssText = "border: 1px solid #333; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; border-radius: 8px;";
+        li.innerHTML = `<strong>${sub.titulo}</strong><div style="display: flex; gap: 8px;"><button class="btn-acessar" data-id="${doc.id}" style="background: #00d2ff; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #000;">Acessar</button><button class="btn-apagar" data-id="${doc.id}" style="background: #e74c3c; padding: 6px 12px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold;">X</button></div>`;
         lista.appendChild(li);
     });
+    
+    // 🔹 Eventos dos botões de acessar e apagar
     document.querySelectorAll('.btn-acessar').forEach(btn => btn.addEventListener('click', (e) => abrirSubsite(e.target.getAttribute('data-id'))));
     document.querySelectorAll('.btn-apagar').forEach(btn => btn.addEventListener('click', async (e) => {
-        if(confirm("Apagar?")) { await deleteDoc(doc(db, "subsites", e.target.getAttribute('data-id'))); carregarDadosCliente(auth.currentUser.uid); }
+        if(confirm("Tem certeza que deseja apagar este subsite? Todos os dados dele serão perdidos.")) { 
+            carregar(true);
+            try {
+                await deleteDoc(doc(db, "subsites", e.target.getAttribute('data-id'))); 
+                await carregarDadosCliente(auth.currentUser.uid); 
+            } catch (err) {
+                alert("Erro ao apagar: " + err.message);
+            } finally {
+                carregar(false);
+            }
+        }
     }));
 }
 
 document.getElementById('btn-criar-subsite')?.addEventListener('click', async () => {
-    const titulo = document.getElementById('titulo-subsite').value;
-    if (!titulo) return;
-    await addDoc(collection(db, "subsites"), { idDono: auth.currentUser.uid, titulo: titulo, criadoEm: new Date() });
-    document.getElementById('titulo-subsite').value = "";
-    carregarDadosCliente(auth.currentUser.uid);
+    const titulo = document.getElementById('titulo-subsite').value.trim();
+    if (!titulo) return alert("Digite um título para o subsite.");
+    
+    // 🔹 Verifica o limite ANTES de tentar criar
+    const isAdmin = auth.currentUser?.email === "neoflux2012@gmail.com";
+    const limite = isAdmin ? 9999 : getLimite(planoAtual);
+    
+    carregar(true);
+    try {
+        const snap = await getDocs(query(collection(db, "subsites"), where("idDono", "==", auth.currentUser.uid)));
+        
+        if (snap.size >= limite) {
+            return alert(`Você atingiu o limite de ${limite} subsite(s) do seu plano (${nomesPlanos[planoAtual] || planoAtual}).`);
+        }
+
+        await addDoc(collection(db, "subsites"), { 
+            idDono: auth.currentUser.uid, 
+            titulo: titulo, 
+            criadoEm: new Date() 
+        });
+        
+        document.getElementById('titulo-subsite').value = "";
+        await carregarDadosCliente(auth.currentUser.uid);
+    } catch (e) {
+        alert("Erro ao criar subsite: " + e.message);
+    } finally {
+        carregar(false);
+    }
 });
 
 async function abrirSubsite(id) {
@@ -236,7 +289,6 @@ async function abrirSubsite(id) {
     if (planoAtual.startsWith('fvm_') && dadosSubsite.configFVM) {
         const config = dadosSubsite.configFVM;
         if (config.nicho) {
-            // Se ele já escolheu um nicho, personaliza os textos
             document.getElementById('titulo-card-1').textContent = config.card1 || 'Projetos';
             document.getElementById('titulo-card-2').textContent = config.card2 || 'Catálogo';
             document.getElementById('titulo-card-3').textContent = config.card3 || 'Kits';
@@ -245,7 +297,6 @@ async function abrirSubsite(id) {
             document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${config.card1 || 'Projeto'}`;
         }
     } else if (planoAtual.startsWith('fvm_') && !dadosSubsite.configFVM) {
-        // Se for FVM e não tem config, abre o modal de onboarding
         window.abrirModalNicho(id);
     }
 
@@ -260,7 +311,7 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
-    // 🔹 FVM: ESCONDE O CARD DE CONTRATOS PARA PLANOS FVM
+    // 🔹 FVM: ESCONDE O CARD DE CONTRATOS
     const cardContratos = document.getElementById('card-contratos');
     if (cardContratos) {
         cardContratos.style.display = planoAtual.startsWith('fvm_') ? 'none' : 'block';
