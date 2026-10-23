@@ -269,7 +269,6 @@ async function carregarFestas(id) {
             const conteudo = document.createElement('div');
             conteudo.style.cssText = "margin-top: 15px; display: none; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;";
             
-            // Renderiza os cards de festas dentro da pasta
             if (pasta.festas) {
                 pasta.festas.forEach(idFesta => {
                     const f = festasGlobais.find(x => x.id === idFesta);
@@ -278,7 +277,6 @@ async function carregarFestas(id) {
             }
             divPasta.appendChild(conteudo);
 
-            // Evento para abrir/fechar pasta
             const btnToggle = header.querySelector('.btn-toggle-pasta');
             btnToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -292,7 +290,6 @@ async function carregarFestas(id) {
         });
     }
 
-    // 5. Renderiza as festas que NÃO estão em nenhuma pasta
     const festasNormais = festasGlobais.filter(f => !idsFestasAgrupadas.includes(f.id));
     festasNormais.forEach(festa => {
         container.appendChild(renderizarCardFesta(festa, regras));
@@ -300,7 +297,6 @@ async function carregarFestas(id) {
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    // Pesquisa
     const inputPesquisa = document.getElementById('pesquisa-festas');
     if (inputPesquisa) {
         inputPesquisa.addEventListener('input', (e) => {
@@ -312,9 +308,6 @@ async function carregarFestas(id) {
     }
 }
 
-// ==========================================
-// FUNÇÃO AUXILIAR: MONTA O CARD DA FESTA
-// ==========================================
 function renderizarCardFesta(festa, regras) {
     const total = parseFloat(festa.total) || 0; 
     const sinal = parseFloat(festa.sinal) || 0;
@@ -337,7 +330,6 @@ function renderizarCardFesta(festa, regras) {
     const pecasStr = festa.pecas && festa.pecas.length > 0 ? festa.pecas.join(", ") : "Nenhuma";
     const blocoPecas = festa.pecas && festa.pecas.length > 0 ? `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;"><p style="color: #888; font-size: 0.8rem; margin: 0 0 4px 0;"><i data-lucide="package" style="width: 14px; vertical-align: middle;"></i> Peças:</p><p style="color: #00d2ff; font-size: 0.85rem; margin: 0;">${pecasStr}</p></div>` : '';
 
-    // Lógica de Devolução
     let areaDevolucao = "";
     if (festa.itensDevolvidos) {
         areaDevolucao = `<div style="width: 100%; padding: 12px; background: rgba(0,200,83,0.1); border: 1px solid #00c853; color: #00c853; border-radius: 6px; text-align: center; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;"><i data-lucide="check-circle" style="width: 18px;"></i> Devolução Registrada</div>`;
@@ -381,7 +373,6 @@ function renderizarCardFesta(festa, regras) {
     return card;
 }
 
-// Injeta o CSS do "minimizado" uma vez só
 if (!document.getElementById('style-card-minimizado')) {
     const style = document.createElement('style');
     style.id = 'style-card-minimizado';
@@ -389,7 +380,6 @@ if (!document.getElementById('style-card-minimizado')) {
     document.head.appendChild(style);
 }
 
-// --- LÓGICA DE REGISTRAR DEVOLUÇÃO ---
 window.registrarDevolucao = async function(idFesta) {
     if (!confirm("Tem certeza que deseja registrar a devolução? O estoque das peças será reposto automaticamente.")) return;
     try {
@@ -419,7 +409,6 @@ window.registrarDevolucao = async function(idFesta) {
     }
 };
 
-// --- LÓGICA DE PASTAS ---
 document.getElementById('btn-abrir-modal-pasta')?.addEventListener('click', () => {
     const modal = document.getElementById('modal-criar-pasta');
     const containerCheck = document.getElementById('lista-checkboxes-festas');
@@ -682,6 +671,9 @@ onAuthStateChanged(auth, (user) => {
                 document.getElementById('btn-neo-wave').style.display = 'none';
                 mostrarTela('tela-escolha-admin');
             } else {
+                const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
+                if (btnVoltar) btnVoltar.style.display = 'none';
+                
                 carregarDadosCliente(user.uid); 
                 mostrarTela('tela-cliente');
             }
@@ -694,12 +686,16 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// --- FUNÇÃO PARA ENTRAR COMO CLIENTE (SIMULAÇÃO) ---
+// --- FUNÇÃO PARA ENTRAR COMO CLIENTE (SIMULAÇÃO DO ADMIN) ---
 window.entrarComoClienteAdmin = async function() {
     const adminUid = auth.currentUser.uid;
     carregar(true);
     try {
         await carregarDadosCliente(adminUid);
+        
+        const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
+        if (btnVoltar) btnVoltar.style.display = 'block';
+        
         mostrarTela('tela-cliente');
     } catch (e) {
         alert("Erro ao carregar visão de cliente.");
@@ -707,6 +703,13 @@ window.entrarComoClienteAdmin = async function() {
         carregar(false);
     }
 };
+
+// --- BOTÃO DE VOLTAR AO PORTAL ADMIN ---
+document.getElementById('btn-voltar-escolha-admin')?.addEventListener('click', () => {
+    const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
+    if (btnVoltar) btnVoltar.style.display = 'none';
+    mostrarTela('tela-escolha-admin');
+});
 
 // --- BOTÃO DE LOGOUT NA TELA DE ESCOLHA ---
 document.getElementById('btn-logout-admin-escolha')?.addEventListener('click', async () => {
