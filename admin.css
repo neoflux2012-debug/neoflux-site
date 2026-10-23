@@ -533,6 +533,18 @@ input:focus, select:focus {
     color: white;
 }
 
+/* 🔹 NOVO BOTÃO EXCLUIR */
+.tabela-admin .btn-excluir {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid #c0392b;
+}
+
+.tabela-admin .btn-excluir:hover {
+    background: #c0392b;
+    color: white;
+}
+
 .texto-centro { text-align: center; }
 .texto-direita { text-align: right; }
 .admin-tabela-vazia {
@@ -639,6 +651,7 @@ input:focus, select:focus {
         justify-content: space-between;
         align-items: center;
         font-size: 0.85rem;
+        flex-wrap: wrap;
     }
 
     .tabela-admin td:last-child { border-bottom: none; }
@@ -657,5 +670,6 @@ input:focus, select:focus {
         flex: 1;
         justify-content: center;
         padding: 10px;
+        margin: 4px 2px;
     }
 }
