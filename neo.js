@@ -59,7 +59,6 @@ function getRecursos(plano) {
     if (plano.startsWith('fvm_')) {
         const planoBase = plano.replace('fvm_', '');
         
-        // 🔹 FVM Start: Libera Kits, mas com limite
         if (planoBase === 'start') {
             return { kits: true, maxKits: 3, relatorios: false, assistente: true, valores: false, contratos: false, sugestaoMensagem: false, analista: false };
         }
@@ -288,11 +287,13 @@ async function abrirSubsite(id) {
     const dadosSubsite = snap.data();
     document.getElementById('nome-do-subsite').textContent = dadosSubsite.titulo;
     
-    // 🔹 PERSONALIZAÇÃO FVM
-    if (planoAtual.startsWith('fvm_') && dadosSubsite.configFVM) {
-        window.aplicarTraducaoFVM(dadosSubsite.configFVM);
-    } else if (planoAtual.startsWith('fvm_') && !dadosSubsite.configFVM) {
-        window.abrirModalNicho(id);
+    // 🔹 PERSONALIZAÇÃO FVM: Se for FVM e já tem nicho, aplica. Se não, reseta.
+    if (planoAtual.startsWith('fvm_')) {
+        if (dadosSubsite.configFVM) {
+            window.aplicarTraducaoFVM(dadosSubsite.configFVM);
+        } else {
+            window.abrirModalNicho(id);
+        }
     } else {
         window.resetarTraducaoFVM();
     }
@@ -1368,31 +1369,23 @@ window.aplicarTraducaoFVM = function(config) {
 
     // 2. Traduzir os Modais (se não for festa)
     if (config.nicho !== 'festa') {
-        // Esconde CPF
         document.getElementById('div-festa-cpf').style.display = 'none';
         document.getElementById('festa-cpf').required = false;
         document.getElementById('festa-cpf').value = "";
 
-        // Traduz campos do modal de agendamento
         document.getElementById('label-festa-tema').textContent = "O que ele pediu? (Descrição)";
         document.getElementById('label-festa-local').textContent = "Endereço de Entrega / Local";
         document.getElementById('label-festa-pecas').textContent = "Itens do Pedido (Selecione no Catálogo)";
-        
-        // Traduz o botão de salvar
         document.getElementById('btn-salvar-festa').textContent = "Salvar Pedido";
 
-        // Traduz o modal de Kit
         document.getElementById('titulo-modal-kit').textContent = `Gerador de ${config.card3 || 'Combo'}`;
         document.getElementById('label-kit-nome').textContent = `Nome do ${config.card3 || 'Combo'}`;
         document.getElementById('label-kit-modelo').textContent = "O que vai incluso?";
-        
-        // Traduz o Orçamento Inteligente
         document.getElementById('label-orc-kit').textContent = `Selecione um(a) ${config.card3 || 'Combo'} cadastrado(a):`;
     }
 };
 
 window.resetarTraducaoFVM = function() {
-    // Se for um cliente Neo Flux normal, garante que os textos originais voltem
     document.getElementById('titulo-card-1').textContent = 'Festas';
     document.getElementById('titulo-card-2').textContent = 'Catálogo';
     document.getElementById('titulo-card-3').textContent = 'Kits';
