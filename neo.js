@@ -31,11 +31,11 @@ let planoAtual = "";
 let festasGlobais = [];
 let kitsDoSubsite = []; 
 
-// 🔹 Variável global para receber o plano do FVM
+// 🔹 Variável global para receber o plano do FVM (vinda do fvm.js)
 window.neoflux_planoFVM = null;
 
 // ==========================================
-// 3. REGRAS E TEXTOS (COM FVM)
+// 3. REGRAS E TEXTOS
 // ==========================================
 const termosPlanos = {
     start: `<h3>Plano Start</h3><p>Ideal para começar. Inclui 1 subsite, 1 login por subsite e armazenamento local.</p>`,
@@ -43,9 +43,9 @@ const termosPlanos = {
     elite: `<h3>Plano Elite</h3><p>A experiência completa. Múltiplos subsites, múltiplos logins, nuvem completa e reuniões ilimitadas.</p>`,
     elite_premium: `<h3>Plano Elite Premium</h3><p>Todas as ferramentas do Elite + Gerador de Contratos exclusivo.</p>`,
     // 🔹 FVM
-    fvm_start: `<h3>Plano FVM Start</h3><p><strong>Faça Você Mesmo</strong> — versão de entrada. Mesmos recursos do Start: 1 subsite, 1 login e armazenamento local.</p>`,
-    fvm_pro:   `<h3>Plano FVM Pro</h3><p><strong>Faça Você Mesmo</strong> — intermediário. Mesmos recursos do Pro: 1 subsite, até 2 logins, nuvem, agendamento, kits e relatórios.</p>`,
-    fvm_elite: `<h3>Plano FVM Elite</h3><p><strong>Faça Você Mesmo</strong> — completo. Mesmos recursos do Elite: múltiplos subsites/logins, kits, relatórios, assistente e analista.</p>`,
+    fvm_start: `<h3>Plano FVM Start</h3><p><strong>Faça Você Mesmo</strong> — versão de entrada. Mesmos recursos do Start.</p>`,
+    fvm_pro: `<h3>Plano FVM Pro</h3><p><strong>Faça Você Mesmo</strong> — intermediário. Mesmos recursos do Pro.</p>`,
+    fvm_elite: `<h3>Plano FVM Elite</h3><p><strong>Faça Você Mesmo</strong> — completo. Mesmos recursos do Elite.</p>`,
     fvm_elite_premium: `<h3>Plano FVM Elite Premium</h3><p><strong>Faça Você Mesmo</strong> — avançado. Tudo do Elite + Gerador de Contratos exclusivo.</p>`
 };
 
@@ -67,7 +67,6 @@ const recursosPlanos = {
     fvm_elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  }
 };
 
-// 🔹 Nomes amigáveis para exibição
 const nomesPlanos = {
     start: "Start", pro: "Pro", elite: "Elite", elite_premium: "Elite Premium",
     fvm_start: "FVM Start", fvm_pro: "FVM Pro", fvm_elite: "FVM Elite", fvm_elite_premium: "FVM Elite Premium"
@@ -113,7 +112,6 @@ document.getElementById('btn-fechar-modal-comparar-footer')?.addEventListener('c
 
 document.getElementById('btn-logout')?.addEventListener('click', async () => { await signOut(auth); mostrarTela('tela-boas-vindas'); });
 
-// Botões de seleção de planos normais
 document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const card = e.target.closest('.card-plano');
@@ -122,7 +120,7 @@ document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
         document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
         document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual] || "";
         
-        // 🔹 Atualiza o resumo do plano
+        // 🔹 Atualiza o resumo do plano na tela de criar conta
         const resumoConta = document.getElementById('resumo-plano-conta');
         if (resumoConta) resumoConta.textContent = nomesPlanos[planoAtual] || nomePlano;
         
@@ -139,7 +137,7 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         const senha = document.getElementById('senha-cadastro').value;
         const nome = document.getElementById('nome-cliente').value;
 
-        // 🔹 FVM: Verifica se o plano veio do fvm.js
+        // 🔹 FVM: Verifica se o plano veio do fvm.js e sobrescreve
         if (window.neoflux_planoFVM && window.neoflux_planoFVM.startsWith('fvm_')) {
             planoAtual = window.neoflux_planoFVM;
         }
@@ -151,10 +149,10 @@ document.getElementById('form-cadastro-final')?.addEventListener('submit', async
         
         document.getElementById('resumo-nome-pagamento').textContent = nome;
         
-        // 🔹 Mostra o nome do plano na tela de pagamento
+        // 🔹 Mostra o nome amigável do plano na tela de pagamento
         const resumoPlanoPag = document.getElementById('resumo-plano-pagamento');
         if (resumoPlanoPag) resumoPlanoPag.textContent = nomesPlanos[planoAtual] || planoAtual;
-        
+
         mostrarTela('tela-pagamento');
     } catch (error) { alert("Erro ao cadastrar: " + error.message); } finally { carregar(false); }
 });
