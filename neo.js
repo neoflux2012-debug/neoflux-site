@@ -4,7 +4,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
     getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification,
-    signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged
+    signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged,
+    setPersistence, browserLocalPersistence // 🔹 IMPORTAÇÃO PARA O DESLOGUE
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
     getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs,
@@ -25,6 +26,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// 🔹 CORREÇÃO DO DESLOGUE: Força o Firebase a lembrar do login localmente
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.error("Erro ao configurar persistência do login:", error);
+});
 
 let subsiteAtualId = "";
 let planoAtual = "";
@@ -287,7 +293,7 @@ async function abrirSubsite(id) {
     const dadosSubsite = snap.data();
     document.getElementById('nome-do-subsite').textContent = dadosSubsite.titulo;
     
-    // 🔹 PERSONALIZAÇÃO FVM: Se for FVM e já tem nicho, aplica. Se não, reseta.
+    // 🔹 PERSONALIZAÇÃO FVM
     if (planoAtual.startsWith('fvm_')) {
         if (dadosSubsite.configFVM) {
             window.aplicarTraducaoFVM(dadosSubsite.configFVM);
@@ -683,7 +689,6 @@ async function carregarCatalogo() {
 }
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', async () => {
-    // 🔹 Verifica limite de kits antes de abrir
     const regras = getRecursos(planoAtual);
     if (regras.kits && regras.maxKits < 999) {
         const snap = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", subsiteAtualId)));
@@ -1286,10 +1291,6 @@ document.getElementById('festa-data')?.addEventListener('change', verificarEstoq
 // ==========================================
 // 15. MÓDULO FVM (FAÇA VOCÊ MESMO)
 // ==========================================
-// Esta seção é responsável por toda a inteligência do FVM:
-// - Abrir o modal de nicho (onboarding)
-// - Traduzir os textos e esconder campos (como o CPF)
-// - Salvar as preferências do cliente no Firebase
 
 window.abrirModalNicho = function(idSubsite) {
     subsiteAtualId = idSubsite;
@@ -1382,6 +1383,15 @@ window.aplicarTraducaoFVM = function(config) {
         document.getElementById('label-kit-nome').textContent = `Nome do ${config.card3 || 'Combo'}`;
         document.getElementById('label-kit-modelo').textContent = "O que vai incluso?";
         document.getElementById('label-orc-kit').textContent = `Selecione um(a) ${config.card3 || 'Combo'} cadastrado(a):`;
+
+        // 🔹 TRADUÇÃO DO ORÇAMENTO INTELIGENTE
+        const tituloOrc = document.getElementById('titulo-modal-orcamento');
+        if (tituloOrc) tituloOrc.innerHTML = `<i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> ${config.card4 || 'Orçamento'}`;
+        
+        const textoAjudaOrc = document.getElementById('texto-ajuda-orcamento');
+        if (textoAjudaOrc) textoAjudaOrc.innerHTML = `<i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do(a) ${config.card3 || 'item'} escolhido(a).`;
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 };
 
@@ -1404,4 +1414,11 @@ window.resetarTraducaoFVM = function() {
     document.getElementById('label-kit-nome').textContent = "Nome do Kit:";
     document.getElementById('label-kit-modelo').textContent = "Modelo do Kit:";
     document.getElementById('label-orc-kit').textContent = "Selecione um kit cadastrado:";
+
+    // 🔹 RESET DO ORÇAMENTO INTELIGENTE
+    const tituloOrcReset = document.getElementById('titulo-modal-orcamento');
+    if (tituloOrcReset) tituloOrcReset.innerHTML = `<i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> Orçamento Inteligente`;
+    
+    const textoAjudaOrcReset = document.getElementById('texto-ajuda-orcamento');
+    if (textoAjudaOrcReset) textoAjudaOrcReset.innerHTML = `<i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do kit escolhido.`;
 };
