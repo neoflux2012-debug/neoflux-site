@@ -115,6 +115,24 @@
         .caixa-pix { background: #0a0a0a; border: 1px dashed #00d2ff; padding: 20px; border-radius: 10px; text-align: center; margin: 15px 0; }
         .caixa-pix img { max-width: 240px; width: 100%; border-radius: 8px; background: white; padding: 10px; margin-bottom: 12px; }
         .caixa-pix .chave-pix { color: #00d2ff; font-weight: bold; font-size: 1.05rem; }
+
+        /* 🔹 FVM: Modal de Nicho */
+        #modal-nicho-fvm { display: none; }
+        #modal-nicho-fvm .card-nicho {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        #modal-nicho-fvm .card-nicho:hover {
+            border-color: #00d2ff;
+            background: #121212;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,210,255,0.1);
+        }
     </style>
 </head>
 <body>
@@ -298,7 +316,6 @@
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button id="btn-voltar-escolha-admin" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #f39c12; display: none;">🔙 Voltar ao Portal Admin</button>
                     
-                    <!-- 🔹 NOVO BOTÃO DE TESTE AQUI -->
                     <button id="btn-testar-plano" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #8a2be2; display: none;" onclick="window.adminTestarPlano()">🎭 Testar Planos</button>
 
                     <button id="btn-pedir-upgrade" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem;">Fazer Upgrade</button>
@@ -337,25 +354,25 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
                 <div style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
                     <i data-lucide="party-popper" style="color: #f39c12; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;">Festas</h3>
+                    <h3 style="color: white; margin: 0 0 10px 0;" id="titulo-card-1">Festas</h3>
                     <button id="btn-agendar-festa" class="botao-principal" style="width: 100%; background: #f39c12;">Agendar Festa</button>
                 </div>
 
                 <div style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
                     <i data-lucide="package" style="color: #00d2ff; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;">Catálogo</h3>
+                    <h3 style="color: white; margin: 0 0 10px 0;" id="titulo-card-2">Catálogo</h3>
                     <button id="btn-abrir-catalogo" class="botao-principal" style="width: 100%; background: #00d2ff; color: #000;">Gerenciar</button>
                 </div>
 
                 <div id="card-kits" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
                     <i data-lucide="gift" style="color: #9b59b6; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;">Kits</h3>
+                    <h3 style="color: white; margin: 0 0 10px 0;" id="titulo-card-3">Kits</h3>
                     <button id="btn-abrir-kits" class="botao-principal" style="width: 100%;">Gerar Kit</button>
                 </div>
 
                 <div id="card-orcamento-inteligente" class="card-orcamento-inteligente" style="border-radius: 12px; padding: 25px; position: relative;">
                     <i data-lucide="sparkles" style="color: #b57bff; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="margin: 0 0 6px 0;">Orçamento Inteligente</h3>
+                    <h3 style="margin: 0 0 6px 0;" id="titulo-card-4">Orçamento Inteligente</h3>
                     <p style="color: #c9a8ff; font-size: 0.75rem; margin: 0 0 12px 0; text-align: left;">
                         <i data-lucide="bot" style="width: 13px; vertical-align: middle;"></i> com Neo Wave
                     </p>
@@ -389,7 +406,7 @@
             </div>
 
             <div style="margin: 40px 0 20px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <h3 style="color: white; margin: 0;">Próximas Festas</h3>
+                <h3 style="color: white; margin: 0;" id="titulo-lista-festas">Próximas Festas</h3>
                 <input type="text" id="pesquisa-festas" placeholder="🔍 Pesquisar por nome..." style="padding: 10px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; width: 300px;">
             </div>
 
@@ -399,7 +416,7 @@
             <div style="margin-top: 30px; text-align: center;">
                 <button id="btn-abrir-modal-pasta" style="background: rgba(138,43,226,0.2); color: #c9a8ff; border: 1px solid var(--cor-roxo); padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;">
                     <i data-lucide="folder-plus" style="width: 18px;"></i>
-                    Criar Pasta / Agrupar Festas
+                    Criar Pasta / Agrupar
                 </button>
             </div>
 
@@ -783,6 +800,85 @@
                     <button type="button" id="btn-fechar-modal-fvm-footer" class="botao-principal" style="flex: 1; background: #333;">Voltar</button>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- 🔹 FVM: MODAL DE ESCOLHA DE NICHO (ONBOARDING) -->
+        <div id="modal-nicho-fvm" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(5px);">
+            <div style="background: #121212; border: 1px solid #00d2ff; padding: 35px; border-radius: 16px; width: 100%; max-width: 750px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 50px rgba(0,210,255,0.2);">
+                
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="background: rgba(0,210,255,0.1); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                        <i data-lucide="sparkles" style="color: #00d2ff; width: 35px; height: 35px;"></i>
+                    </div>
+                    <h2 style="color: white; margin: 0 0 10px 0; font-size: 1.8rem;">Bem-vindo ao seu novo espaço!</h2>
+                    <p style="color: #ccc; font-size: 0.95rem; max-width: 500px; margin: 0 auto; line-height: 1.6;">
+                        O <strong>FVM</strong> foi feito exatamente para quem <strong>NÃO</strong> é do nicho de festas. Escolha o seu ramo abaixo para personalizarmos o seu painel de trabalho.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px;" id="grid-nichos-fvm">
+                    <div class="card-nicho" data-nicho="alimentacao" onclick="window.selecionarNichoFVM('alimentacao')">
+                        <i data-lucide="utensils" style="color: #f39c12; width: 30px; height: 30px; margin-bottom: 10px;"></i>
+                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Alimentação</h4>
+                    </div>
+                    <div class="card-nicho" data-nicho="artesanato" onclick="window.selecionarNichoFVM('artesanato')">
+                        <i data-lucide="palette" style="color: #e74c3c; width: 30px; height: 30px; margin-bottom: 10px;"></i>
+                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Artesanato</h4>
+                    </div>
+                    <div class="card-nicho" data-nicho="beleza" onclick="window.selecionarNichoFVM('beleza')">
+                        <i data-lucide="scissors" style="color: #9b59b6; width: 30px; height: 30px; margin-bottom: 10px;"></i>
+                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Beleza & Estética</h4>
+                    </div>
+                    <div class="card-nicho" data-nicho="servicos" onclick="window.selecionarNichoFVM('servicos')">
+                        <i data-lucide="wrench" style="color: #00d2ff; width: 30px; height: 30px; margin-bottom: 10px;"></i>
+                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Serviços</h4>
+                    </div>
+                    <div class="card-nicho" data-nicho="moda" onclick="window.selecionarNichoFVM('moda')">
+                        <i data-lucide="shirt" style="color: #2ecc71; width: 30px; height: 30px; margin-bottom: 10px;"></i>
+                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Moda & Costura</h4>
+                    </div>
+                    <div class="card-nicho" data-nicho="personalizado" onclick="window.abrirPersonalizacaoNicho()" style="border-color: #555; background: rgba(255,255,255,0.02);">
+                        <i data-lucide="plus-circle" style="color: #888; width: 30px; height: 30px; margin-bottom: 10px;"></i>
+                        <h4 style="color: #888; margin: 0; font-size: 0.85rem;">Meu nicho não está aqui >:( </h4>
+                    </div>
+                </div>
+
+                <div id="area-personalizar-nicho" style="display: none; background: #0a0a0a; border: 1px dashed #8a2be2; border-radius: 12px; padding: 25px;">
+                    <h3 style="color: #b57bff; margin: 0 0 15px 0; font-size: 1.1rem;">Crie o seu Nicho Personalizado</h3>
+                    <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 20px; text-align: left;">Dê um nome ao seu negócio e escolha como os cards do seu painel devem aparecer.</p>
+                    
+                    <label style="color: #ccc; font-size: 0.9rem; display: block; margin-bottom: 5px;">Nome do seu Nicho:</label>
+                    <input type="text" id="custom-nicho-nome" placeholder="Ex: Pet Shop, Doceria..." style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px;">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div>
+                            <label style="color: #ccc; font-size: 0.85rem; display: block; margin-bottom: 5px;">Card 1 (Substitui "Festas"):</label>
+                            <input type="text" id="custom-card-1" placeholder="Ex: Pedidos / Ordens" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="color: #ccc; font-size: 0.85rem; display: block; margin-bottom: 5px;">Card 2 (Substitui "Catálogo"):</label>
+                            <input type="text" id="custom-card-2" placeholder="Ex: Cardápio / Produtos" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="color: #ccc; font-size: 0.85rem; display: block; margin-bottom: 5px;">Card 3 (Substitui "Kits"):</label>
+                            <input type="text" id="custom-card-3" placeholder="Ex: Combos / Materiais" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="color: #ccc; font-size: 0.85rem; display: block; margin-bottom: 5px;">Card 4 (Substitui "Orçamento"):</label>
+                            <input type="text" id="custom-card-4" placeholder="Ex: Calculadora / Vendas" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="window.voltarGridNichos()" class="botao-principal" style="background: #333; flex: 1;">Voltar</button>
+                        <button type="button" onclick="window.salvarNichoPersonalizado()" class="botao-principal" style="background: #8a2be2; flex: 1;">Salvar Meu Nicho</button>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #666; font-size: 0.75rem; margin: 0;">Você poderá alterar essas configurações a qualquer momento dentro do seu painel.</p>
+                </div>
             </div>
         </div>
 
