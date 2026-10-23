@@ -61,6 +61,60 @@
         
         /* Animação para o card minimizar */
         .card-festa.minimizado .card-conteudo { display: none !important; }
+
+        /* 🔹 FVM: Card do plano principal */
+        #card-fvm {
+            border-color: #00d2ff !important;
+            background: linear-gradient(135deg, rgba(0,210,255,0.12) 0%, rgba(138,43,226,0.12) 100%), #121212 !important;
+            position: relative;
+        }
+        #card-fvm:hover {
+            border-color: #8a2be2 !important;
+            box-shadow: 0 10px 40px rgba(138,43,226,0.3), 0 0 20px rgba(0,210,255,0.2) !important;
+        }
+        #card-fvm h3 { color: #00d2ff !important; }
+        #card-fvm .subtitulo-fvm {
+            font-size: 0.8rem;
+            color: #b57bff;
+            margin-bottom: 8px;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+        .btn-abrir-fvm {
+            width: 100%;
+            padding: 11px 20px;
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #00d2ff, #8a2be2) !important;
+            color: white !important;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+        .btn-abrir-fvm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138,43,226,0.45);
+        }
+
+        /* 🔹 FVM: Modal dos subplanos */
+        #modal-fvm { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
+        #modal-fvm .modal-fvm-box { background: #121212; border: 1px solid #00d2ff; padding: 30px; border-radius: 12px; width: 100%; max-width: 900px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 40px rgba(0,210,255,0.25); }
+        .grid-fvm { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 15px; }
+        .card-fvm-sub { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 22px 16px; text-align: center; transition: 0.25s; }
+        .card-fvm-sub:hover { border-color: #00d2ff; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,210,255,0.15); }
+        .card-fvm-sub h3 { color: #00d2ff; font-size: 1.1rem; margin-bottom: 10px; }
+        .card-fvm-sub .preco { font-size: 1.35rem; font-weight: 700; color: white; margin-bottom: 16px; }
+        .card-fvm-sub button { width: 100%; padding: 10px; border: 1px solid #2a2a2a; border-radius: 6px; background: transparent; color: white; font-weight: 600; cursor: pointer; transition: 0.25s; font-size: 0.88rem; }
+        .card-fvm-sub button:hover { background: linear-gradient(135deg, #00d2ff, #8a2be2); border-color: transparent; }
+
+        /* 🔹 FVM: Badge visual no card do plano dentro do modal */
+        .badge-fvm { display: inline-block; font-size: 0.65rem; background: rgba(138,43,226,0.25); color: #b57bff; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.05em; }
+
+        /* 🔹 PIX: box do QR code no pagamento */
+        .caixa-pix { background: #0a0a0a; border: 1px dashed #00d2ff; padding: 20px; border-radius: 10px; text-align: center; margin: 15px 0; }
+        .caixa-pix img { max-width: 240px; width: 100%; border-radius: 8px; background: white; padding: 10px; margin-bottom: 12px; }
+        .caixa-pix .chave-pix { color: #00d2ff; font-weight: bold; font-size: 1.05rem; }
     </style>
 </head>
 <body>
@@ -91,6 +145,14 @@
                 <div class="card-plano" data-plano="pro"><h3>Pro</h3><p class="preco">R$ 79,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
                 <div class="card-plano" data-plano="elite"><h3>Elite</h3><p class="preco">R$ 99,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
                 <div class="card-plano" data-plano="elite_premium"><h3>Elite Premium</h3><p class="preco">R$ 149,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
+
+                <!-- 🔹 FVM: Novo card ao lado dos outros -->
+                <div class="card-plano" id="card-fvm" data-plano="fvm">
+                    <h3>FVM</h3>
+                    <p class="subtitulo-fvm">Faça Você Mesmo</p>
+                    <p class="preco">R$ 49,99+</p>
+                    <button class="btn-abrir-fvm" id="btn-abrir-fvm">Ver Planos FVM</button>
+                </div>
             </div>
 
             <div style="text-align: center; margin-top: 25px;">
@@ -184,10 +246,20 @@
         <section id="tela-pagamento" class="tela">
             <h2>Ative seu plano</h2>
             <p>Sua conta foi criada, <strong id="resumo-nome-pagamento">...</strong>!</p>
-            <div class="caixa-pagamento-simulada" style="text-align: center;">
-                <img id="img-qrcode" src="./qrcode.png" alt="QR Code Pix" style="max-width: 200px; width: 100%;">
-                <p>Chave Pix: <strong>(61) 99161-4509</strong></p>
+            <p style="text-align: left; color: #ccc;">Plano escolhido: <strong id="resumo-plano-pagamento" style="color: #00d2ff;">...</strong></p>
+
+            <!-- 🔹 PIX: QR Code embutido em base64 + chave -->
+            <div class="caixa-pix">
+                <p style="margin-bottom: 12px; color: #ccc;">Pague com Pix escaneando o QR Code abaixo:</p>
+                <img id="img-qrcode" src="./qrcode.png" alt="QR Code Pix">
+                <p style="margin: 0 0 6px 0; color: #888; font-size: 0.85rem;">Chave Pix (Telefone):</p>
+                <p class="chave-pix" style="margin: 0;">(61) 99161-4509</p>
             </div>
+
+            <p style="font-size: 0.85rem; color: #888; margin: 10px 0 20px 0;">
+                Após o pagamento, envie o comprovante pelo WhatsApp <strong>(61) 99161-4509</strong> para liberação do acesso.
+            </p>
+
             <button id="btn-ir-para-login" class="botao-principal">Já paguei, ir para o login</button>
         </section>
 
@@ -197,14 +269,12 @@
             <p>Bem-vindo, Master. Como deseja acessar o sistema hoje?</p>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
-                <!-- Opção 1: Painel Admin -->
                 <div class="card-plano" style="cursor: pointer; border-color: #f39c12;" onclick="window.location.href='./admin.html'">
                     <i data-lucide="shield-check" style="color: #f39c12; width: 40px; height: 40px; margin-bottom: 15px;"></i>
                     <h3 style="color: #f39c12;">Painel Administrativo</h3>
                     <p style="font-size: 0.85rem; margin-bottom: 0;">Gerenciar clientes, cobranças, autopilot e relatórios gerais.</p>
                 </div>
 
-                <!-- Opção 2: Visão do Cliente -->
                 <div class="card-plano" style="cursor: pointer; border-color: #00d2ff;" onclick="window.entrarComoClienteAdmin()">
                     <i data-lucide="user" style="color: #00d2ff; width: 40px; height: 40px; margin-bottom: 15px;"></i>
                     <h3 style="color: #00d2ff;">Visão do Cliente</h3>
@@ -220,9 +290,7 @@
             <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <h2 style="margin: 0;">Área do Cliente</h2>
                 <div style="display: flex; gap: 10px;">
-                    <!-- BOTÃO DE VOLTAR (SÓ APARECE PARA ADMIN) -->
                     <button id="btn-voltar-escolha-admin" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #f39c12; display: none;">🔙 Voltar ao Portal Admin</button>
-                    
                     <button id="btn-pedir-upgrade" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem;">Fazer Upgrade</button>
                 </div>
             </div>
@@ -240,7 +308,6 @@
                 <ul id="lista-subsites" style="margin-top: 20px; list-style: none; padding: 0;"></ul>
             </div>
             
-            <!-- BOTÃO DE FEEDBACK -->
             <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
                 <button id="btn-enviar-feedback" class="botao-principal" style="width: auto; background: transparent; border: 1px solid var(--cor-azul); color: var(--cor-azul); display: inline-flex; align-items: center; gap: 8px;">
                     <i data-lucide="message-square-plus" style="width: 18px;"></i> Enviar Feedback / Ideia
@@ -276,7 +343,6 @@
                     <button id="btn-abrir-kits" class="botao-principal" style="width: 100%;">Gerar Kit</button>
                 </div>
 
-                <!-- CARD: ORÇAMENTO INTELIGENTE -->
                 <div id="card-orcamento-inteligente" class="card-orcamento-inteligente" style="border-radius: 12px; padding: 25px; position: relative;">
                     <i data-lucide="sparkles" style="color: #b57bff; width: 28px; height: 28px; margin-bottom: 10px;"></i>
                     <h3 style="margin: 0 0 6px 0;">Orçamento Inteligente</h3>
@@ -290,7 +356,6 @@
                     </button>
                 </div>
 
-                <!-- CARD: NEO WAVE ANALISTA (APENAS ELITE+) -->
                 <div id="card-analista" class="card-analista">
                     <i data-lucide="bar-chart-3" style="color: #f39c12; width: 28px; height: 28px; margin-bottom: 10px;"></i>
                     <h3 style="margin: 0 0 6px 0;">Neo Wave Analista</h3>
@@ -318,13 +383,10 @@
                 <input type="text" id="pesquisa-festas" placeholder="🔍 Pesquisar por nome..." style="padding: 10px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; width: 300px;">
             </div>
 
-            <!-- CONTAINER DAS PASTAS (ONDE ELAS VÃO APARECER) -->
             <div id="lista-pastas-container" style="margin-bottom: 20px;"></div>
 
-            <!-- LISTA DE FESTAS NORMAIS -->
             <div id="lista-festas-criadas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;"></div>
 
-            <!-- BOTÃO CRIAR PASTA -->
             <div style="margin-top: 30px; text-align: center;">
                 <button id="btn-abrir-modal-pasta" style="background: rgba(138,43,226,0.2); color: #c9a8ff; border: 1px solid var(--cor-roxo); padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;">
                     <i data-lucide="folder-plus" style="width: 18px;"></i>
@@ -342,9 +404,7 @@
                     <input type="text" id="nome-nova-pasta" placeholder="Ex: Festas de Novembro" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px;">
 
                     <label style="color: #ccc; font-size: 0.9rem; display: block;">Selecione as festas para agrupar:</label>
-                    <div id="lista-checkboxes-festas" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; background: #0a0a0a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
-                        <!-- Preenchido via JS -->
-                    </div>
+                    <div id="lista-checkboxes-festas" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; background: #0a0a0a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;"></div>
 
                     <div style="display: flex; gap: 10px;">
                         <button type="button" id="btn-cancelar-pasta" class="botao-principal" style="background: #333;">Cancelar</button>
@@ -566,7 +626,6 @@
                     </div>
                 </div>
 
-                <!-- GERADOR DE RECIBO -->
                 <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 25px;">
                     <h3 style="color: white; margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px;">
                         <i data-lucide="receipt" style="color: #00c853; width: 22px;"></i>
@@ -657,6 +716,57 @@
                     <p style="color: #888; margin-bottom: 15px;">Escolha o plano que melhor se adapta ao seu negócio.</p>
                     <button id="btn-fechar-modal-comparar-footer" class="botao-principal" style="width: auto; padding: 12px 40px;">Voltar para os Planos</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 🔹 FVM: MODAL DOS SUBPLANOS -->
+        <div id="modal-fvm">
+            <div class="modal-fvm-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;">
+                        <i data-lucide="wrench" style="color: #00d2ff; width: 26px;"></i> Planos FVM
+                    </h2>
+                    <button id="btn-fechar-modal-fvm" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
+                </div>
+                <p style="text-align: left; color: #aaa; font-size: 0.9rem; margin-bottom: 25px;">
+                    <strong style="color: #00d2ff;">Faça Você Mesmo:</strong> todas as ferramentas da Neo Flux, mas com o foco no seu nicho. Escolha o seu nível de acesso:
+                </p>
+                
+                <div class="grid-fvm">
+                    <div class="card-fvm-sub">
+                        <span class="badge-fvm">START</span>
+                        <h3>FVM Start</h3>
+                        <p class="preco">R$ 49,99</p>
+                        <button class="btn-fvm-subplano" data-plano="fvm_start">Selecionar</button>
+                    </div>
+                    <div class="card-fvm-sub">
+                        <span class="badge-fvm">PRO</span>
+                        <h3>FVM Pro</h3>
+                        <p class="preco">R$ 79,99</p>
+                        <button class="btn-fvm-subplano" data-plano="fvm_pro">Selecionar</button>
+                    </div>
+                    <div class="card-fvm-sub">
+                        <span class="badge-fvm">ELITE</span>
+                        <h3>FVM Elite</h3>
+                        <p class="preco">R$ 99,99</p>
+                        <button class="btn-fvm-subplano" data-plano="fvm_elite">Selecionar</button>
+                    </div>
+                    <div class="card-fvm-sub">
+                        <span class="badge-fvm">PREMIUM</span>
+                        <h3>FVM Elite Premium</h3>
+                        <p class="preco">R$ 149,99</p>
+                        <button class="btn-fvm-subplano" data-plano="fvm_elite_premium">Selecionar</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; background: rgba(0,210,255,0.06); border: 1px solid #00d2ff; border-radius: 8px; padding: 15px;">
+                    <p style="text-align: left; margin: 0; font-size: 0.85rem; color: #ccc;">
+                        <i data-lucide="info" style="width: 15px; vertical-align: middle; color: #00d2ff;"></i>
+                        Os planos FVM têm a <strong>mesma estrutura, recursos e valores</strong> dos planos regulares, mas são voltados para o nicho "Faça Você Mesmo".
+                    </p>
+                </div>
+
+                <button type="button" id="btn-fechar-modal-fvm-footer" class="botao-principal" style="background: #333; margin-top: 20px;">Voltar</button>
             </div>
         </div>
 
