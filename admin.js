@@ -3,7 +3,7 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU", authDomain: "neo-flux-c91c8.firebaseapp.com", projectId: "neo-flux-c91c8", storageBucket: "neo-flux-c91c8.firebasestorage.app", messagingSenderId: "6686219198", appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
@@ -68,10 +68,8 @@ async function carregarClientes() {
             clientesAdminGlobais.push(cliente);
         });
 
-        // Renderiza a tabela principal (usando a função que criamos)
         renderizarTabelaAdmin();
         
-        // Verifica Upgrades e renderiza
         clientesAdminGlobais.forEach(cliente => {
             if (cliente.statusPagamento === "upgrade_pendente") {
                 temUpgrade = true;
@@ -96,7 +94,6 @@ async function carregarClientes() {
             tabelaUpgrades.innerHTML = '<tr><td colspan="3" class="admin-tabela-vazia">Nenhum pedido de upgrade no momento.</td></tr>';
         }
 
-        // Eventos de Aprovar Upgrade
         document.querySelectorAll('.btn-aprovar-upgrade').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.getAttribute('data-id');
@@ -108,7 +105,6 @@ async function carregarClientes() {
             });
         });
 
-        // Inicializa Monitor e Autopilot
         atualizarMonitorAdmin();
         await carregarEstadoAutopilot();
 
@@ -181,6 +177,7 @@ function renderizarTabelaAdmin() {
                 <button onclick="window.adminConfirmarPagamento('${c.id}')" class="btn-acao btn-pago">✅ Pago</button>
                 <button onclick="window.adminSuspender('${c.id}')" class="btn-acao btn-suspender">🛑 Suspender</button>
                 <button onclick="window.adminAlterarPlano('${c.id}')" class="btn-acao btn-plano">🔄 Plano</button>
+                <button onclick="window.adminExcluirConta('${c.id}')" class="btn-acao btn-excluir">🗑️ Excluir</button>
             </td>`;
         tbody.appendChild(tr);
     });
@@ -206,12 +203,31 @@ window.adminSuspender = async function(uid) {
 
 window.adminAlterarPlano = async function(uid) {
     const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
-    const novoPlano = prompt(`Alterar plano de ${cliente.nome}:\n\nDigite: start, pro, elite ou elite_premium`, cliente.planoPreferido);
+    // 🔹 Adicionado suporte aos planos FVM no prompt
+    const novoPlano = prompt(`Alterar plano de ${cliente.nome}:\n\nDigite: start, pro, elite, elite_premium, fvm_start, fvm_pro, fvm_elite ou fvm_elite_premium`, cliente.planoPreferido);
     if (!novoPlano) return;
     const planoLimpo = novoPlano.toLowerCase().trim();
-    if (!['start', 'pro', 'elite', 'elite_premium'].includes(planoLimpo)) return alert("Plano inválido.");
+    const planosValidos = ['start', 'pro', 'elite', 'elite_premium', 'fvm_start', 'fvm_pro', 'fvm_elite', 'fvm_elite_premium'];
+    
+    if (!planosValidos.includes(planoLimpo)) return alert("Plano inválido.");
     try { await updateDoc(doc(db, "usuarios", uid), { planoPreferido: planoLimpo }); alert(`✅ Plano alterado para ${planoLimpo.toUpperCase()}`); carregarClientes(); } 
     catch (e) { alert("Erro: " + e.message); }
+};
+
+// 🔹 NOVA FUNÇÃO: EXCLUIR CONTA
+window.adminExcluirConta = async function(uid) {
+    const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
+    
+    if (!confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR a conta de ${cliente.nome}?\n\nTodos os dados de plano, cobranças e status serão apagados permanentemente.\n\n(Nota: O login deste e-mail no Firebase Auth deverá ser apagado manualmente pelo Console do Firebase).`)) return;
+    
+    try {
+        // Apaga o documento do banco de dados
+        await deleteDoc(doc(db, "usuarios", uid));
+        alert("🗑️ Conta excluída com sucesso do banco de dados!");
+        carregarClientes(); // Recarrega a lista
+    } catch (e) {
+        alert("Erro ao excluir: " + e.message);
+    }
 };
 
 // ==========================================
