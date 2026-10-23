@@ -384,7 +384,6 @@
             </div>
 
             <div id="lista-pastas-container" style="margin-bottom: 20px;"></div>
-
             <div id="lista-festas-criadas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;"></div>
 
             <div style="margin-top: 30px; text-align: center;">
@@ -766,13 +765,21 @@
                     </p>
                 </div>
 
-                <button type="button" id="btn-fechar-modal-fvm-footer" class="botao-principal" style="background: #333; margin-top: 20px;">Voltar</button>
+                <!-- 🔹 BOTÕES DO RODAPÉ DO FVM -->
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" id="btn-comparar-fvm" class="botao-principal" style="flex: 1; background: transparent; border: 1px solid #00d2ff; color: #00d2ff; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i data-lucide="bar-chart-3" style="width: 18px;"></i> Comparar Assinaturas
+                    </button>
+                    <button type="button" id="btn-fechar-modal-fvm-footer" class="botao-principal" style="flex: 1; background: #333;">Voltar</button>
+                </div>
+
             </div>
         </div>
 
     </main>
 
     <script>lucide.createIcons();</script>
+    <!-- Carrega o neo.js e depois o fvm.js -->
     <script type="module" src="./neo.js"></script>
     <script type="module" src="./fvm.js"></script>
 </body>
