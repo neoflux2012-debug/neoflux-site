@@ -41,14 +41,12 @@ const termosPlanos = {
     pro: `<h3>Plano Pro</h3><p>Para quem quer crescer. Inclui 1 subsite, até 2 logins, armazenamento em nuvem e agendamento de reuniões.</p>`,
     elite: `<h3>Plano Elite</h3><p>A experiência completa. Múltiplos subsites, múltiplos logins, nuvem completa e reuniões ilimitadas.</p>`,
     elite_premium: `<h3>Plano Elite Premium</h3><p>Todas as ferramentas do Elite + Gerador de Contratos exclusivo.</p>`,
-    // 🔹 FVM
-    fvm_start: `<h3>Plano FVM Start</h3><p><strong>Faça Você Mesmo</strong> — versão de entrada. Mesmos recursos do Start.</p>`,
+    fvm_start: `<h3>Plano FVM Start</h3><p><strong>Faça Você Mesmo</strong> — versão de entrada. Mesmos recursos do Start (com limite de Kits).</p>`,
     fvm_pro: `<h3>Plano FVM Pro</h3><p><strong>Faça Você Mesmo</strong> — intermediário. Mesmos recursos do Pro.</p>`,
     fvm_elite: `<h3>Plano FVM Elite</h3><p><strong>Faça Você Mesmo</strong> — completo. Mesmos recursos do Elite.</p>`,
-    fvm_elite_premium: `<h3>Plano FVM Elite Premium</h3><p><strong>Faça Você Mesmo</strong> — avançado. Tudo do Elite + Gerador de Contratos exclusivo.</p>`
+    fvm_elite_premium: `<h3>Plano FVM Elite Premium</h3><p><strong>Faça Você Mesmo</strong> — avançado. Tudo do Elite, sem contratos.</p>`
 };
 
-// 🔹 ESPELHAMENTO AUTOMÁTICO (A regra do "fvm_start é igual a start")
 const limitesPlanosBase = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
 const recursosPlanosBase = {
     start:         { kits: false, relatorios: false, assistente: true,  valores: false, contratos: false, sugestaoMensagem: false, analista: false },
@@ -60,9 +58,18 @@ const recursosPlanosBase = {
 function getRecursos(plano) {
     if (plano.startsWith('fvm_')) {
         const planoBase = plano.replace('fvm_', '');
-        return recursosPlanosBase[planoBase] || recursosPlanosBase.start;
+        
+        // 🔹 FVM Start: Libera Kits, mas com limite
+        if (planoBase === 'start') {
+            return { kits: true, maxKits: 3, relatorios: false, assistente: true, valores: false, contratos: false, sugestaoMensagem: false, analista: false };
+        }
+        
+        const regrasBase = recursosPlanosBase[planoBase] || recursosPlanosBase.start;
+        return { ...regrasBase, maxKits: 999, contratos: false };
     }
-    return recursosPlanosBase[plano] || recursosPlanosBase.start;
+    
+    const regrasBase = recursosPlanosBase[plano] || recursosPlanosBase.start;
+    return { ...regrasBase, maxKits: 999 };
 }
 
 function getLimite(plano) {
@@ -191,7 +198,6 @@ async function carregarDadosCliente(uid) {
                 btnTestar.style.display = (auth.currentUser?.email === "neoflux2012@gmail.com") ? 'inline-block' : 'none';
             }
 
-            // 🔹 Pega o limite correto (Admin Master tem limite infinito)
             const isAdmin = auth.currentUser?.email === "neoflux2012@gmail.com";
             const limite = isAdmin ? 9999 : getLimite(planoAtual);
             
@@ -208,7 +214,6 @@ async function carregarSubsites(uid, limite) {
     const btnCriar = document.getElementById('btn-criar-subsite'); 
     const inputTitulo = document.getElementById('titulo-subsite');
     
-    // 🔹 Habilita/Desabilita o botão de criar baseado no limite
     if (btnCriar && inputTitulo) {
         if (snap.size >= limite) { 
             btnCriar.disabled = true; 
@@ -231,7 +236,6 @@ async function carregarSubsites(uid, limite) {
         lista.appendChild(li);
     });
     
-    // 🔹 Eventos dos botões de acessar e apagar
     document.querySelectorAll('.btn-acessar').forEach(btn => btn.addEventListener('click', (e) => abrirSubsite(e.target.getAttribute('data-id'))));
     document.querySelectorAll('.btn-apagar').forEach(btn => btn.addEventListener('click', async (e) => {
         if(confirm("Tem certeza que deseja apagar este subsite? Todos os dados dele serão perdidos.")) { 
@@ -252,7 +256,6 @@ document.getElementById('btn-criar-subsite')?.addEventListener('click', async ()
     const titulo = document.getElementById('titulo-subsite').value.trim();
     if (!titulo) return alert("Digite um título para o subsite.");
     
-    // 🔹 Verifica o limite ANTES de tentar criar
     const isAdmin = auth.currentUser?.email === "neoflux2012@gmail.com";
     const limite = isAdmin ? 9999 : getLimite(planoAtual);
     
@@ -287,17 +290,11 @@ async function abrirSubsite(id) {
     
     // 🔹 PERSONALIZAÇÃO FVM
     if (planoAtual.startsWith('fvm_') && dadosSubsite.configFVM) {
-        const config = dadosSubsite.configFVM;
-        if (config.nicho) {
-            document.getElementById('titulo-card-1').textContent = config.card1 || 'Projetos';
-            document.getElementById('titulo-card-2').textContent = config.card2 || 'Catálogo';
-            document.getElementById('titulo-card-3').textContent = config.card3 || 'Kits';
-            document.getElementById('titulo-card-4').textContent = config.card4 || 'Orçamento';
-            document.getElementById('titulo-lista-festas').textContent = config.card1 || 'Projetos';
-            document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${config.card1 || 'Projeto'}`;
-        }
+        window.aplicarTraducaoFVM(dadosSubsite.configFVM);
     } else if (planoAtual.startsWith('fvm_') && !dadosSubsite.configFVM) {
         window.abrirModalNicho(id);
+    } else {
+        window.resetarTraducaoFVM();
     }
 
     const regras = getRecursos(planoAtual);
@@ -684,7 +681,18 @@ async function carregarCatalogo() {
     snap.forEach(doc => { const item = doc.data(); const li = document.createElement('li'); li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between;"; li.innerHTML = `<span>${item.nome} <small style="color:#888;">(${item.categoria})</small></span>`; lista.appendChild(li); });
 }
 
-document.getElementById('btn-abrir-kits')?.addEventListener('click', () => document.getElementById('modal-kits').style.display = 'flex');
+document.getElementById('btn-abrir-kits')?.addEventListener('click', async () => {
+    // 🔹 Verifica limite de kits antes de abrir
+    const regras = getRecursos(planoAtual);
+    if (regras.kits && regras.maxKits < 999) {
+        const snap = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", subsiteAtualId)));
+        if (snap.size >= regras.maxKits) {
+            return alert(`Seu plano (${nomesPlanos[planoAtual]}) permite apenas ${regras.maxKits} kits. Faça upgrade para liberar mais!`);
+        }
+    }
+    document.getElementById('modal-kits').style.display = 'flex';
+});
+
 document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
     const regras = getRecursos(planoAtual);
     document.getElementById('area-financeira-festa').style.display = regras.valores ? 'block' : 'none';
@@ -1275,8 +1283,13 @@ async function verificarEstoquePorData() {
 document.getElementById('festa-data')?.addEventListener('change', verificarEstoquePorData);
 
 // ==========================================
-// 🔹 FVM: LÓGICA DO MODAL DE NICHO
+// 15. MÓDULO FVM (FAÇA VOCÊ MESMO)
 // ==========================================
+// Esta seção é responsável por toda a inteligência do FVM:
+// - Abrir o modal de nicho (onboarding)
+// - Traduzir os textos e esconder campos (como o CPF)
+// - Salvar as preferências do cliente no Firebase
+
 window.abrirModalNicho = function(idSubsite) {
     subsiteAtualId = idSubsite;
     const modal = document.getElementById('modal-nicho-fvm');
@@ -1300,14 +1313,10 @@ window.selecionarNichoFVM = function(nicho) {
     const nomes = mapNomes[nicho];
     if (!nomes) return;
 
-    document.getElementById('titulo-card-1').textContent = nomes.c1;
-    document.getElementById('titulo-card-2').textContent = nomes.c2;
-    document.getElementById('titulo-card-3').textContent = nomes.c3;
-    document.getElementById('titulo-card-4').textContent = nomes.c4;
-    document.getElementById('titulo-lista-festas').textContent = nomes.c1;
-    document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${nomes.c1}`;
-
-    salvarNichoNoBanco(nicho, nomes.c1, nomes.c2, nomes.c3, nomes.c4);
+    const config = { nicho: nicho, card1: nomes.c1, card2: nomes.c2, card3: nomes.c3, card4: nomes.c4 };
+    
+    window.aplicarTraducaoFVM(config);
+    window.salvarNichoNoBanco(config);
 };
 
 window.abrirPersonalizacaoNicho = function() {
@@ -1329,28 +1338,16 @@ window.salvarNichoPersonalizado = async function() {
 
     if (!nomeNicho) return alert("Dê um nome ao seu nicho.");
 
-    document.getElementById('titulo-card-1').textContent = c1;
-    document.getElementById('titulo-card-2').textContent = c2;
-    document.getElementById('titulo-card-3').textContent = c3;
-    document.getElementById('titulo-card-4').textContent = c4;
-    document.getElementById('titulo-lista-festas').textContent = c1;
-    document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${c1}`;
+    const config = { nicho: nomeNicho, card1: c1, card2: c2, card3: c3, card4: c4 };
 
-    await salvarNichoNoBanco(nomeNicho, c1, c2, c3, c4);
+    window.aplicarTraducaoFVM(config);
+    await window.salvarNichoNoBanco(config);
 };
 
-async function salvarNichoNoBanco(nicho, c1, c2, c3, c4) {
+window.salvarNichoNoBanco = async function(config) {
     carregar(true);
     try {
-        await updateDoc(doc(db, "subsites", subsiteAtualId), {
-            configFVM: {
-                nicho: nicho,
-                card1: c1,
-                card2: c2,
-                card3: c3,
-                card4: c4
-            }
-        });
+        await updateDoc(doc(db, "subsites", subsiteAtualId), { configFVM: config });
         alert("✅ Painel personalizado com sucesso!");
         document.getElementById('modal-nicho-fvm').style.display = 'none';
     } catch (e) {
@@ -1358,4 +1355,60 @@ async function salvarNichoNoBanco(nicho, c1, c2, c3, c4) {
     } finally {
         carregar(false);
     }
-}
+};
+
+window.aplicarTraducaoFVM = function(config) {
+    // 1. Traduzir os Cards
+    document.getElementById('titulo-card-1').textContent = config.card1 || 'Projetos';
+    document.getElementById('titulo-card-2').textContent = config.card2 || 'Catálogo';
+    document.getElementById('titulo-card-3').textContent = config.card3 || 'Kits';
+    document.getElementById('titulo-card-4').textContent = config.card4 || 'Orçamento';
+    document.getElementById('titulo-lista-festas').textContent = config.card1 || 'Projetos';
+    document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${config.card1 || 'Projeto'}`;
+
+    // 2. Traduzir os Modais (se não for festa)
+    if (config.nicho !== 'festa') {
+        // Esconde CPF
+        document.getElementById('div-festa-cpf').style.display = 'none';
+        document.getElementById('festa-cpf').required = false;
+        document.getElementById('festa-cpf').value = "";
+
+        // Traduz campos do modal de agendamento
+        document.getElementById('label-festa-tema').textContent = "O que ele pediu? (Descrição)";
+        document.getElementById('label-festa-local').textContent = "Endereço de Entrega / Local";
+        document.getElementById('label-festa-pecas').textContent = "Itens do Pedido (Selecione no Catálogo)";
+        
+        // Traduz o botão de salvar
+        document.getElementById('btn-salvar-festa').textContent = "Salvar Pedido";
+
+        // Traduz o modal de Kit
+        document.getElementById('titulo-modal-kit').textContent = `Gerador de ${config.card3 || 'Combo'}`;
+        document.getElementById('label-kit-nome').textContent = `Nome do ${config.card3 || 'Combo'}`;
+        document.getElementById('label-kit-modelo').textContent = "O que vai incluso?";
+        
+        // Traduz o Orçamento Inteligente
+        document.getElementById('label-orc-kit').textContent = `Selecione um(a) ${config.card3 || 'Combo'} cadastrado(a):`;
+    }
+};
+
+window.resetarTraducaoFVM = function() {
+    // Se for um cliente Neo Flux normal, garante que os textos originais voltem
+    document.getElementById('titulo-card-1').textContent = 'Festas';
+    document.getElementById('titulo-card-2').textContent = 'Catálogo';
+    document.getElementById('titulo-card-3').textContent = 'Kits';
+    document.getElementById('titulo-card-4').textContent = 'Orçamento Inteligente';
+    document.getElementById('titulo-lista-festas').textContent = 'Próximas Festas';
+    document.getElementById('btn-agendar-festa').textContent = 'Agendar Festa';
+
+    document.getElementById('div-festa-cpf').style.display = 'block';
+    document.getElementById('festa-cpf').required = true;
+    document.getElementById('label-festa-tema').textContent = "Tema (ou escolha um Kit salvo):";
+    document.getElementById('label-festa-local').textContent = "Localização:";
+    document.getElementById('label-festa-pecas').textContent = "Peças (Selecione no Catálogo):";
+    document.getElementById('btn-salvar-festa').textContent = "Agendar";
+
+    document.getElementById('titulo-modal-kit').textContent = "Gerador de Kit";
+    document.getElementById('label-kit-nome').textContent = "Nome do Kit:";
+    document.getElementById('label-kit-modelo').textContent = "Modelo do Kit:";
+    document.getElementById('label-orc-kit').textContent = "Selecione um kit cadastrado:";
+};
