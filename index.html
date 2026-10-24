@@ -133,6 +133,141 @@
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0,210,255,0.1);
         }
+
+        /* ==========================================
+           HERO SECTION - PÁGINA INICIAL PREMIUM
+           ========================================== */
+        .hero-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+            margin-top: 20px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .hero-content {
+            flex: 1;
+            text-align: left;
+            max-width: 500px;
+        }
+
+        .badge-novo {
+            display: inline-block;
+            background: rgba(138, 43, 226, 0.15);
+            color: #b57bff;
+            border: 1px solid var(--cor-roxo);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 0.05em;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+        }
+
+        .hero-titulo {
+            font-size: 3.2rem;
+            line-height: 1.1;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .texto-gradiente {
+            background: var(--gradiente-neo);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitulo {
+            font-size: 1.1rem;
+            color: var(--texto-secundario);
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .botao-hero {
+            width: auto;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            margin-bottom: 20px;
+        }
+
+        .hero-content .link-troca {
+            text-align: left;
+        }
+
+        .hero-info-box {
+            flex: 1;
+            max-width: 450px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.0) 100%), #0a0a0a;
+            border: 1px solid var(--borda-sutil);
+            border-radius: var(--radius-lg);
+            padding: 35px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--sombra-media);
+            transition: var(--transition);
+        }
+
+        .hero-info-box::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-info-box:hover {
+            border-color: var(--cor-azul);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 210, 255, 0.15);
+        }
+
+        .info-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .icone-info {
+            color: var(--cor-azul);
+            width: 28px;
+            height: 28px;
+        }
+
+        .hero-info-box h3 {
+            color: white;
+            font-size: 1.3rem;
+            margin: 0;
+        }
+
+        .hero-info-box p {
+            color: var(--texto-secundario);
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 900px) {
+            .hero-container { flex-direction: column; text-align: center; margin-top: 0; }
+            .hero-content { text-align: center; max-width: 100%; }
+            .hero-titulo { font-size: 2.2rem; text-align: center; }
+            .hero-subtitulo { text-align: center; }
+            .hero-content .link-troca { text-align: center; }
+            .hero-info-box { max-width: 100%; padding: 25px; margin-top: 20px; }
+            .hero-info-box p { text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -149,10 +284,25 @@
     <main>
         <!-- TELA 1: BOAS-VINDAS -->
         <section id="tela-boas-vindas" class="tela ativa">
-            <h2>Bem-vindo à Neo Flux</h2>
-            <p>O primeiro passo para ter um site incrível começa aqui.</p>
-            <button id="btn-comecar" class="botao-principal">Começar agora</button>
-            <p class="link-troca">Já tem uma conta? <a href="#" id="ir-para-login">Faça login</a></p>
+            <div class="hero-container">
+                <!-- Lado Esquerdo: Chamada Principal -->
+                <div class="hero-content">
+                    <div class="badge-novo">✨ Novo: Conheça o plano FVM</div>
+                    <h1 class="hero-titulo">Gestão que <span class="texto-gradiente">flui</span> com você.</h1>
+                    <p class="hero-subtitulo">A plataforma definitiva para organizar suas reservas, controlar estoques e encantar seus clientes. Tudo em um só lugar, do seu jeito.</p>
+                    <button id="btn-comecar" class="botao-principal botao-hero">Começar agora</button>
+                    <p class="link-troca">Já tem uma conta? <a href="#" id="ir-para-login">Faça login</a></p>
+                </div>
+
+                <!-- Lado Direito: Barra de Informação -->
+                <div class="hero-info-box">
+                    <div class="info-header">
+                        <i data-lucide="info" class="icone-info"></i>
+                        <h3>O que é a Neo Flux?</h3>
+                    </div>
+                    <p>A Neo Flux é a plataforma comercial de gestão que transforma a maneira como você administra seus negócios. Do controle de festas e locações até os mínimos detalhes, nosso sistema foi desenhado para otimizar seu tempo e multiplicar seus resultados.</p>
+                </div>
+            </div>
         </section>
 
         <!-- TELA 2: ESCOLHA DE PLANOS -->
@@ -569,10 +719,14 @@
         <div id="modal-orcamento-inteligente" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 720px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 30px rgba(138,43,226,0.35);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;"><i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> Orçamento Inteligente</h2>
+                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;" id="titulo-modal-orcamento">
+                        <i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> Orçamento Inteligente
+                    </h2>
                     <button id="btn-fechar-modal-orcamento" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
                 </div>
-                <p style="text-align: left; color: #a0a0a0; font-size: 0.85rem; margin-bottom: 18px;"><i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do kit escolhido.</p>
+                <p style="text-align: left; color: #a0a0a0; font-size: 0.85rem; margin-bottom: 18px;" id="texto-ajuda-orcamento">
+                    <i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do kit escolhido.
+                </p>
                 <label style="color: #ccc; font-size: 0.9rem;">Nome do cliente:</label>
                 <input type="text" id="orc-cliente" placeholder="Ex: Maria Silva" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 14px;">
                 <label style="color: #ccc; font-size: 0.9rem;" id="label-orc-kit">Selecione um kit cadastrado:</label>
@@ -784,7 +938,6 @@
                     </div>
                 </div>
 
-                <!-- 🔹 CAIXA DE INFORMAÇÃO SOBRE O FVM -->
                 <div style="margin-top: 25px; background: rgba(0,210,255,0.06); border: 1px solid #00d2ff; border-radius: 8px; padding: 15px; text-align: left;">
                     <h4 style="color: #00d2ff; margin: 0 0 10px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
                         <i data-lucide="info" style="width: 16px;"></i> Como funciona o FVM?
@@ -800,7 +953,6 @@
                     </p>
                 </div>
 
-                <!-- 🔹 BOTÕES DO RODAPÉ DO FVM -->
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button type="button" id="btn-comparar-fvm" class="botao-principal" style="flex: 1; background: transparent; border: 1px solid #00d2ff; color: #00d2ff; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <i data-lucide="bar-chart-3" style="width: 18px;"></i> Comparar Assinaturas
