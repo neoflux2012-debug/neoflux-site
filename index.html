@@ -142,7 +142,6 @@
         <p style="color: white; margin-top: 15px;">Carregando dados...</p>
     </div>
 
-    <!-- 🔹 LOGO COM SUBTÍTULO -->
     <header style="flex-direction: column; align-items: center;">
         <img src="./logo.png" alt="Logo Neo Flux" class="logo">
         <p style="margin-top: 10px; font-size: 0.9rem; color: #888; letter-spacing: 0.1em; text-transform: uppercase;">Gestão que flui com você</p>
@@ -152,8 +151,6 @@
         <!-- TELA 1: BOAS-VINDAS -->
         <section id="tela-boas-vindas" class="tela ativa">
             <div class="hero-container">
-                
-                <!-- Topo da Tela: Texto na Esquerda, Card na Direita -->
                 <div class="hero-topo">
                     <div class="hero-titulo-box">
                         <div class="badge-novo">✨ Novo: Conheça o plano FVM</div>
@@ -170,13 +167,11 @@
                     </div>
                 </div>
 
-                <!-- Centro da Tela: Subtítulo, Botão e Login -->
                 <div class="hero-centro">
                     <p class="hero-subtitulo">A plataforma definitiva para organizar suas reservas, controlar estoques e encantar seus clientes. Tudo em um só lugar, do seu jeito.</p>
                     <button id="btn-comecar" class="botao-principal botao-hero">Começar agora</button>
                     <p class="link-troca">Já tem uma conta? <a href="#" id="ir-para-login">Faça login</a></p>
                 </div>
-                
             </div>
         </section>
 
@@ -189,7 +184,6 @@
                 <div class="card-plano" data-plano="elite"><h3>Elite</h3><p class="preco">R$ 99,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
                 <div class="card-plano" data-plano="elite_premium"><h3>Elite Premium</h3><p class="preco">R$ 149,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
 
-                <!-- 🔹 FVM: Novo card ao lado dos outros -->
                 <div class="card-plano" id="card-fvm" data-plano="fvm">
                     <h3>FVM</h3>
                     <p class="subtitulo-fvm">Faça Você Mesmo</p>
@@ -207,8 +201,7 @@
 
             <p class="link-troca" style="margin-top: 20px;"><a href="#" id="voltar-inicio">Voltar</a></p>
         </section>
-
-        <!-- TELA 3: TERMOS -->
+                <!-- TELA 3: TERMOS -->
         <section id="tela-termos" class="tela">
             <h2 id="titulo-termos">Termos e Condições</h2>
 
@@ -485,7 +478,7 @@
 
                     <label style="color: #ccc; margin-top: 10px; display: block;" id="label-festa-pecas">Peças (Selecione no Catálogo):</label>
                     <div style="display: flex; gap: 10px;">
-                        <select id="festa-pecas" multiple style="flex: 1; padding: 10px; background: #000; border: 1px solid #333; color: white; height: 80px;"></select>
+                        <select id="festa-pecas" multiple style="flex: 1; padding: 10px; background: #000; border: 1px solid #8a2be2; color: white; height: 120px; border-radius: 8px;"></select>
                     </div>
 
                     <div id="area-financeira-festa" style="display: none; background: #0a0a0a; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px dashed #555;">
@@ -516,15 +509,23 @@
                 </form>
             </div>
         </div>
-
-        <!-- MODAL CATÁLOGO -->
+                <!-- MODAL CATÁLOGO -->
         <div id="modal-catalogo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px;">
+            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
                 <h2 style="color: white; margin-top: 0;">Meu Catálogo</h2>
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
                     <input type="text" id="cat-nome" placeholder="Nome do item" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
                     <input type="text" id="cat-categoria" placeholder="Categoria" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    <button id="btn-add-item" class="botao-principal" style="width: auto; margin-top: 0;">Adicionar ao Catálogo</button>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="cat-preco-locacao" placeholder="Preço Locação (R$)" step="0.01" style="flex: 1; padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                        <input type="number" id="cat-preco-reposicao" placeholder="Preço Reposição (R$)" step="0.01" style="flex: 1; padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                    </div>
+
+                    <label style="color: #ccc; font-size: 0.85rem;">Foto do Item (Opcional):</label>
+                    <input type="file" id="cat-imagem" accept="image/*" style="padding: 10px; background: #000; border: 1px solid #333; color: white; font-size: 0.85rem;">
+                    
+                    <button id="btn-add-item" class="botao-principal" style="width: auto; margin-top: 10px;">Adicionar ao Catálogo</button>
                 </div>
                 <ul id="lista-catalogo" style="list-style: none; padding: 0; max-height: 250px; overflow-y: auto;"></ul>
                 <button type="button" id="btn-fechar-modal-catalogo" class="botao-principal" style="background: #333; margin-top: 20px;">Fechar</button>
@@ -727,12 +728,54 @@
             </div>
         </div>
 
-        <!-- BOTÃO FLUTUANTE NEO WAVE + CHAT -->
+        <!-- BOTÃO FLUTUANTE NEO WAVE + BOTÃO DE COMANDOS -->
+        <button id="btn-comandos-neo-wave" class="neo-wave-btn" style="display: none; bottom: 90px; width: 60px; height: 60px; background: #121212; border: 2px solid #8a2be2;">
+            <i data-lucide="terminal" style="color: #8a2be2;"></i>
+        </button>
+        
         <button id="btn-neo-wave" class="neo-wave-btn" style="display: none;"><i data-lucide="message-circle"></i></button>
+        
         <div id="neo-wave-chat" class="neo-wave-chat">
             <div class="neo-wave-header"><span>Neo Wave</span><button id="btn-fechar-neo-wave" style="background: none; border: none; color: white; cursor: pointer;">✕</button></div>
             <div class="neo-wave-body" id="neo-wave-body"><div class="msg-bot">Olá! Sou o Neo Wave. Como posso ajudar com o seu subsite hoje?</div></div>
             <div class="neo-wave-input-area"><input type="text" id="neo-wave-input" placeholder="Digite aqui..."><button id="btn-neo-wave-enviar"><i data-lucide="send" style="width: 16px; height: 16px;"></i></button></div>
+        </div>
+
+        <!-- MODAL DE COMANDOS NEO WAVE -->
+        <div id="modal-comandos-neo-wave" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+            <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 0 40px rgba(138,43,226,0.3);">
+                <i data-lucide="terminal" style="color: #8a2be2; width: 40px; height: 40px; margin-bottom: 15px;"></i>
+                <h2 style="margin-top: 0;">Comandos do Neo Wave</h2>
+                <p style="color: #ccc; margin-bottom: 25px;">O que você gostaria que eu fizesse por você agora?</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('modal-registrar-quebra').style.display='flex';">Registrar Quebra de Peça</button>
+                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-abrir-orcamento-inteligente').click();">Gerar Orçamento Rápido</button>
+                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-agendar-festa').click();">Novo Pedido / Festa</button>
+                </div>
+                <button class="botao-principal" style="background: #333; margin-top: 20px;" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'">Fechar</button>
+            </div>
+        </div>
+
+        <!-- MODAL DE REGISTRAR QUEBRA -->
+        <div id="modal-registrar-quebra" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+            <div style="background: #121212; border: 1px solid #e74c3c; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px;">
+                <h2 style="color: #e74c3c; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="alert-triangle"></i> Registrar Quebra
+                </h2>
+                <p style="color: #ccc; font-size: 0.9rem; text-align: left; margin-bottom: 20px;">Selecione a peça que quebrou e a quantidade para darmos baixa no seu estoque.</p>
+                
+                <label style="color: #ccc; display: block; margin-bottom: 5px;">Peça Danificada:</label>
+                <select id="quebra-peca-select" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 15px;"></select>
+                
+                <label style="color: #ccc; display: block; margin-bottom: 5px;">Quantidade:</label>
+                <input type="number" id="quebra-quantidade" value="1" min="1" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px;">
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="botao-principal" style="background: #333;" onclick="document.getElementById('modal-registrar-quebra').style.display='none'">Cancelar</button>
+                    <button class="botao-principal" style="background: #e74c3c;" onclick="window.confirmarQuebra()">Confirmar Baixa</button>
+                </div>
+            </div>
         </div>
 
         <div id="mensagem-status" class="mensagem"></div>
@@ -834,7 +877,6 @@
                     </button>
                     <button type="button" id="btn-fechar-modal-fvm-footer" class="botao-principal" style="flex: 1; background: #333;">Voltar</button>
                 </div>
-
             </div>
         </div>
 
