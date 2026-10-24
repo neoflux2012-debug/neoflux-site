@@ -963,87 +963,11 @@
 
     <script>lucide.createIcons();</script>
     
-    <!-- Carrega o neo.js -->
+    <!-- Carrega o cérebro principal do sistema (Festas, FVM, Gráficos) -->
     <script type="module" src="./neo.js"></script>
 
-    <!-- 🔹 FVM: Lógica Embutida -->
-    <script type="module">
-        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        const app = getApps().length ? getApps()[0] : initializeApp({});
-        
-        const NOMES_FVM = {
-            fvm_start: "FVM Start",
-            fvm_pro: "FVM Pro",
-            fvm_elite: "FVM Elite",
-            fvm_elite_premium: "FVM Elite Premium"
-        };
+    <!-- Carrega o cérebro do chat (Neo Wave) -->
+    <script type="module" src="./neo-wave.js"></script>
 
-        window.neoflux_planoFVM = null;
-
-        window.abrirModalFVM = function() {
-            const modal = document.getElementById('modal-fvm');
-            if (modal) {
-                modal.style.display = 'flex';
-                if (typeof lucide !== 'undefined') lucide.createIcons(); 
-            }
-        };
-
-        window.fecharModalFVM = function() {
-            const modal = document.getElementById('modal-fvm');
-            if (modal) modal.style.display = 'none';
-        };
-
-        window.selecionarSubplanoFVM = function(chavePlano) {
-            window.neoflux_planoFVM = chavePlano;
-            const nome = NOMES_FVM[chavePlano] || chavePlano;
-            
-            const tituloTermos = document.getElementById('titulo-termos');
-            const textoTermos = document.getElementById('texto-termos');
-            const resumoConta = document.getElementById('resumo-plano-conta');
-
-            if (tituloTermos) tituloTermos.textContent = `Termos e Condições - ${nome}`;
-            if (resumoConta) resumoConta.textContent = nome;
-
-            window.fecharModalFVM();
-            
-            document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-            const tela = document.getElementById('tela-termos');
-            if (tela) tela.classList.add('ativa');
-            window.scrollTo(0, 0);
-        };
-
-        setTimeout(() => {
-            const btnAbrirFVM = document.getElementById('btn-abrir-fvm');
-            if (btnAbrirFVM) btnAbrirFVM.addEventListener('click', window.abrirModalFVM);
-
-            ['btn-fechar-modal-fvm', 'btn-fechar-modal-fvm-footer'].forEach(id => {
-                const btn = document.getElementById(id);
-                if (btn) btn.addEventListener('click', window.fecharModalFVM);
-            });
-
-            const modalFVM = document.getElementById('modal-fvm');
-            if (modalFVM) {
-                modalFVM.addEventListener('click', (e) => {
-                    if (e.target.id === 'modal-fvm') window.fecharModalFVM();
-                });
-            }
-
-            document.querySelectorAll('.btn-fvm-subplano').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const chave = e.currentTarget.getAttribute('data-plano');
-                    if (chave) window.selecionarSubplanoFVM(chave);
-                });
-            });
-
-            const btnCompararFVM = document.getElementById('btn-comparar-fvm');
-            if (btnCompararFVM) {
-                btnCompararFVM.addEventListener('click', () => {
-                    window.fecharModalFVM();
-                    const modalComparar = document.getElementById('modal-comparar');
-                    if (modalComparar) modalComparar.style.display = 'flex';
-                });
-            }
-        }, 300);
-    </script>
 </body>
 </html>
