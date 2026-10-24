@@ -748,21 +748,42 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   22. 🔹 HERO SECTION - PÁGINA INICIAL
+   22. 🔹 HERO SECTION - NOVO LAYOUT ASSIMÉTRICO
    ========================================== */
+
+/* Efeito das Listras no Fundo da Página */
+body {
+    background-image: 
+        radial-gradient(ellipse at top left, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(0, 210, 255, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.02) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.02) 75%, transparent 75%, transparent 100%);
+    background-size: 100% 100%, 100% 100%, 40px 40px; /* Tamanho das listras */
+    background-attachment: fixed;
+}
+
 .hero-container {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    min-height: 70vh; /* Ocupa a tela toda quase */
     justify-content: space-between;
+    padding-top: 20px;
     gap: 40px;
-    margin-top: 20px;
     animation: fadeIn 0.8s ease-out;
 }
 
-.hero-content {
+/* TOPO: Lado a Lado (Título Esquerda, Card Direita) */
+.hero-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 30px;
+    width: 100%;
+}
+
+.hero-titulo-box {
     flex: 1;
     text-align: left;
-    max-width: 500px;
+    padding-top: 20px;
 }
 
 .badge-novo {
@@ -780,7 +801,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 .hero-titulo {
-    font-size: 3.2rem;
+    font-size: 3.5rem;
     line-height: 1.1;
     font-weight: 700;
     color: white;
@@ -795,48 +816,18 @@ textarea { resize: vertical; min-height: 80px; }
     background-clip: text;
 }
 
-.hero-subtitulo {
-    font-size: 1.1rem;
-    color: var(--texto-secundario);
-    line-height: 1.6;
-    margin-bottom: 30px;
-    text-align: left;
-}
-
-.botao-hero {
-    width: auto;
-    padding: 15px 40px;
-    font-size: 1.1rem;
-    border-radius: 30px;
-    margin-bottom: 20px;
-}
-
-.hero-content .link-troca {
-    text-align: left;
-}
-
 .hero-info-box {
     flex: 1;
-    max-width: 450px;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.0) 100%), #0a0a0a;
+    max-width: 420px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.0) 100%), rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--borda-sutil);
     border-radius: var(--radius-lg);
-    padding: 35px;
+    padding: 30px;
     position: relative;
     overflow: hidden;
     box-shadow: var(--sombra-media);
     transition: var(--transition);
-}
-
-.hero-info-box::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(0, 210, 255, 0.1) 0%, transparent 70%);
-    pointer-events: none;
 }
 
 .hero-info-box:hover {
@@ -860,47 +851,78 @@ textarea { resize: vertical; min-height: 80px; }
 
 .hero-info-box h3 {
     color: white;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     margin: 0;
 }
 
 .hero-info-box p {
     color: var(--texto-secundario);
     text-align: left;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     line-height: 1.6;
     margin-bottom: 0;
 }
 
+/* CENTRO: Subtítulo, Botão e Login */
+.hero-centro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+    margin-top: auto;
+    padding-bottom: 40px;
+}
+
+.hero-subtitulo {
+    font-size: 1.1rem;
+    color: var(--texto-secundario);
+    line-height: 1.6;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.botao-hero {
+    width: auto;
+    padding: 15px 50px;
+    font-size: 1.1rem;
+    border-radius: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4);
+}
+
+.hero-centro .link-troca {
+    text-align: center;
+    margin: 0;
+}
+
+/* Responsividade para Celular */
 @media (max-width: 900px) {
     .hero-container {
+        min-height: auto;
+        gap: 30px;
+    }
+
+    .hero-topo {
         flex-direction: column;
+        align-items: center;
         text-align: center;
-        margin-top: 0;
     }
     
-    .hero-content {
+    .hero-titulo-box {
         text-align: center;
-        max-width: 100%;
+        padding-top: 0;
     }
 
     .hero-titulo {
-        font-size: 2.2rem;
-        text-align: center;
-    }
-
-    .hero-subtitulo {
-        text-align: center;
-    }
-
-    .hero-content .link-troca {
+        font-size: 2.5rem;
         text-align: center;
     }
 
     .hero-info-box {
         max-width: 100%;
         padding: 25px;
-        margin-top: 20px;
     }
     
     .hero-info-box p {
@@ -908,6 +930,25 @@ textarea { resize: vertical; min-height: 80px; }
     }
 }
 
+/* ==========================================
+   23. 🔹 ESTILOS MODAL DE NICHO (FVM)
+   ========================================== */
+#modal-nicho-fvm { display: none; }
+#modal-nicho-fvm .card-nicho {
+    background: #0a0a0a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 20px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+#modal-nicho-fvm .card-nicho:hover {
+    border-color: #00d2ff;
+    background: #121212;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,210,255,0.1);
+}
 /* ==========================================
    23. 🔹 ESTILOS MODAL DE NICHO (FVM)
    ========================================== */
