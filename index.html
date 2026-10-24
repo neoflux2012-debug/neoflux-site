@@ -133,141 +133,6 @@
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0,210,255,0.1);
         }
-
-        /* ==========================================
-           HERO SECTION - PÁGINA INICIAL PREMIUM
-           ========================================== */
-        .hero-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 40px;
-            margin-top: 20px;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        .hero-content {
-            flex: 1;
-            text-align: left;
-            max-width: 500px;
-        }
-
-        .badge-novo {
-            display: inline-block;
-            background: rgba(138, 43, 226, 0.15);
-            color: #b57bff;
-            border: 1px solid var(--cor-roxo);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            letter-spacing: 0.05em;
-            box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
-        }
-
-        .hero-titulo {
-            font-size: 3.2rem;
-            line-height: 1.1;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .texto-gradiente {
-            background: var(--gradiente-neo);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-subtitulo {
-            font-size: 1.1rem;
-            color: var(--texto-secundario);
-            line-height: 1.6;
-            margin-bottom: 30px;
-            text-align: left;
-        }
-
-        .botao-hero {
-            width: auto;
-            padding: 15px 40px;
-            font-size: 1.1rem;
-            border-radius: 30px;
-            margin-bottom: 20px;
-        }
-
-        .hero-content .link-troca {
-            text-align: left;
-        }
-
-        .hero-info-box {
-            flex: 1;
-            max-width: 450px;
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.0) 100%), #0a0a0a;
-            border: 1px solid var(--borda-sutil);
-            border-radius: var(--radius-lg);
-            padding: 35px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--sombra-media);
-            transition: var(--transition);
-        }
-
-        .hero-info-box::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(0, 210, 255, 0.1) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .hero-info-box:hover {
-            border-color: var(--cor-azul);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 40px rgba(0, 210, 255, 0.15);
-        }
-
-        .info-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .icone-info {
-            color: var(--cor-azul);
-            width: 28px;
-            height: 28px;
-        }
-
-        .hero-info-box h3 {
-            color: white;
-            font-size: 1.3rem;
-            margin: 0;
-        }
-
-        .hero-info-box p {
-            color: var(--texto-secundario);
-            text-align: left;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 0;
-        }
-
-        @media (max-width: 900px) {
-            .hero-container { flex-direction: column; text-align: center; margin-top: 0; }
-            .hero-content { text-align: center; max-width: 100%; }
-            .hero-titulo { font-size: 2.2rem; text-align: center; }
-            .hero-subtitulo { text-align: center; }
-            .hero-content .link-troca { text-align: center; }
-            .hero-info-box { max-width: 100%; padding: 25px; margin-top: 20px; }
-            .hero-info-box p { text-align: center; }
-        }
     </style>
 </head>
 <body>
@@ -285,23 +150,30 @@
         <!-- TELA 1: BOAS-VINDAS -->
         <section id="tela-boas-vindas" class="tela ativa">
             <div class="hero-container">
-                <!-- Lado Esquerdo: Chamada Principal -->
-                <div class="hero-content">
-                    <div class="badge-novo">✨ Novo: Conheça o plano FVM</div>
-                    <h1 class="hero-titulo">Gestão que <span class="texto-gradiente">flui</span> com você.</h1>
+                
+                <!-- Topo da Tela: Texto na Esquerda, Card na Direita -->
+                <div class="hero-topo">
+                    <div class="hero-titulo-box">
+                        <div class="badge-novo">✨ Novo: Conheça o plano FVM</div>
+                        <h1 class="hero-titulo">Gestão que <span class="texto-gradiente">flui</span> com você.</h1>
+                    </div>
+
+                    <div class="hero-info-box">
+                        <div class="info-header">
+                            <i data-lucide="info" class="icone-info"></i>
+                            <h3>O que é a Neo Flux?</h3>
+                        </div>
+                        <p>A Neo Flux é a plataforma comercial de gestão que transforma a maneira como você administra seus negócios. Do controle de festas e locações até os mínimos detalhes, nosso sistema foi desenhado para otimizar seu tempo e multiplicar seus resultados.</p>
+                    </div>
+                </div>
+
+                <!-- Centro da Tela: Subtítulo, Botão e Login -->
+                <div class="hero-centro">
                     <p class="hero-subtitulo">A plataforma definitiva para organizar suas reservas, controlar estoques e encantar seus clientes. Tudo em um só lugar, do seu jeito.</p>
                     <button id="btn-comecar" class="botao-principal botao-hero">Começar agora</button>
                     <p class="link-troca">Já tem uma conta? <a href="#" id="ir-para-login">Faça login</a></p>
                 </div>
-
-                <!-- Lado Direito: Barra de Informação -->
-                <div class="hero-info-box">
-                    <div class="info-header">
-                        <i data-lucide="info" class="icone-info"></i>
-                        <h3>O que é a Neo Flux?</h3>
-                    </div>
-                    <p>A Neo Flux é a plataforma comercial de gestão que transforma a maneira como você administra seus negócios. Do controle de festas e locações até os mínimos detalhes, nosso sistema foi desenhado para otimizar seu tempo e multiplicar seus resultados.</p>
-                </div>
+                
             </div>
         </section>
 
