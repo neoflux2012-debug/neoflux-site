@@ -5,7 +5,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { 
     getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification,
     signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged,
-    setPersistence, browserLocalPersistence // 🔹 IMPORTAÇÃO PARA O DESLOGUE
+    setPersistence, browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
     getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs,
@@ -27,7 +27,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔹 CORREÇÃO DO DESLOGUE: Força o Firebase a lembrar do login localmente
 setPersistence(auth, browserLocalPersistence).catch((error) => {
     console.error("Erro ao configurar persistência do login:", error);
 });
@@ -210,7 +209,6 @@ async function carregarDadosCliente(uid) {
         }
     } catch (error) { console.error(error); } finally { carregar(false); }
 }
-
 async function carregarSubsites(uid, limite) {
     const lista = document.getElementById('lista-subsites'); if(!lista) return;
     lista.innerHTML = "";
@@ -293,7 +291,6 @@ async function abrirSubsite(id) {
     const dadosSubsite = snap.data();
     document.getElementById('nome-do-subsite').textContent = dadosSubsite.titulo;
     
-    // 🔹 PERSONALIZAÇÃO FVM
     if (planoAtual.startsWith('fvm_')) {
         if (dadosSubsite.configFVM) {
             window.aplicarTraducaoFVM(dadosSubsite.configFVM);
@@ -315,7 +312,6 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
-    // 🔹 FVM: ESCONDE O CARD DE CONTRATOS
     const cardContratos = document.getElementById('card-contratos');
     if (cardContratos) {
         cardContratos.style.display = planoAtual.startsWith('fvm_') ? 'none' : 'block';
@@ -352,9 +348,6 @@ async function carregarPecasNoSelect() {
     });
 }
 
-// ==========================================
-// 7. FESTAS, FRETE, DEVOLUÇÃO E PASTAS
-// ==========================================
 async function carregarFestas(id) {
     const container = document.getElementById('lista-festas-criadas'); if(!container) return;
     const containerPastas = document.getElementById('lista-pastas-container');
@@ -599,7 +592,6 @@ window.apagarPasta = async function(idPasta, idSubsite) {
         }
     }
 };
-
 // ==========================================
 // 8. RESTO DO ARQUIVO (ORÇAMENTOS, KITS, ETC)
 // ==========================================
@@ -674,19 +666,6 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
 });
 
 document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => { document.getElementById('modal-catalogo').style.display = 'flex'; carregarCatalogo(); });
-document.getElementById('btn-add-item')?.addEventListener('click', async () => {
-    const nome = document.getElementById('cat-nome').value; const cat = document.getElementById('cat-categoria').value;
-    if (!nome) return alert("Digite o nome do item.");
-    await addDoc(collection(db, "catalogo"), { idSubsite: subsiteAtualId, nome: nome, categoria: cat });
-    document.getElementById('cat-nome').value = ""; document.getElementById('cat-categoria').value = ""; carregarCatalogo();
-});
-async function carregarCatalogo() {
-    const lista = document.getElementById('lista-catalogo'); if(!lista) return;
-    lista.innerHTML = "<li>Carregando...</li>";
-    const snap = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
-    lista.innerHTML = ""; if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum item adicionado.</li>";
-    snap.forEach(doc => { const item = doc.data(); const li = document.createElement('li'); li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between;"; li.innerHTML = `<span>${item.nome} <small style="color:#888;">(${item.categoria})</small></span>`; lista.appendChild(li); });
-}
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', async () => {
     const regras = getRecursos(planoAtual);
@@ -768,75 +747,6 @@ window.apagarContrato = async function(id) { if(confirm("Tem certeza que deseja 
 
 document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => { btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; }); });
 document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
-document.getElementById('btn-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'flex');
-document.getElementById('btn-fechar-neo-wave')?.addEventListener('click', () => document.getElementById('neo-wave-chat').style.display = 'none');
-
-document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => {
-    const input = document.getElementById('neo-wave-input'); const body = document.getElementById('neo-wave-body');
-    if(!input.value.trim()) return;
-    body.innerHTML += `<div class="msg-user">${input.value}</div>`;
-    const msg = input.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    input.value = "";
-    const idTyping = "typing-" + Date.now();
-    body.innerHTML += `<div class="msg-bot" id="${idTyping}" style="opacity: 0.6;">Digitando...</div>`; body.scrollTop = body.scrollHeight;
-
-    setTimeout(() => {
-        const typingEl = document.getElementById(idTyping); if (typingEl) typingEl.remove();
-        
-        const ehStart = (planoAtual === 'start' || planoAtual === 'fvm_start');
-        let resposta = "Ainda estou aprendendo, mas posso te ajudar com: Orçamento, Kits, Contratos, Relatórios, Histórico, Analista e Planos. O que você precisa?";
-
-        if (msg.includes('orcamento')) {
-            if (ehStart) resposta = "🔒 O **Orçamento Inteligente** está disponível a partir do plano **Pro**. No Start, você pode gerenciar suas festas e catálogo manualmente.";
-            else resposta = "O **Orçamento Inteligente** está no card roxo! Lá você escolhe o cliente, seleciona um Kit já cadastrado, e eu monto a mensagem perfeita pra você enviar no WhatsApp. 💜";
-        }
-        else if (msg.includes('historico')) {
-            if (ehStart) resposta = "🔒 O **Histórico de Orçamentos** está disponível a partir do plano **Pro**.";
-            else resposta = "No card do **Orçamento Inteligente**, tem o botão **'Ver Histórico (30 dias)'**. Lá você encontra todos os orçamentos que gerou no último mês, pode copiar a mensagem de novo, reenviar ou apagar. 📚";
-        }
-        else if (msg.includes('analista') || msg.includes('grafico') || msg.includes('lucro') || msg.includes('estatistica')) {
-            if (ehStart || planoAtual === 'pro' || planoAtual === 'fvm_pro') resposta = "🔒 O **Neo Wave Analista** é exclusivo para planos **Elite e Elite Premium**. Ele te mostra o faturamento do mês, pico de vendas e kits mais vendidos! 📊✨";
-            else resposta = "O **Neo Wave Analista** é exclusivo para planos Elite! É o card laranja. Ele te mostra o faturamento do mês, o pico de vendas em gráfico, quais modelos de kits você mais vendeu e ainda gera recibos! 📊✨";
-        }
-        else if (msg.includes('recibo')) {
-            if (ehStart || planoAtual === 'pro' || planoAtual === 'fvm_pro') resposta = "🔒 O **Gerador de Recibos** está disponível apenas no plano **Elite Premium**.";
-            else resposta = "Dentro do **Neo Wave Analista**, tem o Gerador de Recibos. Você escolhe a festa, se é sinal ou quitação total, e o sistema monta o recibo pronto para imprimir ou salvar em PDF. 🧾";
-        }
-        else if (msg.includes('conflito') || msg.includes('data')) {
-            if (ehStart) resposta = "🔒 O **Detector de Conflito de Datas** está disponível a partir do plano **Pro**. No Start, você deve verificar manualmente suas festas.";
-            else resposta = "O sistema agora tem um **Detector de Conflito de Datas**! Se você tentar agendar duas festas para o mesmo dia, ele vai avisar na hora para você não alugar a mesma peça para duas pessoas. 🛡️";
-        }
-        else if (msg.includes('preco') || msg.includes('valor do kit')) {
-            if (ehStart) resposta = "🔒 O cadastro de **Preço do Modelo** nos kits está disponível a partir do plano **Pro**.";
-            else resposta = "Para o Orçamento Inteligente funcionar certinho, sempre coloque o **Preço do Modelo** quando for cadastrar um Kit novo! Assim eu já puxo o valor automaticamente. 💰";
-        }
-        else if (msg.includes('kit')) {
-            if (ehStart) resposta = "🔒 O módulo **Kits** está disponível a partir do plano **Pro**.";
-            else resposta = "No card **Kits**, você pode cadastrar novos modelos com nome, foto e preço! Esses kits ficam salvos e depois aparecem no Orçamento Inteligente. 🎁";
-        }
-        else if (msg.includes('contrato')) {
-            if (ehStart || planoAtual === 'pro' || planoAtual === 'elite' || planoAtual === 'fvm_pro' || planoAtual === 'fvm_elite') resposta = "🔒 O módulo **Contratos** está disponível apenas no plano **Elite Premium**.";
-            else resposta = "Para gerar contratos, vá no card **Contratos** (laranja). Você pode subir o PDF do seu modelo, colocar a logo da sua empresa e usar em qualquer festa. O módulo está disponível no plano **Elite Premium**. ✍️";
-        }
-        else if (msg.includes('relatorio') || msg.includes('planilha') || msg.includes('venda')) {
-            if (ehStart) resposta = "🔒 O módulo **Relatórios** está disponível a partir do plano **Pro**.";
-            else resposta = "No card **Relatórios** (verde), você consegue ver o resumo de vendas do mês e o faturamento das festas agendadas. Ótimo pra manter o controle financeiro! 📊";
-        }
-        else if (msg.includes('plano') || msg.includes('start') || msg.includes('pro') || msg.includes('elite') || msg.includes('upgrade')) {
-            resposta = "Você pode comparar os planos na tela inicial clicando em **'Comparar Assinaturas'**. O plano **Start** é mais básico, o **Pro** já libera a sugestão de mensagem, o **Elite** libera o chat comigo e o **Elite Premium** libera os contratos. 🚀";
-        }
-        else if (msg.includes('agendar') || msg.includes('festa') || msg.includes('projeto') || msg.includes('pedido')) {
-            resposta = "Para criar um novo registro, clique no primeiro card (ex: Agendar Festa / Novo Projeto). Lá você preenche os dados do cliente, escolhe a data, seleciona os itens e a calculadora faz o resto! 🎉";
-        }
-        else if (msg.includes('ola') || msg.includes('oi') || msg.includes('bom dia') || msg.includes('boa tarde') || msg.includes('boa noite')) {
-            if (ehStart) resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Estou aqui para tirar dúvidas sobre o site. Como posso ajudar hoje? (Lembre-se: ferramentas como orçamento, kits e relatórios precisam de upgrade para o Pro!).";
-            else resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Posso te ajudar a entender sobre Orçamentos, Kits, Histórico, Contratos, Analista ou Planos. Como posso ajudar hoje?";
-        }
-        else if (msg.includes('obrigado') || msg.includes('obrigada') || msg.includes('valeu') || msg.includes('vlw')) resposta = "Por nada! 💜 Estou sempre aqui se precisar. Bom trabalho com a Neo Flux! 🚀";
-
-        body.innerHTML += `<div class="msg-bot">${resposta}</div>`; body.scrollTop = body.scrollHeight;
-    }, 700);
-});
 
 // ==========================================
 // 10. OBSERVADOR DE ESTADO E ADMIN
@@ -910,7 +820,6 @@ window.adminTestarPlano = function() {
     }
 };
 
-// --- FUNÇÃO PARA ENTRAR COMO CLIENTE (SIMULAÇÃO DO ADMIN) ---
 window.entrarComoClienteAdmin = async function() {
     const adminUid = auth.currentUser.uid;
     carregar(true);
@@ -928,14 +837,12 @@ window.entrarComoClienteAdmin = async function() {
     }
 };
 
-// --- BOTÃO DE VOLTAR AO PORTAL ADMIN ---
 document.getElementById('btn-voltar-escolha-admin')?.addEventListener('click', () => {
     const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
     if (btnVoltar) btnVoltar.style.display = 'none';
     mostrarTela('tela-escolha-admin');
 });
 
-// --- BOTÃO DE LOGOUT NA TELA DE ESCOLHA ---
 document.getElementById('btn-logout-admin-escolha')?.addEventListener('click', async () => {
     await signOut(auth);
     mostrarTela('tela-boas-vindas');
@@ -1219,7 +1126,7 @@ document.getElementById('btn-imprimir-recibo')?.addEventListener('click', () => 
 });
 
 // ==========================================
-// 14. VERIFICAÇÃO DE ESTOQUE POR DATA (ANTI-DUPLICIDADE)
+// 14. VERIFICAÇÃO DE ESTOQUE POR DATA
 // ==========================================
 async function verificarEstoquePorData() {
     const dataFesta = document.getElementById('festa-data').value;
