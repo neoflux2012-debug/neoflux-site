@@ -842,6 +842,16 @@ textarea { resize: vertical; min-height: 80px; }
     margin-bottom: 0;
 }
 
+/* Textinho novo no lado esquerdo */
+.hero-subtexto-lado {
+    font-size: 1rem;
+    color: var(--texto-secundario);
+    line-height: 1.6;
+    text-align: left;
+    margin-top: 15px;
+    max-width: 90%;
+}
+
 /* CENTRO: Subtítulo, Botão e Login */
 .hero-centro {
     display: flex;
@@ -897,6 +907,11 @@ textarea { resize: vertical; min-height: 80px; }
     .hero-titulo {
         font-size: 2.5rem;
         text-align: center;
+    }
+
+    .hero-subtexto-lado {
+        text-align: center;
+        margin: 15px auto 0 auto;
     }
 
     .hero-info-box {
