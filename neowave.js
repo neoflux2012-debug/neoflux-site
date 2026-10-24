@@ -10,22 +10,64 @@ const db = getFirestore(app);
 let subsiteAtualIdWave = "";
 
 // 🔹 1. LIGAR OS BOTÕES QUANDO ENTRAR NO SUBSITE
-// Fica "escutando" o clique no botão "Acessar" para saber qual subsite é
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn-acessar')) {
         subsiteAtualIdWave = e.target.getAttribute('data-id');
         
-        // Mostra os botões flutuantes com um pequeno atraso
         setTimeout(() => {
             const btnChat = document.getElementById('btn-neo-wave');
             const btnComandos = document.getElementById('btn-comandos-neo-wave');
             if (btnChat) btnChat.style.display = 'flex';
             if (btnComandos) btnComandos.style.display = 'flex';
+
+            // 🔹 DISPARA O TUTORIAL
+            iniciarTutorial();
         }, 500);
     }
 });
 
-// 🔹 2. ABRIR/FECHAR O CHAT
+// 🔹 2. FUNÇÃO DO TUTORIAL (Só aparece 1 vez por navegador)
+function iniciarTutorial() {
+    const jaViuTutorial = localStorage.getItem('neowave_tutorial_visto');
+    const caixaChat = document.getElementById('neo-wave-chat');
+    const body = document.getElementById('neo-wave-body');
+    
+    if (!jaViuTutorial && caixaChat && body) {
+        // Abre o chat automaticamente
+        caixaChat.style.display = 'flex';
+        body.innerHTML = ""; // Limpa a mensagem padrão
+
+        const plano = window.planoAtual || 'start';
+        const ehStart = (plano === 'start' || plano === 'fvm_start');
+
+        // Mensagem 1: Boas vindas
+        setTimeout(() => {
+            body.innerHTML += `<div class="msg-bot">Olá! Seja muito bem-vindo(a) à Neo Flux! 💜</div>`;
+            body.scrollTop = body.scrollHeight;
+        }, 500);
+
+        // Mensagem 2: Tutorial Básico
+        setTimeout(() => {
+            body.innerHTML += `<div class="msg-bot">Vou te dar um tour rápido. Aqui no painel você tem:<br><br>📅 <b>Festas/Pedidos:</b> Onde você agenda os eventos.<br>📦 <b>Catálogo:</b> Seus produtos e estoques.<br>🎁 <b>Kits:</b> Os combos prontos.<br>💰 <b>Orçamento:</b> Onde eu monto as mensagens pra você!</div>`;
+            body.scrollTop = body.scrollHeight;
+        }, 2000);
+
+        // Mensagem 3: Aviso do Start ou Dica Geral
+        setTimeout(() => {
+            if (ehStart) {
+                body.innerHTML += `<div class="msg-bot">⚠️ <b>Aviso do seu Plano Start:</b> Eu estou aqui para tirar suas dúvidas básicas! Porém, ferramentas como Orçamento Inteligente, Kits e Relatórios precisam de um upgrade para o Pro. Se precisar, é só chamar no WhatsApp!</div>`;
+            } else {
+                body.innerHTML += `<div class="msg-bot">✨ E lembre-se: sempre que precisar de um atalho rápido, clique no botão de <b>Comandos (>_)</b> aqui do lado, onde você pode registrar quebras de estoque e gerar orçamentos!</div>`;
+            }
+            body.scrollTop = body.scrollHeight;
+        }, 4000);
+
+        // Salva no navegador para não repetir na próxima vez
+        localStorage.setItem('neowave_tutorial_visto', 'true');
+    }
+}
+
+// 🔹 3. ABRIR/FECHAR O CHAT
 const btnAbrirChat = document.getElementById('btn-neo-wave');
 const btnFecharChat = document.getElementById('btn-fechar-neo-wave');
 const caixaChat = document.getElementById('neo-wave-chat');
@@ -33,7 +75,7 @@ const caixaChat = document.getElementById('neo-wave-chat');
 if (btnAbrirChat) btnAbrirChat.addEventListener('click', () => caixaChat.style.display = 'flex');
 if (btnFecharChat) btnFecharChat.addEventListener('click', () => caixaChat.style.display = 'none');
 
-// 🔹 3. LÓGICA DAS RESPOSTAS DO CHAT
+// 🔹 4. LÓGICA DAS RESPOSTAS DO CHAT
 document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => {
     const input = document.getElementById('neo-wave-input'); 
     const body = document.getElementById('neo-wave-body');
@@ -59,7 +101,7 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
             resposta = "Para registrar uma peça quebrada, clique no botão de Comandos (o ícone de terminal `>_`) que fica acima do meu botão de chat. Lá tem a opção 'Registrar Quebra'! 🛠️";
         }
         else if (msg.includes('orcamento')) {
-            if (ehStart) resposta = "🔒 O **Orçamento Inteligente** está disponível a partir do plano **Pro**.";
+            if (ehStart) resposta = "🔒 O **Orçamento Inteligente** está disponível a partir do plano **Pro**. No Start, eu só tiro dúvidas básicas.";
             else resposta = "O **Orçamento Inteligente** está no card roxo! Lá você escolhe o cliente, seleciona um Kit e eu monto a mensagem perfeita. 💜";
         }
         else if (msg.includes('analista') || msg.includes('grafico')) {
@@ -83,16 +125,14 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
     }, 700);
 });
 
-// 🔹 4. ABRIR O MODAL DE COMANDOS
+// 🔹 5. ABRIR O MODAL DE COMANDOS
 document.getElementById('btn-comandos-neo-wave')?.addEventListener('click', () => {
     document.getElementById('modal-comandos-neo-wave').style.display = 'flex';
 });
 
-// 🔹 5. PREENCHER O SELECT DE QUEBRA QUANDO O MODAL ABRIR
+// 🔹 6. PREENCHER O SELECT DE QUEBRA QUANDO O MODAL ABRIR
 document.querySelector('button[onclick*="modal-registrar-quebra"]')?.addEventListener('click', async () => {
     const select = document.getElementById('quebra-peca-select');
-    
-    // Descobre qual é o subsite atual (pelo clique ou pelo título na tela)
     const idParaBuscar = subsiteAtualIdWave || document.querySelector('#nome-do-subsite').getAttribute('data-id');
     
     select.innerHTML = '<option value="">Carregando peças...</option>';
@@ -111,7 +151,7 @@ document.querySelector('button[onclick*="modal-registrar-quebra"]')?.addEventLis
     }
 });
 
-// 🔹 6. CONFIRMAR QUEBRA (DAR BAIXA NO ESTOQUE)
+// 🔹 7. CONFIRMAR QUEBRA (DAR BAIXA NO ESTOQUE)
 window.confirmarQuebra = async function() {
     const idPeca = document.getElementById('quebra-peca-select').value;
     const qtd = parseInt(document.getElementById('quebra-quantidade').value) || 1;
