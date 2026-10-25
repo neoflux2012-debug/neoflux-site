@@ -1101,6 +1101,75 @@ window.abrirGeradorContratoPDF = async function(idFesta) {
 
 window.gerarContrato = window.abrirGeradorContratoPDF;
 
+window.gerarPDFDoModal = async function() {
+    const select = document.getElementById('contrato-modelo-select');
+    const previa = document.getElementById('previa-contrato');
+
+    if (!select?.value) {
+        alert("Selecione um modelo de contrato primeiro.");
+        return;
+    }
+
+    atualizarPreviaContrato();
+
+    const texto = previa?.textContent?.trim();
+
+    if (!texto) {
+        alert("O contrato está vazio.");
+        return;
+    }
+
+    const modelo = contratosSalvos.find(c => c.id === select.value);
+
+    const pagina = document.createElement('div');
+    pagina.style.cssText = `
+        background: white;
+        color: black;
+        padding: 35px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    `;
+
+    if (modelo?.logo) {
+        const logo = document.createElement('img');
+        logo.src = modelo.logo;
+        logo.style.cssText = 'display:block;max-width:160px;max-height:100px;object-fit:contain;margin:0 auto 25px;';
+        pagina.appendChild(logo);
+    }
+
+    const conteudo = document.createElement('div');
+    conteudo.textContent = texto;
+    pagina.appendChild(conteudo);
+
+    try {
+        if (typeof window.html2pdf === 'undefined') {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        await window.html2pdf().set({
+            margin: 10,
+            filename: 'contrato-' + Date.now() + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'] }
+        }).from(pagina).save();
+
+    } catch (erro) {
+        console.error("Erro ao gerar PDF:", erro);
+        alert("Não foi possível gerar o PDF. Verifique o console.");
+    }
+};
+
 // (Mantém o fechamento dos modais que já existia)
 document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => { btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; }); });
 document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
