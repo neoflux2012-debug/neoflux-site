@@ -316,9 +316,10 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
-    const cardContratos = document.getElementById('card-contratos');
+        const cardContratos = document.getElementById('card-contratos');
     if (cardContratos) {
-        cardContratos.style.display = planoAtual.startsWith('fvm_') ? 'none' : 'block';
+        // Mostra o card se o plano tiver a permissão de contratos
+        cardContratos.style.display = regras.contratos ? 'block' : 'none';
     }
 
     const cardAnalista = document.getElementById('card-analista');
