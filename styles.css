@@ -53,7 +53,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Fundo suave: Apenas os brilhos (roxo no topo-esquerdo, azul no fundo-direito) */
     background-image:
         radial-gradient(circle at 15% 20%, rgba(138, 43, 226, 0.12) 0%, transparent 40%),
         radial-gradient(circle at 85% 80%, rgba(0, 210, 255, 0.08) 0%, transparent 40%);
@@ -486,31 +485,7 @@ textarea { resize: vertical; min-height: 80px; }
 #modal-comparar > div::-webkit-scrollbar-thumb:hover { background: var(--cor-roxo); }
 
 /* ==========================================
-   13. NEO WAVE CHAT
-   ========================================== */
-.neo-wave-btn {
-    transition: var(--transition);
-    animation: none !important;
-}
-
-.neo-wave-btn:hover {
-    transform: scale(1.08) translateY(-2px);
-    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.6);
-}
-
-.neo-wave-chat {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    animation: modalSlideIn 0.3s ease-out;
-}
-
-.msg-bot, .msg-user {
-    animation: fadeIn 0.3s ease-out;
-    line-height: 1.5;
-}
-
-/* ==========================================
-   14. LISTA DE SUBSITES
+   13. LISTA DE SUBSITES
    ========================================== */
 #lista-subsites li { transition: var(--transition); }
 
@@ -521,7 +496,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   15. CARDS DE FESTA
+   14. CARDS DE FESTA
    ========================================== */
 #lista-festas-criadas > div { transition: var(--transition); }
 
@@ -532,7 +507,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   16. SCROLLBAR GLOBAL
+   15. SCROLLBAR GLOBAL
    ========================================== */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--cor-fundo); }
@@ -549,7 +524,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   17. RESPONSIVIDADE GERAL
+   16. RESPONSIVIDADE GERAL
    ========================================== */
 @media (max-width: 768px) {
     header { padding: 28px 16px 16px; }
@@ -575,7 +550,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   18. ACESSIBILIDADE
+   17. ACESSIBILIDADE
    ========================================== */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -587,7 +562,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   19. 🔹 FVM - CARD PRINCIPAL
+   18. 🔹 FVM - CARD PRINCIPAL
    ========================================== */
 #card-fvm {
     border-color: #00d2ff !important;
@@ -630,7 +605,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   20. 🔹 FVM - MODAL DE SUBPLANOS
+   19. 🔹 FVM - MODAL DE SUBPLANOS
    ========================================== */
 #modal-fvm {
     display: none;
@@ -727,7 +702,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   21. 🔹 PIX - CAIXA DO QR CODE
+   20. 🔹 PIX - CAIXA DO QR CODE
    ========================================== */
 .caixa-pix {
     background: #0a0a0a;
@@ -757,7 +732,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   22. 🔹 HERO SECTION - NOVO LAYOUT ASSIMÉTRICO
+   21. 🔹 HERO SECTION - NOVO LAYOUT ASSIMÉTRICO
    ========================================== */
 .hero-container {
     display: flex;
@@ -925,7 +900,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ==========================================
-   23. 🔹 ESTILOS MODAL DE NICHO (FVM)
+   22. 🔹 ESTILOS MODAL DE NICHO (FVM)
    ========================================== */
 #modal-nicho-fvm { display: none; }
 #modal-nicho-fvm .card-nicho {
@@ -942,4 +917,25 @@ textarea { resize: vertical; min-height: 80px; }
     background: #121212;
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0,210,255,0.1);
+}
+
+/* ==========================================
+   23. 🔹 CARD DE REUNIÃO
+   ========================================== */
+#card-reuniao {
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+#card-reuniao:hover {
+    border-color: #3498db !important;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+}
+
+#card-reuniao h3 {
+    color: var(--texto-principal);
+    font-size: 1.1rem;
+    margin-bottom: 12px;
 }
