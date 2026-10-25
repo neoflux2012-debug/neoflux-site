@@ -621,9 +621,11 @@
                             
                             <label style="color: #ccc; font-size: 0.9rem;">Logo da Empresa (Opcional):</label>
                             <input type="file" id="contrato-logo" accept="image/*" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px; margin-bottom: 15px;">
-
-                            <!-- Texto Invisível (O Segredo do Funcionamento) -->
-                            <input type="hidden" id="contrato-texto" value="CONTRATO DE PRESTAÇÃO DE SERVIÇOS&#10;&#10;Pelo presente instrumento particular, de um lado [NOME_CLIENTE], portador(a) do CPF [CPF], doravante denominado(a) CONTRATANTE.&#10;&#10;O CONTRATANTE contrata os serviços para o evento com tema [TEMA], a ser realizado no dia [DATA] no local [LOCAL].&#10;&#10;Itens inclusos: [PECAS].&#10;Valor total: [VALOR_TOTAL]. Sinal pago: [SINAL].&#10;&#10;Por estarem de acordo, assinam o presente.">
+                            <label for="contrato-arquivo" style="color:#ccc;font-size:0.9rem;display:block;margin-bottom:5px;">Adicionar Modelo de Contrato (PDF):</label>
+                            <input type="file" id="contrato-arquivo" accept=".pdf,application/pdf" style="width:100%;padding:10px;background:#000;border:1px solid #8a2be2;color:white;border-radius:8px;margin-bottom:8px;">
+                            <p id="contrato-arquivo-status" style="font-size:0.8rem;color:#aaa;margin:0 0 15px;">Selecione um PDF com texto para importar. Confira as variáveis antes de salvar.</p>
+                            <label for="contrato-texto" style="color:#ccc;font-size:0.9rem;display:block;margin-bottom:5px;">Texto do modelo (editável):</label>
+                            <textarea id="contrato-texto" rows="10" required placeholder="Importe um PDF ou cole o texto do contrato aqui. Substitua dados variáveis por [NOME_CLIENTE], [CPF], [DATA], [TEMA], [LOCAL], [PECAS], [VALOR_TOTAL], [SINAL]." style="width:100%;padding:12px;background:#000;border:1px solid #333;color:white;border-radius:8px;margin-bottom:15px;resize:vertical;"></textarea>
 
                             <button type="submit" class="botao-principal" style="width: 100%; background: #8a2be2;">Salvar Modelo de Contrato</button>
                         </form>
