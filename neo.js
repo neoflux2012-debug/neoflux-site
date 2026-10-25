@@ -812,20 +812,27 @@ document.querySelectorAll('.btn-variavel').forEach(btn => {
         textarea.selectionStart = textarea.selectionEnd = startPos + variavel.length;
         textarea.focus();
         
-        atualizarPreviaContrato(); // Atualiza a prévia ao inserir
-    });
-});
-
-// Atualiza a prévia em tempo real quando digita no texto base ou nos campos de teste
-document.getElementById('contrato-texto')?.addEventListener('input', atualizarPreviaContrato);
+      // Atualiza a prévia em tempo real
 ['teste-nome', 'teste-cpf', 'teste-data', 'teste-tema', 'teste-local', 'teste-pecas', 'teste-valor', 'teste-sinal'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', atualizarPreviaContrato);
 });
+document.getElementById('contrato-modelo-select')?.addEventListener('change', atualizarPreviaContrato);
 
 function atualizarPreviaContrato() {
-    const textoBase = document.getElementById('contrato-texto')?.value || '';
+    const selectModelo = document.getElementById('contrato-modelo-select');
+    const idModelo = selectModelo?.value;
+    const previaDiv = document.getElementById('previa-contrato');
     
-    // Pega os valores digitados (ou deixa a tag visível se não digitou nada)
+    if (!idModelo) {
+        if (previaDiv) previaDiv.textContent = "Selecione um modelo de contrato acima para ver a prévia...";
+        return;
+    }
+
+    // Busca o modelo escolhido na lista de modelos salvos
+    const modelo = contratosSalvos.find(c => c.id === idModelo);
+    if (!modelo) return;
+
+    // Pega os valores digitados nos campos da direita
     const nome = document.getElementById('teste-nome')?.value || '[NOME_CLIENTE]';
     const cpf = document.getElementById('teste-cpf')?.value || '[CPF]';
     const data = document.getElementById('teste-data')?.value || '[DATA]';
@@ -835,8 +842,8 @@ function atualizarPreviaContrato() {
     const valor = document.getElementById('teste-valor')?.value || '[VALOR_TOTAL]';
     const sinal = document.getElementById('teste-sinal')?.value || '[SINAL]';
 
-    // Substitui as tags no texto
-    let textoFinal = textoBase
+    // Substitui as tags no texto do modelo
+    let textoFinal = (modelo.textoBase || '')
         .replace(/\[NOME_CLIENTE\]/g, nome)
         .replace(/\[CPF\]/g, cpf)
         .replace(/\[DATA\]/g, data)
@@ -847,7 +854,6 @@ function atualizarPreviaContrato() {
         .replace(/\[SINAL\]/g, sinal);
 
     // Mostra na prévia
-    const previaDiv = document.getElementById('previa-contrato');
     if (previaDiv) previaDiv.textContent = textoFinal;
 }
 
@@ -855,9 +861,7 @@ function atualizarPreviaContrato() {
 document.getElementById('btn-abrir-contratos')?.addEventListener('click', () => { 
     document.getElementById('modal-contratos').style.display = 'flex'; 
     carregarContratos(); 
-    atualizarPreviaContrato(); 
 });
-
 // Salvar o modelo no banco
 document.getElementById('form-contrato')?.addEventListener('submit', async (e) => {
     e.preventDefault(); 
