@@ -588,37 +588,75 @@
                 </form>
             </div>
         </div>
-
-                <!-- MODAL CONTRATOS -->
-        
+        <!-- MODAL CONTRATOS -->
         <div id="modal-contratos" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <h2 style="color: white; margin-top: 0;">Modelos de Contrato</h2>
-                <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Cadastre o nome, a logo da sua empresa e <strong>faça upload do PDF</strong> do contrato. O arquivo é comprimido automaticamente antes de salvar.</p>
+            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto;">
                 
+                <!-- Topo do Modal -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: white; margin: 0;">Modelos de Contrato</h2>
+                    <!-- BOTÃO DE AJUDA -->
+                    <button type="button" onclick="document.getElementById('modal-ajuda-contrato').style.display='flex';" style="background: rgba(0, 210, 255, 0.1); color: #00d2ff; border: 1px solid #00d2ff; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 0.85rem; transition: 0.3s;">
+                        <i data-lucide="help-circle" style="width: 16px;"></i> Ajuda com o Neo
+                    </button>
+                </div>
+
                 <form id="form-contrato">
-                    <label style="color: #ccc;">Nome do Modelo (ex: Contrato de Aluguel):</label>
-                    <input type="text" id="contrato-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px;">
+                    <label style="color: #ccc;">Nome do Modelo (ex: Contrato Padrão):</label>
+                    <input type="text" id="contrato-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 15px;">
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                        <div>
-                            <label style="color: #ccc;">Logo da Empresa (Opcional):</label>
-                            <input type="file" id="contrato-logo" accept="image/*" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                        </div>
-                        <div>
-                            <label style="color: #ccc;">Arquivo do Contrato (.pdf):</label>
-                            <input type="file" id="contrato-arquivo" accept=".pdf" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                        </div>
+                    <label style="color: #ccc;">Logo da Empresa (Opcional):</label>
+                    <input type="file" id="contrato-logo" accept="image/*" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 15px;">
+
+                    <label style="color: #ccc; font-size: 0.9rem; display: block; margin-bottom: 5px;">Texto do Contrato:</label>
+                    
+                    <!-- Botões Mágicos de Variáveis -->
+                    <div id="botoes-variaveis" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
+                        <button type="button" onclick="window.inserirVariavel('[NOME_CLIENTE]')" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Nome</button>
+                        <button type="button" onclick="window.inserirVariavel('[CPF]')" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ CPF</button>
+                        <button type="button" onclick="window.inserirVariavel('[DATA]')" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Data</button>
+                        <button type="button" onclick="window.inserirVariavel('[TEMA]')" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Tema</button>
+                        <button type="button" onclick="window.inserirVariavel('[LOCAL]')" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Local</button>
+                        <button type="button" onclick="window.inserirVariavel('[PECAS]')" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Peças</button>
+                        <button type="button" onclick="window.inserirVariavel('[VALOR_TOTAL]')" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Valor Total</button>
+                        <button type="button" onclick="window.inserirVariavel('[SINAL]')" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Sinal</button>
                     </div>
+
+                    <textarea id="contrato-texto" rows="8" required placeholder="Cole aqui o texto do seu contrato. Use os botões acima para inserir os dados que mudam..." style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; font-family: monospace; font-size: 0.85rem; margin-bottom: 20px;"></textarea>
                     
                     <div style="display: flex; gap: 10px;">
                         <button type="button" id="btn-fechar-modal-contratos" class="botao-principal" style="background: #333;">Fechar</button>
-                        <button type="submit" class="botao-principal" style="background: #e67e22;">Salvar Contrato</button>
+                        <button type="submit" class="botao-principal" style="background: #e67e22;">Salvar Modelo</button>
                     </div>
                 </form>
                 
-                <h3 style="color: white; margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">Meus Contratos Salvos:</h3>
+                <h3 style="color: white; margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; font-size: 1.1rem;">Meus Contratos Salvos:</h3>
                 <ul id="lista-contratos" style="list-style: none; padding: 0; max-height: 200px; overflow-y: auto;"></ul>
+            </div>
+        </div>
+
+        <!-- MODAL DE AJUDA DO NEO WAVE -->
+        <div id="modal-ajuda-contrato" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px);">
+            <div style="background: #121212; border: 1px solid #8a2be2; padding: 25px; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 0 30px rgba(138,43,226,0.3);">
+                
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <div style="background: rgba(138,43,226,0.2); padding: 10px; border-radius: 50%;">
+                        <i data-lucide="bot" style="color: #8a2be2; width: 24px; height: 24px;"></i>
+                    </div>
+                    <h3 style="color: white; margin: 0;">Como funciona o Modelo?</h3>
+                </div>
+
+                <div style="background: #0a0a0a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
+                    <p style="color: #ccc; font-size: 0.9rem; line-height: 1.5; text-align: left; margin-top: 0;">
+                        Aqui você <strong>não cola o contrato preenchido</strong> de um cliente. Você cola o <strong>Modelo em Branco</strong> (o esqueleto do contrato).
+                    </p>
+                    <p style="color: #ccc; font-size: 0.9rem; line-height: 1.5; text-align: left;">
+                        Quando você usar os botões (ex: <span style="color:#00d2ff;">+ Nome</span>), o sistema vai criar uma "tag" invisível (ex: <code>[NOME_CLIENTE]</code>). <br><br>
+                        Na hora que você clicar em <strong>"Gerar Contrato"</strong> na festa da Maria, o sistema vai pegar essa tag e trocar automaticamente pelo nome da Maria! O resto do texto continua igual.
+                    </p>
+                </div>
+
+                <button type="button" onclick="document.getElementById('modal-ajuda-contrato').style.display='none';" class="botao-principal" style="width: 100%; background: #8a2be2;">Entendi, voltar!</button>
             </div>
         </div>
 
