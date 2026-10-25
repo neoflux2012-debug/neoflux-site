@@ -952,9 +952,38 @@ async function carregarContratos() {
     const lista = document.getElementById('lista-contratos'); if(!lista) return;
     lista.innerHTML = "<li>Carregando...</li>";
     const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
-    lista.innerHTML = ""; if (snap.empty) { contratosSalvos = []; return lista.innerHTML = "<li style='color:#888;'>Nenhum modelo cadastrado.</li>"; }
+    lista.innerHTML = ""; 
+
+if (snap.empty) {
+    contratosSalvos = [];
+
+    lista.innerHTML = "<li style='color:#888;'>Nenhum modelo cadastrado.</li>";
+
+    const selectModelo = document.getElementById('contrato-modelo-select');
+
+    if (selectModelo) {
+        selectModelo.innerHTML = '<option value="">Nenhum modelo cadastrado</option>';
+    }
+
+    return;
+}
+
     
     contratosSalvos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  
+const selectModelo = document.getElementById('contrato-modelo-select');
+
+if (selectModelo) {
+    selectModelo.innerHTML = '<option value="">Selecione um modelo...</option>';
+
+    contratosSalvos.forEach(modelo => {
+        const option = document.createElement('option');
+        option.value = modelo.id;
+        option.textContent = modelo.nome;
+        selectModelo.appendChild(option);
+    });
+}
+
     snap.forEach(doc => { 
         const item = doc.data(); 
         const li = document.createElement('li'); 
