@@ -1859,3 +1859,31 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
         lucide.createIcons();
     });
 };
+// NEO FLUX MARKETPLACE - ETAPA 1: navegação e prévia local
+(function iniciarMarketplace() {
+    const botaoAbrir = document.getElementById('btn-abrir-marketplace');
+    const botaoVoltar = document.getElementById('btn-voltar-marketplace');
+    const nome = document.getElementById('market-nome');
+    const descricao = document.getElementById('market-descricao');
+    const cor = document.getElementById('market-cor');
+    const whats = document.getElementById('market-whatsapp');
+    const capa = document.querySelector('.market-preview-capa');
+    function atualizarPrevia() {
+        document.getElementById('market-preview-nome').textContent = nome.value.trim() || 'Minha empresa';
+        document.getElementById('market-preview-descricao').textContent = descricao.value.trim() || 'Seu portfólio e seus produtos aparecerão aqui.';
+        capa.style.background = `linear-gradient(125deg, #00d2ff, ${cor.value})`;
+        document.getElementById('market-preview-contato').textContent = whats.value.trim() ? 'WhatsApp configurado (prévia)' : 'WhatsApp (prévia)';
+    }
+    botaoAbrir?.addEventListener('click', () => {
+        if (!subsiteAtualId) return alert('Abra primeiro um subsite.');
+        nome.value = document.getElementById('nome-do-subsite')?.textContent || '';
+        descricao.value = '';
+        whats.value = '';
+        cor.value = '#8a2be2';
+        atualizarPrevia();
+        mostrarTela('tela-marketplace');
+        if (window.lucide) window.lucide.createIcons();
+    });
+    botaoVoltar?.addEventListener('click', () => mostrarTela('tela-subsite'));
+    [nome, descricao, cor, whats].forEach(el => el?.addEventListener('input', atualizarPrevia));
+})();
