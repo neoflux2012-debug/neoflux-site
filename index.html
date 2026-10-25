@@ -302,7 +302,7 @@
 
         <!-- TELA EXTRA: ESCOLHA DO ADMIN -->
         <section id="tela-escolha-admin" class="tela">
-            <h2>Portal do Administrador</h2>
+            <h2>Portal do Administrador</h2><button id="btn-market-admin" type="button" class="botao-principal">🚀 Moderação e Booster</button>
             <p>Bem-vindo, Master. Como deseja acessar o sistema hoje?</p>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
@@ -419,9 +419,10 @@
             <div id="market-wave-busca" class="market-wave" hidden><strong>🤖 Neo Wave</strong><p>Escolha o ambiente. A pesquisa mostra somente vitrines publicadas.</p><div class="market-choice-buttons"><button data-market-choice="neo">Neo Flux Marketplace</button><button data-market-choice="fvm">FVM Marketplace</button></div></div>
             <div class="market-search-hero"><small>NEO FLUX</small><h1 id="market-search-title">Marketplace</h1><p>Encontre empresas, produtos e serviços</p><input id="market-search-input" placeholder="Pesquisar empresas, categorias ou produtos..." autocomplete="off"><button id="market-search-button" type="button">Pesquisar</button></div>
             <div id="market-search-status" role="status"></div><div id="market-search-results" class="market-resultados"></div>
-            <section class="market-sponsored"><h3>Neo Flux Booster</h3><p>Espaço reservado para anúncios patrocinados, identificados como publicidade. Contratação e cobrança ainda não ativadas.</p></section>
+            <section class="market-sponsored"><h3>Neo Flux Booster</h3><p>Espaço reservado para anúncios patrocinados, identificados como publicidade. Destaque por R$ 10 durante 14 dias. Pagamento via Pix, sujeito à confirmação manual.</p></section>
         </section>
-        <section id="tela-market-perfil" class="tela"><button id="market-perfil-voltar" type="button">← Voltar à pesquisa</button><div id="market-perfil-conteudo"></div><button id="market-denunciar" type="button">Denunciar esta vitrine</button></section>
+        <section id="tela-market-perfil" class="tela"><button id="market-perfil-voltar" type="button">← Voltar à pesquisa</button><div id="market-perfil-conteudo"></div><button id="market-denunciar" type="button">Denunciar esta vitrine</button><button id="market-solicitar-booster" type="button">🚀 Impulsionar minha vitrine (R$ 10 / 14 dias)</button></section>
+        <section id="tela-market-admin" class="tela"><h2>Moderação e Booster</h2><button id="market-admin-voltar" type="button">Voltar ao portal</button><h3>Configuração Pix</h3><p>Insira a chave que deseja mostrar aos clientes. Não use dados bancários privados adicionais.</p><input id="market-admin-pix" placeholder="Sua chave Pix"><button id="market-admin-salvar-pix" type="button">Salvar chave Pix</button><p id="market-admin-status"></p><h3>Solicitações de Booster</h3><div id="market-admin-pedidos"></div><h3>Denúncias</h3><div id="market-admin-denuncias"></div></section>
         <!-- TELA 10: PAINEL DO SUBSITE -->
         <section id="tela-subsite" class="tela" style="max-width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
