@@ -388,14 +388,21 @@ async function carregarFestas(id) {
             
             const header = document.createElement('div');
             header.style.cssText = "display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding-bottom: 10px;";
-            header.innerHTML = `
+                       header.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <i data-lucide="folder" style="color: #b57bff; width: 24px;"></i>
                     <h4 style="color: white; margin: 0; font-size: 1.1rem;">${pasta.nome}</h4>
                     <span style="background: rgba(138,43,226,0.2); color: #b57bff; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">${pasta.festas ? pasta.festas.length : 0} itens</span>
                 </div>
                 <div style="display: flex; gap: 10px;">
+                    
+                    <!-- 🔹 NOVO BOTÃO: Adicionar Festa na Pasta -->
+                    <button onclick="event.stopPropagation(); window.abrirModalAdicionarNaPasta('${pasta.id}', '${pasta.nome}', '${id}')" style="background: rgba(0,210,255,0.1); border: 1px solid #00d2ff; color: #00d2ff; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; gap: 4px;" title="Adicionar Festas">
+                        <i data-lucide="plus-circle" style="width: 14px;"></i> Add
+                    </button>
+
                     <button onclick="event.stopPropagation(); window.apagarPasta('${pasta.id}', '${id}')" style="background: rgba(231,76,60,0.1); border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;"><i data-lucide="trash-2" style="width: 14px; vertical-align: middle;"></i></button>
+                    
                     <button class="btn-toggle-pasta" style="background: rgba(138,43,226,0.2); border: 1px solid #8a2be2; color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;"><i data-lucide="chevron-down" style="width: 14px; vertical-align: middle;"></i></button>
                 </div>
             `;
@@ -581,16 +588,41 @@ document.getElementById('btn-abrir-modal-pasta')?.addEventListener('click', () =
     modal.style.display = 'flex';
 });
 
-document.getElementById('btn-cancelar-pasta')?.addEventListener('click', () => {
-    document.getElementById('modal-criar-pasta').style.display = 'none';
-});
-
+// 3. A MÁGICA DO BOTÃO SALVAR (Criar Pasta OU Adicionar na Pasta)
 document.getElementById('btn-salvar-pasta')?.addEventListener('click', async () => {
-    const nome = document.getElementById('nome-nova-pasta').value.trim();
-    if (!nome) return alert("Digite o nome da pasta.");
+    const btn = document.getElementById('btn-salvar-pasta');
+    const idPastaEdicao = btn.getAttribute('data-pasta-id');
     
     const selecionadas = [];
     document.querySelectorAll('.chk-festa-pasta:checked').forEach(cb => selecionadas.push(cb.value));
+
+    // 🔹 MODO EDIÇÃO: Se o botão tem um ID de pasta guardado, estamos adicionando festas
+    if (idPastaEdicao) {
+        carregar(true);
+        try {
+            await updateDoc(doc(db, "pastas", idPastaEdicao), { festas: selecionadas });
+            alert("✅ Festas atualizadas na pasta!");
+            
+            // Reseta o botão para o modo de criação
+            btn.textContent = "Criar Pasta";
+            btn.removeAttribute('data-pasta-id');
+            btn.removeAttribute('data-subsite-id');
+            document.querySelector('#modal-criar-pasta h2').innerHTML = `<i data-lucide="folder" style="color: #8a2be2;"></i> Criar Nova Pasta`;
+            document.getElementById('nome-nova-pasta').value = "";
+            
+            document.getElementById('modal-criar-pasta').style.display = 'none';
+            carregarFestas(subsiteAtualId);
+        } catch (e) {
+            alert("Erro ao atualizar pasta: " + e.message);
+        } finally {
+            carregar(false);
+        }
+        return;
+    }
+
+    // 🔹 MODO CRIAÇÃO: Se não tem ID, é uma pasta nova
+    const nome = document.getElementById('nome-nova-pasta').value.trim();
+    if (!nome) return alert("Digite o nome da pasta.");
     if (selecionadas.length === 0) return alert("Selecione pelo menos uma festa.");
 
     carregar(true);
@@ -606,11 +638,23 @@ document.getElementById('btn-salvar-pasta')?.addEventListener('click', async () 
         document.getElementById('nome-nova-pasta').value = "";
         carregarFestas(subsiteAtualId);
     } catch (e) {
-        console.error(e);
         alert("Erro ao criar pasta: " + e.message);
     } finally {
         carregar(false);
     }
+});
+
+// 4. RESETAR O MODAL AO CLICAR EM CANCELAR
+document.getElementById('btn-cancelar-pasta')?.addEventListener('click', () => {
+    document.getElementById('modal-criar-pasta').style.display = 'none';
+    
+    // Reseta o botão de salvar caso tenha aberto pelo modo "Adicionar"
+    const btn = document.getElementById('btn-salvar-pasta');
+    btn.textContent = "Criar Pasta";
+    btn.removeAttribute('data-pasta-id');
+    btn.removeAttribute('data-subsite-id');
+    document.querySelector('#modal-criar-pasta h2').innerHTML = `<i data-lucide="folder" style="color: #8a2be2;"></i> Criar Nova Pasta`;
+    document.getElementById('nome-nova-pasta').value = "";
 });
 
 window.apagarPasta = async function(idPasta, idSubsite) {
