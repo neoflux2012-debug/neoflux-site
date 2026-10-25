@@ -17,7 +17,6 @@ const db = getFirestore(app);
 
 console.log("Firebase conectado com sucesso! O erro do projectId sumiu!");
 
-
 setPersistence(auth, browserLocalPersistence).catch((error) => {
     console.error("Erro ao configurar persistência do login:", error);
 });
@@ -178,7 +177,6 @@ document.getElementById('form-recuperar')?.addEventListener('submit', async (e) 
     try { await sendPasswordResetEmail(auth, document.getElementById('email-recuperar').value); alert("Link de recuperação enviado!"); } 
     catch (error) { alert("Erro ao enviar e-mail."); } finally { carregar(false); }
 });
-
 // ==========================================
 // 6. ÁREA DO CLIENTE E SUBSITES
 // ==========================================
@@ -344,7 +342,6 @@ async function carregarPecasNoSelect() {
         selectPecas.appendChild(opt); 
     });
 }
-
 async function carregarFestas(id) {
     const container = document.getElementById('lista-festas-criadas'); if(!container) return;
     const containerPastas = document.getElementById('lista-pastas-container');
@@ -435,7 +432,7 @@ async function carregarFestas(id) {
             btnToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const isHidden = conteudo.style.display === 'none';
-                conteudo.style.display = isHidden ? 'block' : 'none'; // 🔹 MUDOU PARA BLOCK AQUI
+                conteudo.style.display = isHidden ? 'block' : 'none';
                 btnToggle.innerHTML = isHidden ? '<i data-lucide="chevron-up" style="width: 14px; vertical-align: middle;"></i>' : '<i data-lucide="chevron-down" style="width: 14px; vertical-align: middle;"></i>';
                 lucide.createIcons();
             });
@@ -660,6 +657,38 @@ window.apagarPasta = async function(idPasta, idSubsite) {
     }
 };
 
+window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
+    // Muda o título do modal
+    document.querySelector('#modal-criar-pasta h2').innerHTML = `<i data-lucide="folder-plus" style="color: #00d2ff;"></i> Adicionar na pasta: ${nomePasta}`;
+    
+    // Muda o botão para salvar edição
+    const btnSalvar = document.getElementById('btn-salvar-pasta');
+    btnSalvar.textContent = "Adicionar à Pasta";
+    btnSalvar.setAttribute('data-pasta-id', idPasta);
+    btnSalvar.setAttribute('data-subsite-id', idSubsite);
+
+    // Prepara os checkboxes
+    const containerCheck = document.getElementById('lista-checkboxes-festas');
+    containerCheck.innerHTML = "";
+    
+    // Busca as festas que JÁ estão nessa pasta para deixar marcado
+    getDoc(doc(db, "pastas", idPasta)).then(snapPasta => {
+        const festasNaPasta = snapPasta.data().festas || [];
+        
+        festasGlobais.forEach(f => {
+            const label = document.createElement('label');
+            label.style.cssText = "display: flex; align-items: center; gap: 10px; cursor: pointer; color: #ccc; padding: 5px 0; font-size: 0.9rem;";
+            
+            const checked = festasNaPasta.includes(f.id) ? 'checked' : '';
+            
+            label.innerHTML = `<input type="checkbox" value="${f.id}" class="chk-festa-pasta" ${checked} style="width: 18px; height: 18px; accent-color: #00d2ff;"> ${f.nome} - ${f.data.split('-').reverse().join('/')}`;
+            containerCheck.appendChild(label);
+        });
+        
+        document.getElementById('modal-criar-pasta').style.display = 'flex';
+        lucide.createIcons();
+    });
+};
 // ==========================================
 // 8. RESTO DO ARQUIVO (ORÇAMENTOS, KITS, ETC)
 // ==========================================
@@ -785,7 +814,6 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
         alert("Kit salvo!"); document.getElementById('form-kit').reset(); document.getElementById('modal-kits').style.display = 'none'; abrirSubsite(subsiteAtualId); 
     } catch (error) { alert("Erro ao salvar kit: " + error.message); } finally { carregar(false); }
 });
-
 // ==========================================
 // 🔹 CONTRATOS COM VARIÁVEIS E PRÉVIA EM TEMPO REAL
 // ==========================================
@@ -1177,7 +1205,6 @@ window.gerarPDFDoModal = async function() {
 // (Mantém o fechamento dos modais que já existia)
 document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => { btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; }); });
 document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
-
 // ==========================================
 // 🔹 MÓDULO DE REUNIÕES
 // ==========================================
@@ -1449,7 +1476,6 @@ async function carregarHistoricoOrcamentos() {
 window.copiarMensagemHistorico = async function(id) { try { const docSnap = await getDoc(doc(db, "historico_orcamentos", id)); if (docSnap.exists()) { await navigator.clipboard.writeText(docSnap.data().mensagem); alert("✅ Mensagem copiada!"); } } catch (e) { alert("Erro ao copiar."); } };
 window.enviarWhatsHistorico = async function(id) { try { const docSnap = await getDoc(doc(db, "historico_orcamentos", id)); if (docSnap.exists()) { window.open(`https://wa.me/?text=${encodeURIComponent(docSnap.data().mensagem)}`, '_blank'); } } catch (e) { alert("Erro ao abrir WhatsApp."); } };
 window.apagarOrcamentoHistorico = async function(id) { if (confirm("Apagar este orçamento do histórico?")) { try { await deleteDoc(doc(db, "historico_orcamentos", id)); carregarHistoricoOrcamentos(); } catch (e) { alert("Erro ao apagar."); } } };
-
 // ==========================================
 // 12. NEO WAVE ANALISTA (DASHBOARD ELITE)
 // ==========================================
@@ -1827,39 +1853,6 @@ window.resetarTraducaoFVM = function() {
     const textoAjudaOrcReset = document.getElementById('texto-ajuda-orcamento');
     if (textoAjudaOrcReset) textoAjudaOrcReset.innerHTML = `<i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do kit escolhido.`;
 };
-window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
-    // Muda o título do modal
-    document.querySelector('#modal-criar-pasta h2').innerHTML = `<i data-lucide="folder-plus" style="color: #00d2ff;"></i> Adicionar na pasta: ${nomePasta}`;
-    
-    // Muda o botão para salvar edição
-    const btnSalvar = document.getElementById('btn-salvar-pasta');
-    btnSalvar.textContent = "Adicionar à Pasta";
-    btnSalvar.setAttribute('data-pasta-id', idPasta); // Guarda o ID da pasta no botão
-    btnSalvar.setAttribute('data-subsite-id', idSubsite);
-
-    // Prepara os checkboxes
-    const containerCheck = document.getElementById('lista-checkboxes-festas');
-    containerCheck.innerHTML = "";
-    
-    // Busca as festas que JÁ estão nessa pasta para deixar marcado
-    getDoc(doc(db, "pastas", idPasta)).then(snapPasta => {
-        const festasNaPasta = snapPasta.data().festas || [];
-        
-        festasGlobais.forEach(f => {
-            const label = document.createElement('label');
-            label.style.cssText = "display: flex; align-items: center; gap: 10px; cursor: pointer; color: #ccc; padding: 5px 0; font-size: 0.9rem;";
-            
-            const checked = festasNaPasta.includes(f.id) ? 'checked' : '';
-            
-            label.innerHTML = `<input type="checkbox" value="${f.id}" class="chk-festa-pasta" ${checked} style="width: 18px; height: 18px; accent-color: #00d2ff;"> ${f.nome} - ${f.data.split('-').reverse().join('/')}`;
-            containerCheck.appendChild(label);
-        });
-        
-        document.getElementById('modal-criar-pasta').style.display = 'flex';
-        lucide.createIcons();
-    });
-};
-
 // NEO FLUX MARKETPLACE - VITRINES, PESQUISA E SELETOR
 (function iniciarMarketplaceCompleto(){
  const $=id=>document.getElementById(id);
@@ -1878,7 +1871,16 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
  async function abrirEditor(){const id=subsiteAtualId;if(!id)return alert('Abra primeiro um subsite.');retorno='tela-subsite';mostrarTela('tela-marketplace');aplicar({...padrao,nome:$('nome-do-subsite').textContent});msg('Carregando...');try{await validarDono(id);const s=await getDoc(doc(db,'marketplaceRascunhos',id));if(id!==subsiteAtualId)return;if(s.exists())aplicar({...padrao,...s.data()});msg(s.exists()?'Dados carregados.':'Nova vitrine.');}catch(e){msg('Erro: '+e.message)}}
  async function salvar(publicar=false){const id=subsiteAtualId,d=formulario();if(!d.nome)return alert('Informe o nome da empresa.');if(d.whatsapp&&(d.whatsapp.length<10||d.whatsapp.length>15))return alert('Confira o WhatsApp.');if(d.itens.length>60)return alert('Limite técnico de 60 itens por vitrine nesta versão.');if([d.logoUrl,d.capaUrl,...d.itens.map(x=>x.foto)].some(u=>u&&!safeUrl(u)))return alert('Use URLs HTTPS válidas nas imagens.');const b=publicar?$('market-publicar'):$('btn-market-salvar');b.disabled=true;msg(publicar?'Publicando...':'Salvando...');try{await validarDono(id);const base={...d,idSubsite:id,idDono:auth.currentUser.uid,atualizadoEm:new Date()};await setDoc(doc(db,'marketplaceRascunhos',id),base,{merge:true});if(publicar){await setDoc(doc(db,'marketplacePublicos',id),{...base,publicado:true},{merge:true});msg('Vitrine publicada! Ela já pode aparecer na pesquisa.')}else msg('Rascunho salvo. Se a vitrine já estiver publicada, use Publicar para atualizar o conteúdo público.')}catch(e){msg('Erro: '+e.message)}finally{b.disabled=false}}
  async function despublicar(){if(!confirm('Retirar sua vitrine da pesquisa pública?'))return;try{await validarDono(subsiteAtualId);await deleteDoc(doc(db,'marketplacePublicos',subsiteAtualId));msg('Vitrine retirada do ar. Rascunho preservado.')}catch(e){msg('Erro: '+e.message)}}
- async function buscar(){mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';try{const s=await getDocs(query(collection(db,'marketplacePublicos'),where('segmento','==',ambiente)));const termo=$('market-search-input').value.toLocaleLowerCase('pt-BR').trim();let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));lista.sort((a,b)=>((b.boosterAte?.toMillis?.()||0)>Date.now())-((a.boosterAte?.toMillis?.()||0)>Date.now()));lista=lista.slice(0,80);$('market-search-status').textContent=`${lista.length} vitrine(s) encontrada(s).`;lista.forEach(x=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt='';c.append(img)}const info=document.createElement('div');info.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'),texto('small',(x.boosterAte?.toMillis?.()>Date.now()?'🚀 Patrocinado · ':'')+'Nova empresa · Sem avaliações'));c.append(info);const b=texto('button','Ver vitrine');b.onclick=()=>abrirPerfil(x);c.append(b);$('market-search-results').append(c)})}catch(e){$('market-search-status').textContent='Não foi possível pesquisar: '+e.message}}
+ async function buscar(){mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';try{const s=await getDocs(query(collection(db,'marketplacePublicos'),where('segmento','==',ambiente)));const termo=$('market-search-input').value.toLocaleLowerCase('pt-BR').trim();let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));
+  // 🔹 ORDENAÇÃO BOOSTER: patrocinados primeiro, expira sem rotina de limpeza
+  const agora=Date.now();
+  lista.sort((a,b)=>{
+    const aBoost=(a.boosterAte?.toMillis?.()||0)>agora?1:0;
+    const bBoost=(b.boosterAte?.toMillis?.()||0)>agora?1:0;
+    if(aBoost!==bBoost)return bBoost-aBoost;
+    return (b.boosterAte?.toMillis?.()||0)-(a.boosterAte?.toMillis?.()||0);
+  });
+  lista=lista.slice(0,80);$('market-search-status').textContent=`${lista.length} vitrine(s) encontrada(s).`;lista.forEach(x=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt='';c.append(img)}const info=document.createElement('div');info.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'),texto('small',(x.boosterAte?.toMillis?.()>Date.now()?'🚀 Patrocinado · ':'')+'Nova empresa · Sem avaliações'));c.append(info);const b=texto('button','Ver vitrine');b.onclick=()=>abrirPerfil(x);c.append(b);$('market-search-results').append(c)})}catch(e){$('market-search-status').textContent='Não foi possível pesquisar: '+e.message}}
   function abrirPerfil(x){perfilAberto=x;mostrarTela('tela-market-perfil');const a=$('market-perfil-conteudo');a.replaceChildren();const capa=document.createElement('div');capa.className='market-perfil-capa';capa.style.background=safeUrl(x.capaUrl)?`url("${safeUrl(x.capaUrl)}") center/cover`:`linear-gradient(125deg,#00d2ff,${x.cor||'#8a2be2'})`;a.append(capa);a.append(texto('h1',x.nome||'Empresa'),texto('p',x.categoria||''),texto('p',x.descricao||''),texto('p','Nova empresa · Sem avaliações'));if(x.whatsapp){const w=texto('a','Falar pelo WhatsApp');w.href=`https://wa.me/${String(x.whatsapp).replace(/\D/g,'')}`;w.target='_blank';w.rel='noopener noreferrer';a.append(w)}a.append(texto('h2','Portfólio e anúncios'));const grid=document.createElement('div');grid.className='market-resultados';(x.itens||[]).forEach(it=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(it.foto)){const img=document.createElement('img');img.src=safeUrl(it.foto);img.alt='';c.append(img)}const content=document.createElement('div');content.append(texto('h3',it.nome),texto('p',it.tipo==='portfolio'?'Portfólio':'Produto / Serviço'));if(it.preco!==null&&it.preco!==undefined)content.append(texto('strong',`R$ ${Number(it.preco).toFixed(2)}`));c.append(content);grid.append(c)});a.append(grid)}
  $('btn-abrir-marketplace')?.addEventListener('click',abrirEditor);
  $('btn-market-explorar')?.addEventListener('click',()=>{retorno='tela-subsite';escolha('neo');buscar()});
@@ -1896,8 +1898,7 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
  Object.values(campos).forEach(id=>$(id)?.addEventListener('input',()=>{preview();msg('Alterações não salvas.')}));
  $('market-denunciar')?.addEventListener('click',async()=>{if(!perfilAberto)return;if(!auth.currentUser)return alert('Entre na sua conta para enviar uma denúncia.');const motivo=prompt('Descreva o motivo da denúncia (mínimo 10 caracteres):');if(!motivo)return;if(motivo.trim().length<10)return alert('Descreva melhor a denúncia.');try{await addDoc(collection(db,'marketplaceDenuncias'),{idVitrine:perfilAberto.id,motivo:motivo.trim().slice(0,1000),idAutor:auth.currentUser?.uid||null,criadoEm:new Date(),status:'pendente'});alert('Denúncia enviada para análise.')}catch(e){alert('Erro ao denunciar: '+e.message)}});
 })();
-
-// NEO FLUX BOOSTER + MODERAÇÃO (Pix manual, 14 dias)
+// NEO FLUX BOOSTER + MODERAÇÃO (Pix via QR existente ./qrcode.png, 14 dias)
 (function iniciarBoosterModeracao(){
  const $=id=>document.getElementById(id);
  const ADMIN_EMAIL='neoflux2012@gmail.com';
@@ -1905,7 +1906,9 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
  const el=(tag,txt)=>{const e=document.createElement(tag);e.textContent=txt;return e};
  const status=t=>{if($('market-admin-status'))$('market-admin-status').textContent=t};
  const config=doc(db,'marketplaceConfig','booster');
- async function solicitar(){
+
+ // 🔹 Abre o modal com o QR Code existente (./qrcode.png) — NÃO cria outro QR.
+ async function abrirModalBooster(){
    if(!auth.currentUser)return alert('Entre na sua conta para solicitar o Booster.');
    const id=subsiteAtualId;
    if(!id)return alert('Abra seu subsite e publique uma vitrine antes de solicitar.');
@@ -1913,30 +1916,80 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
    if(!sub.exists()||sub.data().idDono!==auth.currentUser.uid)return alert('Você só pode impulsionar a sua vitrine.');
    const pub=await getDoc(doc(db,'marketplacePublicos',id));
    if(!pub.exists())return alert('Publique sua vitrine primeiro.');
-   const cfg=await getDoc(config);
-   const chave=cfg.exists()?cfg.data().chavePix:'';
-   if(!chave)return alert('Pix ainda não configurado pelo administrador.');
-   if(!confirm('Solicitar Booster por R$ 10,00 com 14 dias de destaque após aprovação?'))return;
-   try{
-     const r=await addDoc(collection(db,'marketplaceBoosterPedidos'),{
-       idSubsite:id,idDono:auth.currentUser.uid,valorCentavos:1000,dias:14,status:'pendente',criadoEm:new Date()
-     });
-     await navigator.clipboard?.writeText(chave).catch(()=>{});
-     alert('Solicitação '+r.id+' registrada!\n\nPague R$ 10,00 na chave Pix:\n'+chave+'\n\nCopiamos a chave, se permitido pelo navegador. O destaque só será ativado após conferência do pagamento pelo administrador.');
-   }catch(e){alert('Erro ao solicitar Booster: '+e.message)}
+
+   const modal=document.getElementById('modal-booster-pix');
+   const msg=document.getElementById('booster-status-msg');
+   if(msg)msg.textContent='';
+   const img=document.getElementById('img-qrcode-booster');
+   if(img)img.src=`./qrcode.png?t=${Date.now()}`; // reutiliza o arquivo existente
+   if(modal)modal.style.display='flex';
+   if(typeof lucide!=='undefined')lucide.createIcons();
  }
+
+ // 🔹 Registra a solicitação APENAS como pendente. NÃO aprova nada.
+ async function registrarPagamentoBooster(){
+   if(!auth.currentUser)return;
+   const btn=document.getElementById('btn-booster-ja-paguei');
+   const msg=document.getElementById('booster-status-msg');
+   const id=subsiteAtualId;
+   if(!id)return alert('Abra seu subsite novamente.');
+   if(btn)btn.disabled=true;
+   if(msg)msg.textContent='Registrando solicitação...';
+   try{
+     // Evita duplicar pedido pendente para a mesma vitrine
+     const dup=await getDocs(query(collection(db,'marketplaceBoosterPedidos'),
+        where('idSubsite','==',id), where('status','==','pendente')));
+     if(!dup.empty){
+        if(msg)msg.textContent='Já existe uma solicitação pendente para esta vitrine. Aguarde a análise do administrador.';
+        if(btn)btn.disabled=false;
+        return;
+     }
+
+     const subSnap=await getDoc(doc(db,'subsites',id));
+     const pubSnap=await getDoc(doc(db,'marketplacePublicos',id));
+     const nomeCliente=auth.currentUser.displayName||auth.currentUser.email||'';
+     const nomeVitrine=pubSnap.exists()?(pubSnap.data().nome||subSnap.data()?.titulo||''):(subSnap.data()?.titulo||'');
+
+     const r=await addDoc(collection(db,'marketplaceBoosterPedidos'),{
+       idSubsite:id,
+       idDono:auth.currentUser.uid,
+       nomeCliente:nomeCliente,
+       nomeVitrine:nomeVitrine,
+       valorCentavos:1000,
+       dias:14,
+       status:'pendente',
+       criadoEm:new Date()
+     });
+     if(msg)msg.textContent='✅ Solicitação registrada! O destaque será ativado após o administrador confirmar o Pix.';
+     alert('Solicitação '+r.id+' registrada!\n\nO administrador vai conferir o Pix manualmente. Você receberá o destaque de 14 dias após a aprovação.');
+     setTimeout(()=>{const m=document.getElementById('modal-booster-pix'); if(m)m.style.display='none';},1200);
+   }catch(e){
+     if(msg)msg.textContent='Erro: '+e.message;
+   }finally{
+     if(btn)btn.disabled=false;
+   }
+ }
+
+ // 🔹 Expor globalmente (para o botão do card do subsite)
+ window.abrirModalBooster = abrirModalBooster;
+ window.registrarPagamentoBooster = registrarPagamentoBooster;
+
  async function abrirAdmin(){
    if(!admin())return alert('Acesso exclusivo do administrador verificado.');
    mostrarTela('tela-market-admin');status('Carregando...');
    try{
      const cfg=await getDoc(config);$('market-admin-pix').value=cfg.exists()?cfg.data().chavePix||'':'';
+
      const [ped,den]=await Promise.all([
        getDocs(collection(db,'marketplaceBoosterPedidos')),
        getDocs(collection(db,'marketplaceDenuncias'))
      ]);
+
      const p=$('market-admin-pedidos');p.replaceChildren();
      ped.docs.sort((a,b)=>(b.data().criadoEm?.toMillis?.()||0)-(a.data().criadoEm?.toMillis?.()||0)).forEach(s=>{
-       const d=s.data(),r=el('article',`Vitrine: ${d.idSubsite} | ${d.status} | R$ ${(d.valorCentavos/100).toFixed(2)} | ${d.dias} dias`);
+       const d=s.data();
+       const dataStr=d.criadoEm?.toDate?d.criadoEm.toDate().toLocaleString('pt-BR'):'—';
+       const r=el('article',`👤 ${d.nomeCliente||'—'} · 🏬 ${d.nomeVitrine||d.idSubsite} | ${d.status} | R$ ${((d.valorCentavos||1000)/100).toFixed(2)} | ${d.dias||14} dias | ${dataStr}`);
        if(d.status==='pendente'){
          const b=el('button','Confirmar Pix recebido e ativar');
          b.onclick=async()=>{
@@ -1946,37 +1999,67 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
              const vit=doc(db,'marketplacePublicos',d.idSubsite);
              const snap=await getDoc(vit);if(!snap.exists())throw Error('Vitrine não publicada.');
              const inicio=new Date(),fim=new Date(inicio.getTime()+14*86400000);
-             // Duas gravações administrativas. Se a segunda falhar, mostrar erro e revisar pedido.
-             const lote=writeBatch(db);lote.update(vit,{boosterAte:fim});lote.update(s.ref,{status:'aprovado',aprovadoEm:inicio,expiraEm:fim});await lote.commit();
+             const lote=writeBatch(db);
+             lote.update(vit,{boosterAte:fim});
+             lote.update(s.ref,{status:'aprovado',aprovadoEm:inicio,expiraEm:fim});
+             await lote.commit();
              await abrirAdmin();
            }catch(e){alert('Falha ao aprovar: '+e.message);b.disabled=false}
-         };r.append(b);
-         const negar=el('button','Recusar pedido');negar.onclick=async()=>{if(!confirm('Recusar solicitação?'))return;try{await updateDoc(s.ref,{status:'recusado'});await abrirAdmin()}catch(e){alert(e.message)}};r.append(negar);
+         };
+         r.append(b);
+         const negar=el('button','Recusar pedido');
+         negar.onclick=async()=>{
+           if(!confirm('Recusar solicitação?'))return;
+           try{await updateDoc(s.ref,{status:'recusado'});await abrirAdmin()}catch(e){alert(e.message)}
+         };
+         r.append(negar);
        }
        p.append(r);
-     });if(p.childElementCount===0)p.append(el('p','Nenhuma solicitação.'));
+     });
+     if(p.childElementCount===0)p.append(el('p','Nenhuma solicitação.'));
+
      const n=$('market-admin-denuncias');n.replaceChildren();
-     den.docs.forEach(s=>{const d=s.data(),r=el('article',`Vitrine: ${d.idVitrine} | ${d.status} | Motivo: ${d.motivo}`);
+     den.docs.forEach(s=>{
+       const d=s.data(),r=el('article',`Vitrine: ${d.idVitrine} | ${d.status} | Motivo: ${d.motivo}`);
        if(d.status==='pendente'){
          const resolver=async(acao)=>{
            if(!confirm(acao==='suspensa'?'Suspender esta vitrine pública?':'Encerrar denúncia sem suspensão?'))return;
            try{
-             const lote=writeBatch(db);if(acao==='suspensa'){lote.set(doc(db,'marketplaceSuspensoes',d.idVitrine),{ativo:true,motivo:d.motivo,criadoEm:new Date()});lote.delete(doc(db,'marketplacePublicos',d.idVitrine));}lote.update(s.ref,{status:acao,analisadoEm:new Date()});await lote.commit();await abrirAdmin();
+             const lote=writeBatch(db);
+             if(acao==='suspensa'){
+               lote.set(doc(db,'marketplaceSuspensoes',d.idVitrine),{ativo:true,motivo:d.motivo,criadoEm:new Date()});
+               lote.delete(doc(db,'marketplacePublicos',d.idVitrine));
+             }
+             lote.update(s.ref,{status:acao,analisadoEm:new Date()});
+             await lote.commit();
+             await abrirAdmin();
            }catch(e){alert('Erro na moderação: '+e.message)}
          };
          const susp=el('button','Suspender vitrine');susp.onclick=()=>resolver('suspensa');r.append(susp);
          const desc=el('button','Rejeitar denúncia');desc.onclick=()=>resolver('rejeitada');r.append(desc);
-       }n.append(r)
-     });if(n.childElementCount===0)n.append(el('p','Nenhuma denúncia.'));
+       }
+       n.append(r)
+     });
+     if(n.childElementCount===0)n.append(el('p','Nenhuma denúncia.'));
+
      status('Dados atualizados. Confira os pagamentos diretamente no banco antes de aprovar.');
    }catch(e){status('Erro: '+e.message)}
  }
- $('market-solicitar-booster')?.addEventListener('click',solicitar);
+
+ // 🔹 Handlers — inclui o novo botão do card do subsite
+ $('market-solicitar-booster')?.addEventListener('click',abrirModalBooster);
+ $('btn-solicitar-booster-card')?.addEventListener('click',abrirModalBooster);
+ document.getElementById('btn-booster-ja-paguei')?.addEventListener('click',registrarPagamentoBooster);
+ document.getElementById('btn-fechar-modal-booster')?.addEventListener('click',()=>{document.getElementById('modal-booster-pix').style.display='none';});
+ document.getElementById('btn-fechar-modal-booster-footer')?.addEventListener('click',()=>{document.getElementById('modal-booster-pix').style.display='none';});
+
  $('btn-market-admin')?.addEventListener('click',abrirAdmin);
  $('market-admin-voltar')?.addEventListener('click',()=>mostrarTela('tela-escolha-admin'));
+
  $('market-admin-salvar-pix')?.addEventListener('click',async()=>{
    if(!admin())return;
-   const chave=$('market-admin-pix').value.trim();if(chave.length<5||chave.length>150)return alert('Confira a chave Pix.');
+   const chave=$('market-admin-pix').value.trim();
+   if(chave.length<5||chave.length>150)return alert('Confira a chave Pix.');
    try{await setDoc(config,{chavePix:chave,atualizadoEm:new Date()});status('Chave Pix salva.')}catch(e){status('Erro: '+e.message)}
  });
 })();
