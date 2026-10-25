@@ -588,40 +588,35 @@
             </div>
         </div>
 
-        <!-- MODAL CONTRATOS -->
+                <!-- MODAL CONTRATOS -->
         <div id="modal-contratos" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
                 <h2 style="color: white; margin-top: 0;">Modelos de Contrato</h2>
-                <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Cadastre um nome, a logo da sua empresa (para o cabeçalho) e faça o upload do arquivo em PDF.</p>
+                <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Cadastre o nome, a logo da sua empresa e o <strong>link</strong> do contrato (Google Drive, Dropbox, etc).</p>
+                
                 <form id="form-contrato">
                     <label style="color: #ccc;">Nome do Modelo (ex: Contrato de Aluguel):</label>
                     <input type="text" id="contrato-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px;">
+                    
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                        <div><label style="color: #ccc;">Logo da Empresa:</label><input type="file" id="contrato-logo" accept="image/*" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                        <div><label style="color: #ccc;">Arquivo do Contrato (.pdf):</label><input type="file" id="contrato-arquivo" accept=".pdf" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
+                        <div>
+                            <label style="color: #ccc;">Logo da Empresa (Opcional):</label>
+                            <input type="file" id="contrato-logo" accept="image/*" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                        </div>
+                        <div>
+                            <label style="color: #ccc;">Link do Contrato (PDF):</label>
+                            <input type="url" id="contrato-link" placeholder="https://drive.google.com/..." required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                        </div>
                     </div>
+                    
                     <div style="display: flex; gap: 10px;">
                         <button type="button" id="btn-fechar-modal-contratos" class="botao-principal" style="background: #333;">Fechar</button>
                         <button type="submit" class="botao-principal" style="background: #e67e22;">Salvar Contrato</button>
                     </div>
                 </form>
+                
                 <h3 style="color: white; margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">Meus Contratos Salvos:</h3>
                 <ul id="lista-contratos" style="list-style: none; padding: 0; max-height: 200px; overflow-y: auto;"></ul>
-            </div>
-        </div>
-
-        <!-- MODAL RELATÓRIOS -->
-        <div id="modal-relatorios" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto;">
-                <h2 style="color: white; margin-top: 0;">Relatório Mensal de Vendas</h2>
-                <table style="width: 100%; border-collapse: collapse; color: #ccc; text-align: left;">
-                    <thead>
-                        <tr style="border-bottom: 1px solid #333;"><th style="padding: 10px;">Cliente</th><th style="padding: 10px;">Tema</th><th style="padding: 10px;">Data</th></tr>
-                    </thead>
-                    <tbody id="tabela-relatorio"></tbody>
-                </table>
-                <div style="margin-top: 20px; text-align: right; color: #00c853; font-size: 1.2rem; font-weight: bold;">Total do Mês: <span id="total-mes">R$ 0,00</span></div>
-                <button type="button" id="btn-fechar-relatorios" class="botao-principal" style="background: #333; margin-top: 20px;">Fechar</button>
             </div>
         </div>
 
