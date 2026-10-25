@@ -69,7 +69,11 @@ function getRecursos(plano) {
         }
         
         const regrasBase = recursosPlanosBase[planoBase] || recursosPlanosBase.start;
-        return { ...regrasBase, maxKits: 999, contratos: false };
+        
+        // 🔹 AQUI: Libera contratos APENAS para o FVM Elite Premium
+        const temContrato = (plano === 'fvm_elite_premium');
+        
+        return { ...regrasBase, maxKits: 999, contratos: temContrato };
     }
     
     const regrasBase = recursosPlanosBase[plano] || recursosPlanosBase.start;
