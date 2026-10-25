@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, setPersistence, browserLocalPersistence, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
@@ -25,7 +25,8 @@ setPersistence(auth, browserLocalPersistence).catch((error) => {
 let subsiteAtualId = "";
 let planoAtual = "";
 let festasGlobais = [];
-let kitsDoSubsite = []; 
+let kitsDoSubsite = [];
+let contratosSalvos = []; 
 
 window.neoflux_planoFVM = null;
 
@@ -802,6 +803,9 @@ document.querySelectorAll('.btn-variavel').forEach(btn => {
         textarea.value = textarea.value.substring(0, startPos) + variavel + textarea.value.substring(endPos, textarea.value.length);
         textarea.selectionStart = textarea.selectionEnd = startPos + variavel.length;
         textarea.focus();
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+});
         
       // Atualiza a prévia em tempo real
 ['teste-nome', 'teste-cpf', 'teste-data', 'teste-tema', 'teste-local', 'teste-pecas', 'teste-valor', 'teste-sinal'].forEach(id => {
@@ -893,8 +897,9 @@ async function carregarContratos() {
     const lista = document.getElementById('lista-contratos'); if(!lista) return;
     lista.innerHTML = "<li>Carregando...</li>";
     const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
-    lista.innerHTML = ""; if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum modelo cadastrado.</li>";
+    lista.innerHTML = ""; if (snap.empty) { contratosSalvos = []; return lista.innerHTML = "<li style='color:#888;'>Nenhum modelo cadastrado.</li>"; }
     
+    contratosSalvos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     snap.forEach(doc => { 
         const item = doc.data(); 
         const li = document.createElement('li'); 
@@ -1009,6 +1014,8 @@ window.abrirGeradorContratoPDF = async function(idFesta) {
         carregar(false);
     }
 };
+
+window.gerarContrato = window.abrirGeradorContratoPDF;
 
 // (Mantém o fechamento dos modais que já existia)
 document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => { btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; }); });
