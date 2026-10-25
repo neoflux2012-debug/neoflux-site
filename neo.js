@@ -1143,6 +1143,13 @@ window.gerarPDFDoModal = async function() {
     const conteudo = document.createElement('div');
     conteudo.textContent = texto;
     pagina.appendChild(conteudo);
+  pagina.style.position = 'fixed';
+pagina.style.left = '0';
+pagina.style.top = '0';
+pagina.style.width = '794px';
+pagina.style.zIndex = '-1';
+
+document.body.appendChild(pagina);
 
     try {
         if (typeof window.html2pdf === 'undefined') {
