@@ -601,7 +601,7 @@
                     </button>
                 </div>
 
-                <form id="form-contrato">
+                               <form id="form-contrato">
                     <label style="color: #ccc;">Nome do Modelo (ex: Contrato Padrão):</label>
                     <input type="text" id="contrato-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 15px;">
                     
@@ -610,7 +610,7 @@
 
                     <label style="color: #ccc; font-size: 0.9rem; display: block; margin-bottom: 5px;">Texto do Contrato:</label>
                     
-                                       <!-- Botões Mágicos de Variáveis -->
+                    <!-- Botões Mágicos de Variáveis (Ficam em cima) -->
                     <div id="botoes-variaveis" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
                         <button type="button" class="btn-variavel" data-variavel="[NOME_CLIENTE]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Nome</button>
                         <button type="button" class="btn-variavel" data-variavel="[CPF]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ CPF</button>
@@ -621,6 +621,16 @@
                         <button type="button" class="btn-variavel" data-variavel="[VALOR_TOTAL]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Valor Total</button>
                         <button type="button" class="btn-variavel" data-variavel="[SINAL]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Sinal</button>
                     </div>
+
+                    <!-- 🔹 A CAIXA DE TEXTO 🔹 -->
+                    <textarea id="contrato-texto" rows="8" required placeholder="Cole aqui o texto do seu contrato. Use os botões acima para inserir os dados que mudam..." style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; font-family: monospace; font-size: 0.85rem; margin-bottom: 20px;"></textarea>
+                    
+                    <!-- Botões de Ação no final -->
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-fechar-modal-contratos" class="botao-principal" style="background: #333;">Fechar</button>
+                        <button type="submit" class="botao-principal" style="background: #e67e22;">Salvar Modelo</button>
+                    </div>
+                </form>
 
         <!-- MODAL DE AJUDA DO NEO WAVE -->
         <div id="modal-ajuda-contrato" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px);">
