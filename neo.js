@@ -316,9 +316,8 @@ async function abrirSubsite(id) {
     const btnNeo = document.getElementById('btn-neo-wave');
     if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
 
-        const cardContratos = document.getElementById('card-contratos');
+    const cardContratos = document.getElementById('card-contratos');
     if (cardContratos) {
-        // Mostra o card se o plano tiver a permissão de contratos
         cardContratos.style.display = regras.contratos ? 'block' : 'none';
     }
 
@@ -339,6 +338,21 @@ async function abrirSubsite(id) {
     mostrarTela('tela-subsite');
 }
 
+// 🔹 FUNÇÃO QUE TINHA SUMIDO
+async function carregarPecasNoSelect() {
+    const selectPecas = document.getElementById('festa-pecas');
+    if(!selectPecas) return;
+    selectPecas.innerHTML = "";
+    const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
+    snapCat.forEach(c => { 
+        const item = c.data(); 
+        const opt = document.createElement('option'); 
+        opt.value = item.nome; 
+        opt.textContent = `${item.nome} (${item.categoria})`; 
+        selectPecas.appendChild(opt); 
+    });
+}
+
 async function carregarFestas(id) {
     const container = document.getElementById('lista-festas-criadas'); if(!container) return;
     const containerPastas = document.getElementById('lista-pastas-container');
@@ -348,7 +362,7 @@ async function carregarFestas(id) {
     
     const regras = getRecursos(planoAtual);
     
-    // 1. Pega as festas
+    // 1. Pega as festas do banco
     const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
     snap.forEach(doc => {
         const festa = doc.data(); 
@@ -356,7 +370,7 @@ async function carregarFestas(id) {
         festasGlobais.push(festa);
     });
 
-    // 2. Pega as pastas
+    // 2. Pega as pastas do banco
     let pastas = [];
     const snapPastas = await getDocs(query(collection(db, "pastas"), where("idSubsite", "==", id)));
     snapPastas.forEach(doc => {
@@ -390,7 +404,7 @@ async function carregarFestas(id) {
             const conteudo = document.createElement('div');
             conteudo.style.cssText = "margin-top: 15px; display: none;";
             
-            // 🔹 BARRA DE PESQUISA
+            // 🔹 BARRA DE PESQUISA DA PASTA
             const barraPesquisa = document.createElement('input');
             barraPesquisa.type = 'text';
             barraPesquisa.placeholder = '🔍 Pesquisar festa nesta pasta...';
@@ -431,7 +445,7 @@ async function carregarFestas(id) {
         });
     }
 
-    // 4. Desenha as Festas soltas (que não estão em pastas)
+    // 4. Desenha as Festas que NÃO estão em pastas
     const festasNormais = festasGlobais.filter(f => !idsFestasAgrupadas.includes(f.id));
     festasNormais.forEach(festa => {
         container.appendChild(renderizarCardFesta(festa, regras));
@@ -442,7 +456,6 @@ async function carregarFestas(id) {
     // 5. Pesquisa global (das festas soltas)
     const inputPesquisa = document.getElementById('pesquisa-festas');
     if (inputPesquisa) {
-        // Remove o evento antigo para não duplicar se chamar a função 2x
         inputPesquisa.replaceWith(inputPesquisa.cloneNode(true));
         document.getElementById('pesquisa-festas').addEventListener('input', (e) => {
             const termo = e.target.value.toLowerCase();
@@ -452,6 +465,7 @@ async function carregarFestas(id) {
         });
     }
 }
+
 function renderizarCardFesta(festa, regras) {
     const total = parseFloat(festa.total) || 0; 
     const sinal = parseFloat(festa.sinal) || 0;
@@ -609,6 +623,7 @@ window.apagarPasta = async function(idPasta, idSubsite) {
         }
     }
 };
+
 // ==========================================
 // 8. RESTO DO ARQUIVO (ORÇAMENTOS, KITS, ETC)
 // ==========================================
