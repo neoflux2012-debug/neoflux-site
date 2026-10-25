@@ -595,88 +595,81 @@
                 </form>
             </div>
         </div>
-                <!-- MODAL CONTRATOS -->
+                      <!-- MODAL CONTRATOS -->
         <div id="modal-contratos" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 950px; max-height: 90vh; overflow-y: auto;">
+            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto;">
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="color: white; margin: 0;">Modelos de Contrato</h2>
+                    <h2 style="color: white; margin: 0;">Trocar Informações</h2>
                     <button type="button" onclick="document.getElementById('modal-ajuda-contrato').style.display='flex';" style="background: rgba(0, 210, 255, 0.1); color: #00d2ff; border: 1px solid #00d2ff; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 0.85rem; transition: 0.3s;">
                         <i data-lucide="help-circle" style="width: 16px;"></i> Ajuda com o Neo
                     </button>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    
-                    <!-- LADO ESQUERDO: O TEXTO BASE -->
-                    <div>
-                        <form id="form-contrato">
-                            <label style="color: #ccc;">Nome do Modelo (ex: Contrato Padrão):</label>
-                            <input type="text" id="contrato-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 15px;">
-                            
-                            <label style="color: #ccc;">Logo da Empresa (Opcional):</label>
-                            <input type="file" id="contrato-logo" accept="image/*" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 15px;">
-
-                            <label style="color: #ccc; font-size: 0.9rem; display: block; margin-bottom: 5px;">Texto do Contrato:</label>
-                            
-                            <div id="botoes-variaveis" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
-                                <button type="button" class="btn-variavel" data-variavel="[NOME_CLIENTE]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Nome</button>
-                                <button type="button" class="btn-variavel" data-variavel="[CPF]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ CPF</button>
-                                <button type="button" class="btn-variavel" data-variavel="[DATA]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Data</button>
-                                <button type="button" class="btn-variavel" data-variavel="[TEMA]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Tema</button>
-                                <button type="button" class="btn-variavel" data-variavel="[LOCAL]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Local</button>
-                                <button type="button" class="btn-variavel" data-variavel="[PECAS]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Peças</button>
-                                <button type="button" class="btn-variavel" data-variavel="[VALOR_TOTAL]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Valor Total</button>
-                                <button type="button" class="btn-variavel" data-variavel="[SINAL]" style="background: #333; color: #ccc; border: 1px solid #555; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">+ Sinal</button>
-                            </div>
-
-                            <textarea id="contrato-texto" rows="10" required style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; font-family: monospace; font-size: 0.85rem; margin-bottom: 20px;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS
-
-Pelo presente instrumento particular, de um lado [NOME_CLIENTE], portador(a) do CPF [CPF], doravante denominado(a) CONTRATANTE.
-
-O CONTRATANTE contrata os serviços para o evento com tema [TEMA], a ser realizado no dia [DATA] no local [LOCAL].
-
-Itens inclusos: [PECAS].
-Valor total: [VALOR_TOTAL]. Sinal pago: [SINAL].
-
-Por estarem de acordo, assinam o presente.</textarea>
-                            
-                            <div style="display: flex; gap: 10px;">
-                                <button type="button" id="btn-fechar-modal-contratos" class="botao-principal" style="background: #333;">Fechar</button>
-                                <button type="submit" class="botao-principal" style="background: #e67e22;">Salvar Modelo</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- LADO DIREITO: O TESTE / PREENCHIMENTO -->
-                    <div style="background: #0a0a0a; border: 1px dashed #8a2be2; border-radius: 12px; padding: 20px; display: flex; flex-direction: column;">
-                        <h4 style="color: #b57bff; margin: 0 0 15px 0; font-size: 1rem; display: flex; align-items: center; gap: 5px;">
-                            <i data-lucide="flask-conical" style="width: 16px;"></i> Testar Preenchimento
-                        </h4>
-                        <p style="color: #888; font-size: 0.8rem; margin-bottom: 15px;">Preencha os campos abaixo para ver como o contrato vai ficar com os dados reais.</p>
+                <form id="form-contrato">
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
                         
-                        <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
-                            <input type="text" id="teste-nome" placeholder="Nome do Cliente" style="padding: 8px; background: #121212; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;">
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="teste-cpf" placeholder="CPF" style="flex: 1; padding: 8px; background: #121212; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;">
-                                <input type="text" id="teste-data" placeholder="Data" style="flex: 1; padding: 8px; background: #121212; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;">
+                        <div>
+                            <label style="color: #ccc;">Nome do Modelo (ex: Contrato Padrão):</label>
+                            <input type="text" id="contrato-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="color: #ccc; font-size: 0.9rem;">Nome do Cliente:</label>
+                                <input type="text" id="teste-nome" placeholder="Ex: Maria Silva" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
                             </div>
-                            <input type="text" id="teste-tema" placeholder="Tema" style="padding: 8px; background: #121212; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;">
-                            <input type="text" id="teste-local" placeholder="Local" style="padding: 8px; background: #121212; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;">
-                            <input type="text" id="teste-pecas" placeholder="Peças" style="padding: 8px; background: #121212; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;">
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="teste-valor" placeholder="Valor Total" style="flex: 1; padding: 8px; background: #121212; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;">
-                                <input type="text" id="teste-sinal" placeholder="Sinal" style="flex: 1; padding: 8px; background: #121212; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;">
+                            <div>
+                                <label style="color: #ccc; font-size: 0.9rem;">CPF:</label>
+                                <input type="text" id="teste-cpf" placeholder="000.000.000-00" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
                             </div>
                         </div>
 
-                        <div style="margin-top: 15px; border-top: 1px dashed #333; padding-top: 15px;">
-                            <p style="color: #ccc; font-size: 0.8rem; margin-bottom: 5px; font-weight: bold;">Prévia do Contrato:</p>
-                            <div id="previa-contrato" style="background: #121212; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #aaa; white-space: pre-wrap; max-height: 150px; overflow-y: auto; border: 1px solid #222;">O texto preenchido aparecerá aqui...</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="color: #ccc; font-size: 0.9rem;">Data do Evento:</label>
+                                <input type="text" id="teste-data" placeholder="DD/MM/AAAA" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
+                            </div>
+                            <div>
+                                <label style="color: #ccc; font-size: 0.9rem;">Tema:</label>
+                                <input type="text" id="teste-tema" placeholder="Ex: Safári" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
+                            </div>
                         </div>
+
+                        <div>
+                            <label style="color: #ccc; font-size: 0.9rem;">Local:</label>
+                            <input type="text" id="teste-local" placeholder="Ex: Salão de Festas" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
+                        </div>
+
+                        <div>
+                            <label style="color: #ccc; font-size: 0.9rem;">Peças Inclusas:</label>
+                            <input type="text" id="teste-pecas" placeholder="Ex: Kit completo" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="color: #ccc; font-size: 0.9rem;">Valor Total (R$):</label>
+                                <input type="text" id="teste-valor" placeholder="Ex: 1500,00" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
+                            </div>
+                            <div>
+                                <label style="color: #ccc; font-size: 0.9rem;">Sinal (R$):</label>
+                                <input type="text" id="teste-sinal" placeholder="Ex: 500,00" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-top: 5px;">
+                            </div>
+                        </div>
+
+                        <!-- Campo invisível que guarda o texto base para as variáveis funcionarem -->
+                        <input type="hidden" id="contrato-texto" value="CONTRATO DE PRESTAÇÃO DE SERVIÇOS&#10;&#10;Pelo presente instrumento particular, de um lado [NOME_CLIENTE], portador(a) do CPF [CPF], doravante denominado(a) CONTRATANTE.&#10;&#10;O CONTRATANTE contrata os serviços para o evento com tema [TEMA], a ser realizado no dia [DATA] no local [LOCAL].&#10;&#10;Itens inclusos: [PECAS].&#10;Valor total: [VALOR_TOTAL]. Sinal pago: [SINAL].&#10;&#10;Por estarem de acordo, assinam o presente.">
+
                     </div>
-
-                </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" id="btn-fechar-modal-contratos" class="botao-principal" style="background: #333;">Fechar</button>
+                        <button type="submit" class="botao-principal" style="background: #8a2be2;">Trocar Informações</button>
+                    </div>
+                </form>
+                
+                <h3 style="color: white; margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; font-size: 1.1rem;">Seus Modelos Salvos:</h3>
+                <ul id="lista-contratos" style="list-style: none; padding: 0; max-height: 200px; overflow-y: auto;"></ul>
             </div>
         </div>
 
