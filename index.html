@@ -422,6 +422,48 @@
             <section class="market-sponsored"><h3>Neo Flux Booster</h3><p>Espaço reservado para anúncios patrocinados, identificados como publicidade. Destaque por R$ 10 durante 14 dias. Pagamento via Pix, sujeito à confirmação manual.</p></section>
         </section>
         <section id="tela-market-perfil" class="tela"><button id="market-perfil-voltar" type="button">← Voltar à pesquisa</button><div id="market-perfil-conteudo"></div><button id="market-denunciar" type="button">Denunciar esta vitrine</button><button id="market-solicitar-booster" type="button">🚀 Impulsionar minha vitrine (R$ 10 / 14 dias)</button></section>
+
+        <!-- ============================================== -->
+        <!-- 🔹 MODAL BOOSTER (Pix via QR existente)       -->
+        <!-- ============================================== -->
+        <div id="modal-booster-pix" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 10001; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px);">
+            <div style="background: #121212; border: 1px solid #f39c12; padding: 30px; border-radius: 12px; width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 40px rgba(243,156,18,0.25);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px; font-size: 1.3rem;">
+                        <i data-lucide="rocket" style="color: #f39c12; width: 24px;"></i> Neo Flux Booster
+                    </h2>
+                    <button type="button" id="btn-fechar-modal-booster" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
+                </div>
+
+                <p style="text-align: left; color: #ccc; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">
+                    Destaque sua vitrine no Marketplace por <strong style="color: #00d2ff;">R$ 10,00</strong> durante <strong style="color: #00d2ff;">14 dias</strong>.
+                    Pague com Pix escaneando o QR Code abaixo e depois clique em <strong>"Já fiz o pagamento"</strong>.
+                </p>
+
+                <div class="caixa-pix">
+                    <p style="margin-bottom: 12px; color: #ccc;">Pague com Pix escaneando o QR Code:</p>
+                    <img id="img-qrcode-booster" src="./qrcode.png" alt="QR Code Pix Booster">
+                    <p style="margin: 0 0 6px 0; color: #888; font-size: 0.85rem;">Valor:</p>
+                    <p class="chave-pix" style="margin: 0; font-size: 1.3rem;">R$ 10,00</p>
+                    <p style="margin: 10px 0 0 0; color: #888; font-size: 0.8rem;">Período: 14 dias após aprovação</p>
+                </div>
+
+                <div style="background: rgba(0,210,255,0.08); border: 1px solid #00d2ff; border-radius: 8px; padding: 12px; margin: 15px 0;">
+                    <p style="margin: 0; color: #ccc; font-size: 0.82rem; text-align: left; line-height: 1.5;">
+                        <i data-lucide="info" style="width: 14px; vertical-align: middle; color: #00d2ff;"></i>
+                        O destaque só será ativado <strong>após conferência manual do pagamento</strong> pelo administrador. Não é automático.
+                    </p>
+                </div>
+
+                <p id="booster-status-msg" style="font-size: 0.8rem; color: #aaa; margin: 0 0 12px 0; text-align: left;"></p>
+
+                <button type="button" id="btn-booster-ja-paguei" class="botao-principal" style="background: #f39c12; color: #000; font-weight: 700;">
+                    ✅ Já fiz o pagamento
+                </button>
+                <button type="button" id="btn-fechar-modal-booster-footer" class="botao-principal" style="background: #333; margin-top: 10px;">Cancelar</button>
+            </div>
+        </div>
+
         <section id="tela-market-admin" class="tela"><h2>Moderação e Booster</h2><button id="market-admin-voltar" type="button">Voltar ao portal</button><h3>Configuração Pix</h3><p>Insira a chave que deseja mostrar aos clientes. Não use dados bancários privados adicionais.</p><input id="market-admin-pix" placeholder="Sua chave Pix"><button id="market-admin-salvar-pix" type="button">Salvar chave Pix</button><p id="market-admin-status"></p><h3>Solicitações de Booster</h3><div id="market-admin-pedidos"></div><h3>Denúncias</h3><div id="market-admin-denuncias"></div></section>
         <!-- TELA 10: PAINEL DO SUBSITE -->
         <section id="tela-subsite" class="tela" style="max-width: 100%;">
@@ -453,7 +495,11 @@
                 <div id="card-marketplace" style="background:#121212;border:1px solid #8a2be2;border-radius:12px;padding:25px;">
                     <i data-lucide="store" style="color:#b57bff;width:28px;height:28px;margin-bottom:10px;"></i>
                     <h3 style="color:white;margin:0 0 10px;">Marketplace</h3>
-                    <button id="btn-abrir-marketplace" class="botao-principal" type="button">Monte sua Vitrine</button><button id="btn-market-explorar" type="button" class="botao-principal" style="margin-top:10px">Explorar Marketplaces</button>
+                    <button id="btn-abrir-marketplace" class="botao-principal" type="button">Monte sua Vitrine</button>
+                    <button id="btn-market-explorar" type="button" class="botao-principal" style="margin-top:10px">Explorar Marketplaces</button>
+                    <button id="btn-solicitar-booster-card" type="button" class="botao-principal" style="margin-top:10px; background:#f39c12; color:#000; font-weight:700;">
+                        🚀 Impulsionar (R$ 10 / 14 dias)
+                    </button>
                 </div>
 
                 <!-- 🔹 NOVO CARD: AGENDAR REUNIÃO -->
