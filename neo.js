@@ -1859,31 +1859,41 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
         lucide.createIcons();
     });
 };
-// NEO FLUX MARKETPLACE - ETAPA 1: navegação e prévia local
-(function iniciarMarketplace() {
-    const botaoAbrir = document.getElementById('btn-abrir-marketplace');
-    const botaoVoltar = document.getElementById('btn-voltar-marketplace');
-    const nome = document.getElementById('market-nome');
-    const descricao = document.getElementById('market-descricao');
-    const cor = document.getElementById('market-cor');
-    const whats = document.getElementById('market-whatsapp');
-    const capa = document.querySelector('.market-preview-capa');
-    function atualizarPrevia() {
-        document.getElementById('market-preview-nome').textContent = nome.value.trim() || 'Minha empresa';
-        document.getElementById('market-preview-descricao').textContent = descricao.value.trim() || 'Seu portfólio e seus produtos aparecerão aqui.';
-        capa.style.background = `linear-gradient(125deg, #00d2ff, ${cor.value})`;
-        document.getElementById('market-preview-contato').textContent = whats.value.trim() ? 'WhatsApp configurado (prévia)' : 'WhatsApp (prévia)';
-    }
-    botaoAbrir?.addEventListener('click', () => {
-        if (!subsiteAtualId) return alert('Abra primeiro um subsite.');
-        nome.value = document.getElementById('nome-do-subsite')?.textContent || '';
-        descricao.value = '';
-        whats.value = '';
-        cor.value = '#8a2be2';
-        atualizarPrevia();
-        mostrarTela('tela-marketplace');
-        if (window.lucide) window.lucide.createIcons();
-    });
-    botaoVoltar?.addEventListener('click', () => mostrarTela('tela-subsite'));
-    [nome, descricao, cor, whats].forEach(el => el?.addEventListener('input', atualizarPrevia));
+
+// NEO FLUX MARKETPLACE - VITRINES, PESQUISA E SELETOR
+(function iniciarMarketplaceCompleto(){
+ const $=id=>document.getElementById(id);
+ const campos={nome:'market-nome',descricao:'market-descricao',whatsapp:'market-whatsapp',cor:'market-cor',categoria:'market-categoria',logoUrl:'market-logo-url',capaUrl:'market-capa-url',segmento:'market-segmento'};
+ const padrao={nome:'',descricao:'',whatsapp:'',cor:'#8a2be2',categoria:'',logoUrl:'',capaUrl:'',segmento:'neo',itens:[]};
+ let itens=[],ambiente='neo',retorno='tela-subsite',perfilAberto=null;
+ const safeUrl=u=>{try{const v=new URL(u);return v.protocol==='https:'?v.href:''}catch{return ''}};
+ const msg=t=>{if($('market-status'))$('market-status').textContent=t};
+ const texto=(tag,valor)=>{const el=document.createElement(tag);el.textContent=valor;return el};
+ const escolha=(seg)=>{ambiente=seg==='fvm'?'fvm':'neo';$('market-choice-atual').textContent=ambiente==='fvm'?'FVM Marketplace':'Neo Flux Marketplace';$('market-search-title').textContent=ambiente==='fvm'?'FVM Marketplace':'Neo Flux Marketplace';document.querySelectorAll('.market-wave').forEach(e=>e.hidden=true);};
+ const formulario=()=>{const d={};Object.entries(campos).forEach(([k,id])=>d[k]=$(id).value.trim());d.whatsapp=d.whatsapp.replace(/\D/g,'');d.itens=itens.map(x=>({...x}));return d};
+ const aplicar=d=>{Object.entries(campos).forEach(([k,id])=>$(id).value=d[k]||padrao[k]);itens=Array.isArray(d.itens)?d.itens.slice(0,60):[];desenharItens();preview()};
+ function desenharItens(){const area=$('market-itens-editor');area.replaceChildren();itens.forEach((it,i)=>{const r=document.createElement('div');r.className='market-item-linha';r.append(texto('span',`${it.tipo==='portfolio'?'Portfólio':'Anúncio'}: ${it.nome}`));const b=texto('button','Excluir');b.type='button';b.onclick=()=>{itens.splice(i,1);desenharItens();preview();msg('Alterações não salvas.')};r.append(b);area.append(r)})}
+ function preview(){const d=formulario();$('market-preview-nome').textContent=d.nome||'Minha empresa';$('market-preview-descricao').textContent=d.descricao||'Seu portfólio e seus produtos aparecerão aqui.';const capa=$('.market-preview-capa');capa.style.backgroundImage=d.capaUrl&&safeUrl(d.capaUrl)?`url("${safeUrl(d.capaUrl)}")`:`linear-gradient(125deg,#00d2ff,${d.cor})`;capa.style.backgroundSize='cover';const logo=$('market-preview-logo');logo.replaceChildren();if(safeUrl(d.logoUrl)){const img=document.createElement('img');img.src=safeUrl(d.logoUrl);img.alt='Logo';logo.append(img)}else logo.append(texto('span','🏬'));$('market-preview-contato').textContent=d.whatsapp?'WhatsApp configurado (prévia)':'WhatsApp (prévia)';const a=$('market-preview-itens');a.replaceChildren();itens.forEach(it=>{const c=document.createElement('div');c.className='market-mini-item';if(safeUrl(it.foto)){const im=document.createElement('img');im.src=safeUrl(it.foto);im.alt='';c.append(im)}c.append(texto('strong',it.nome));if(it.preco!==null)c.append(texto('small',`R$ ${Number(it.preco).toFixed(2)}`));a.append(c)});if(!itens.length)a.append(texto('p','Adicione seus produtos e trabalhos.'))}
+ async function validarDono(id){if(!auth.currentUser||!id)throw Error('Entre na sua conta e abra um subsite.');const s=await getDoc(doc(db,'subsites',id));if(!s.exists()||s.data().idDono!==auth.currentUser.uid)throw Error('Subsite não pertence à sua conta.')}
+ async function abrirEditor(){const id=subsiteAtualId;if(!id)return alert('Abra primeiro um subsite.');retorno='tela-subsite';mostrarTela('tela-marketplace');aplicar({...padrao,nome:$('nome-do-subsite').textContent});msg('Carregando...');try{await validarDono(id);const s=await getDoc(doc(db,'marketplaceRascunhos',id));if(id!==subsiteAtualId)return;if(s.exists())aplicar({...padrao,...s.data()});msg(s.exists()?'Dados carregados.':'Nova vitrine.');}catch(e){msg('Erro: '+e.message)}}
+ async function salvar(publicar=false){const id=subsiteAtualId,d=formulario();if(!d.nome)return alert('Informe o nome da empresa.');if(d.whatsapp&&(d.whatsapp.length<10||d.whatsapp.length>15))return alert('Confira o WhatsApp.');if(d.itens.length>60)return alert('Limite técnico de 60 itens por vitrine nesta versão.');if([d.logoUrl,d.capaUrl,...d.itens.map(x=>x.foto)].some(u=>u&&!safeUrl(u)))return alert('Use URLs HTTPS válidas nas imagens.');const b=publicar?$('market-publicar'):$('btn-market-salvar');b.disabled=true;msg(publicar?'Publicando...':'Salvando...');try{await validarDono(id);const base={...d,idSubsite:id,idDono:auth.currentUser.uid,atualizadoEm:new Date()};await setDoc(doc(db,'marketplaceRascunhos',id),base,{merge:true});if(publicar){await setDoc(doc(db,'marketplacePublicos',id),{...base,publicado:true},{merge:false});msg('Vitrine publicada! Ela já pode aparecer na pesquisa.')}else msg('Rascunho salvo. Se a vitrine já estiver publicada, use Publicar para atualizar o conteúdo público.')}catch(e){msg('Erro: '+e.message)}finally{b.disabled=false}}
+ async function despublicar(){if(!confirm('Retirar sua vitrine da pesquisa pública?'))return;try{await validarDono(subsiteAtualId);await deleteDoc(doc(db,'marketplacePublicos',subsiteAtualId));msg('Vitrine retirada do ar. Rascunho preservado.')}catch(e){msg('Erro: '+e.message)}}
+ async function buscar(){mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';try{const s=await getDocs(query(collection(db,'marketplacePublicos'),where('segmento','==',ambiente)));const termo=$('market-search-input').value.toLocaleLowerCase('pt-BR').trim();let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));lista=lista.slice(0,80);$('market-search-status').textContent=`${lista.length} vitrine(s) encontrada(s).`;lista.forEach(x=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt='';c.append(img)}const info=document.createElement('div');info.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'),texto('small','Nova empresa · Sem avaliações'));c.append(info);const b=texto('button','Ver vitrine');b.onclick=()=>abrirPerfil(x);c.append(b);$('market-search-results').append(c)})}catch(e){$('market-search-status').textContent='Não foi possível pesquisar: '+e.message}}
+ }
+ function abrirPerfil(x){perfilAberto=x;mostrarTela('tela-market-perfil');const a=$('market-perfil-conteudo');a.replaceChildren();const capa=document.createElement('div');capa.className='market-perfil-capa';capa.style.background=safeUrl(x.capaUrl)?`url("${safeUrl(x.capaUrl)}") center/cover`:`linear-gradient(125deg,#00d2ff,${x.cor||'#8a2be2'})`;a.append(capa);a.append(texto('h1',x.nome||'Empresa'),texto('p',x.categoria||''),texto('p',x.descricao||''),texto('p','Nova empresa · Sem avaliações'));if(x.whatsapp){const w=texto('a','Falar pelo WhatsApp');w.href=`https://wa.me/${String(x.whatsapp).replace(/\D/g,'')}`;w.target='_blank';w.rel='noopener noreferrer';a.append(w)}a.append(texto('h2','Portfólio e anúncios'));const grid=document.createElement('div');grid.className='market-resultados';(x.itens||[]).forEach(it=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(it.foto)){const img=document.createElement('img');img.src=safeUrl(it.foto);img.alt='';c.append(img)}const content=document.createElement('div');content.append(texto('h3',it.nome),texto('p',it.tipo==='portfolio'?'Portfólio':'Produto / Serviço'));if(it.preco!==null&&it.preco!==undefined)content.append(texto('strong',`R$ ${Number(it.preco).toFixed(2)}`));c.append(content);grid.append(c)});a.append(grid)}
+ $('btn-abrir-marketplace')?.addEventListener('click',abrirEditor);
+ $('btn-market-explorar')?.addEventListener('click',()=>{retorno='tela-subsite';escolha('neo');buscar()});
+ $('btn-market-publico')?.addEventListener('click',()=>{retorno='tela-boas-vindas';escolha('neo');buscar()});
+ $('btn-voltar-marketplace')?.addEventListener('click',()=>mostrarTela('tela-subsite'));
+ $('market-voltar-busca')?.addEventListener('click',()=>mostrarTela(retorno));
+ $('market-perfil-voltar')?.addEventListener('click',buscar);
+ $('market-escolher')?.addEventListener('click',()=>{$('market-wave').hidden=!$('market-wave').hidden});
+ $('market-escolher-busca')?.addEventListener('click',()=>{$('market-wave-busca').hidden=!$('market-wave-busca').hidden});
+ document.querySelectorAll('[data-market-choice]').forEach(b=>b.addEventListener('click',()=>{escolha(b.dataset.marketChoice);if($('tela-market-busca').classList.contains('ativa'))buscar();else $('market-segmento').value=ambiente}));
+ $('market-search-button')?.addEventListener('click',buscar);
+ $('market-search-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')buscar()});
+ $('market-item-add')?.addEventListener('click',()=>{const nome=$('market-item-nome').value.trim(),foto=$('market-item-foto').value.trim(),preco=$('market-item-preco').value;if(!nome)return alert('Digite o título do item.');if(foto&&!safeUrl(foto))return alert('A foto precisa ter URL HTTPS.');if(itens.length>=60)return alert('Limite técnico atingido.');itens.push({tipo:$('market-item-tipo').value,nome,foto,preco:preco===''?null:Number(preco)});['market-item-nome','market-item-foto','market-item-preco'].forEach(id=>$(id).value='');desenharItens();preview();msg('Item adicionado. Salve ou publique para confirmar.')});
+ $('btn-market-salvar')?.addEventListener('click',()=>salvar(false));$('market-publicar')?.addEventListener('click',()=>salvar(true));$('market-despublicar')?.addEventListener('click',despublicar);
+ Object.values(campos).forEach(id=>$(id)?.addEventListener('input',()=>{preview();msg('Alterações não salvas.')}));
+ $('market-denunciar')?.addEventListener('click',async()=>{if(!perfilAberto)return;if(!auth.currentUser)return alert('Entre na sua conta para enviar uma denúncia.');const motivo=prompt('Descreva o motivo da denúncia (mínimo 10 caracteres):');if(!motivo)return;if(motivo.trim().length<10)return alert('Descreva melhor a denúncia.');try{await addDoc(collection(db,'marketplaceDenuncias'),{idVitrine:perfilAberto.id,motivo:motivo.trim().slice(0,1000),idAutor:auth.currentUser?.uid||null,criadoEm:new Date(),status:'pendente'});alert('Denúncia enviada para análise.')}catch(e){alert('Erro ao denunciar: '+e.message)}});
 })();
