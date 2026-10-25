@@ -171,7 +171,7 @@
 
                 <div class="hero-centro">
                     <p class="hero-subtitulo">A plataforma definitiva para organizar suas reservas, controlar estoques e encantar seus clientes. Tudo em um só lugar, do seu jeito.</p>
-                    <button id="btn-comecar" class="botao-principal botao-hero">Começar agora</button>
+                    <button id="btn-comecar" class="botao-principal botao-hero">Começar agora</button><button id="btn-market-publico" class="market-publico-link" type="button">Explorar Marketplace</button>
                     <p class="link-troca">Já tem uma conta? <a href="#" id="ir-para-login">Faça login</a></p>
                 </div>
             </div>
@@ -365,6 +365,8 @@
 
               <!-- NEO FLUX MARKETPLACE: editor inicial local, ainda sem publicação -->
         <section id="tela-marketplace" class="tela">
+            <div class="market-choice-top"><button id="market-escolher" type="button">☰ Escolha Marketplace</button><span id="market-choice-atual">Neo Flux Marketplace</span></div>
+            <div id="market-wave" class="market-wave" hidden><strong>🤖 Neo Wave</strong><p>Bem-vindo! Escolha Neo Flux ou FVM para explorar empresas. Todos os planos podem visitar os dois. Para anunciar, configure sua vitrine, escolha a categoria e publique. Os anúncios precisam respeitar as regras do marketplace.</p><div class="market-choice-buttons"><button data-market-choice="neo">Neo Flux Marketplace</button><button data-market-choice="fvm">FVM Marketplace</button></div></div>
             <div class="market-topo">
                 <div class="market-marca"><strong>Neo Flux</strong><span>Marketplace</span></div>
                 <button id="btn-voltar-marketplace" type="button" class="market-voltar">Voltar ao painel</button>
@@ -372,7 +374,11 @@
             <div class="market-conteudo">
                 <div class="market-editor">
                     <h2>Monte sua Vitrine</h2>
-                    <p>Personalize e visualize o perfil público da sua empresa. Esta versão é apenas uma prévia.</p>
+                    <p>Personalize e visualize o perfil público da sua empresa. Suas alterações podem ser salvas como rascunho privado.</p>
+                    <label for="market-segmento">Marketplace da sua vitrine</label><select id="market-segmento"><option value="neo">Neo Flux</option><option value="fvm">FVM — Faça Você Mesmo</option></select>
+                    <label for="market-categoria">Categoria</label><input id="market-categoria" maxlength="60" placeholder="Ex.: Decoração, Artesanato, Serviços">
+                    <label for="market-logo-url">URL HTTPS da logo</label><input id="market-logo-url" type="url" placeholder="https://...">
+                    <label for="market-capa-url">URL HTTPS da capa</label><input id="market-capa-url" type="url" placeholder="https://...">
                     <label for="market-nome">Nome da empresa</label>
                     <input id="market-nome" maxlength="80" placeholder="Nome da sua empresa">
                     <label for="market-descricao">Apresentação</label>
@@ -381,24 +387,41 @@
                     <input id="market-whatsapp" inputmode="numeric" maxlength="15" placeholder="5561999999999">
                     <label for="market-cor">Cor de destaque</label>
                     <input id="market-cor" type="color" value="#8a2be2">
-                    <div class="market-nota">Rascunho local de demonstração. Ainda não é salvo nem publicado no Firebase.</div>
+                    <h3>Portfólio e anúncios</h3><p>Adicione trabalhos e produtos. Use imagens hospedadas em endereço HTTPS.</p>
+                    <label for="market-item-tipo">Tipo</label><select id="market-item-tipo"><option value="produto">Produto / Serviço</option><option value="portfolio">Portfólio</option></select>
+                    <label for="market-item-nome">Título</label><input id="market-item-nome" maxlength="100" placeholder="Ex.: Decoração Minnie">
+                    <label for="market-item-preco">Preço (opcional)</label><input id="market-item-preco" type="number" min="0" step="0.01" placeholder="150.00">
+                    <label for="market-item-foto">URL HTTPS da foto</label><input id="market-item-foto" type="url" placeholder="https://...">
+                    <button type="button" id="market-item-add">Adicionar item</button><div id="market-itens-editor"></div>
+                    <div class="market-nota">O rascunho fica vinculado a este subsite e não aparece publicamente.</div>
+                    <button type="button" id="btn-market-salvar" class="botao-principal" style="margin-top:14px">Salvar rascunho</button>
+                    <p id="market-status" role="status" aria-live="polite" style="margin-top:10px;text-align:left">Ainda não publicado.</p>
+                    <button type="button" id="market-publicar">Publicar vitrine</button><button type="button" id="market-despublicar">Retirar do ar</button>
                 </div>
                 <div class="market-preview" aria-label="Prévia da vitrine">
                     <span class="market-preview-tag">PRÉVIA DO PERFIL</span>
                     <div class="market-preview-capa"></div>
                     <div class="market-preview-info">
-                        <div class="market-preview-logo"><i data-lucide="store"></i></div>
+                        <div class="market-preview-logo" id="market-preview-logo"><i data-lucide="store"></i></div>
                         <h3 id="market-preview-nome">Minha empresa</h3>
                         <p id="market-preview-descricao">Seu portfólio e seus produtos aparecerão aqui.</p>
                         <span class="market-preview-estrelas">★★★★★ <small>Nova empresa · Sem avaliações</small></span>
                         <a id="market-preview-contato" class="market-preview-contato" href="#" aria-disabled="true">WhatsApp (prévia)</a>
                         <div class="market-preview-abas"><span>Portfólio</span><span>Produtos</span><span>Avaliações</span></div>
-                        <div class="market-preview-vazio">Seus trabalhos e anúncios serão exibidos aqui após a configuração.</div>
+                        <div id="market-preview-itens" class="market-lista-itens">Seus trabalhos e anúncios aparecerão aqui.</div>
                     </div>
                 </div>
             </div>
         </section>
 
+        <section id="tela-market-busca" class="tela">
+            <div class="market-choice-top"><button id="market-escolher-busca" type="button">☰ Escolha Marketplace</button><button id="market-voltar-busca" type="button">Voltar</button></div>
+            <div id="market-wave-busca" class="market-wave" hidden><strong>🤖 Neo Wave</strong><p>Escolha o ambiente. A pesquisa mostra somente vitrines publicadas.</p><div class="market-choice-buttons"><button data-market-choice="neo">Neo Flux Marketplace</button><button data-market-choice="fvm">FVM Marketplace</button></div></div>
+            <div class="market-search-hero"><small>NEO FLUX</small><h1 id="market-search-title">Marketplace</h1><p>Encontre empresas, produtos e serviços</p><input id="market-search-input" placeholder="Pesquisar empresas, categorias ou produtos..." autocomplete="off"><button id="market-search-button" type="button">Pesquisar</button></div>
+            <div id="market-search-status" role="status"></div><div id="market-search-results" class="market-resultados"></div>
+            <section class="market-sponsored"><h3>Neo Flux Booster</h3><p>Espaço reservado para anúncios patrocinados, identificados como publicidade. Contratação e cobrança ainda não ativadas.</p></section>
+        </section>
+        <section id="tela-market-perfil" class="tela"><button id="market-perfil-voltar" type="button">← Voltar à pesquisa</button><div id="market-perfil-conteudo"></div><button id="market-denunciar" type="button">Denunciar esta vitrine</button></section>
         <!-- TELA 10: PAINEL DO SUBSITE -->
         <section id="tela-subsite" class="tela" style="max-width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -429,7 +452,7 @@
                 <div id="card-marketplace" style="background:#121212;border:1px solid #8a2be2;border-radius:12px;padding:25px;">
                     <i data-lucide="store" style="color:#b57bff;width:28px;height:28px;margin-bottom:10px;"></i>
                     <h3 style="color:white;margin:0 0 10px;">Marketplace</h3>
-                    <button id="btn-abrir-marketplace" class="botao-principal" type="button">Monte sua Vitrine</button>
+                    <button id="btn-abrir-marketplace" class="botao-principal" type="button">Monte sua Vitrine</button><button id="btn-market-explorar" type="button" class="botao-principal" style="margin-top:10px">Explorar Marketplaces</button>
                 </div>
 
                 <!-- 🔹 NOVO CARD: AGENDAR REUNIÃO -->
