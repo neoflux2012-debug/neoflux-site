@@ -1426,6 +1426,14 @@ window.aplicarTraducaoFVM = function(config) {
         
         const textoAjudaOrc = document.getElementById('texto-ajuda-orcamento');
         if (textoAjudaOrc) textoAjudaOrc.innerHTML = `<i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do(a) ${config.card3 || 'item'} escolhido(a).`;
+        const cardContratosTitulo = document.querySelector('#card-contratos h3');
+        if (cardContratosTitulo) {
+            if (config.nicho === 'servicos') {
+                cardContratosTitulo.textContent = 'Ordens de Serviço';
+            } else {
+                cardContratosTitulo.textContent = 'Contratos';
+            }
+        }
         
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
