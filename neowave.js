@@ -1,5 +1,5 @@
 // ==========================================
-// NEOWAVE.JS - Chat, Comandos e Quebra
+// NEOWAVE.JS - Chat, Comandos, Quebra e Tutorial
 // ==========================================
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, updateDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -9,7 +9,7 @@ const db = getFirestore(app);
 
 let subsiteAtualIdWave = "";
 
-// 🔹 1. LIGAR OS BOTÕES QUANDO ENTRAR NO SUBSITE
+// 🔹 1. LIGAR OS BOTÕES E INICIAR TUTORIAL
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn-acessar')) {
         subsiteAtualIdWave = e.target.getAttribute('data-id');
@@ -115,6 +115,9 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
         else if (msg.includes('kit')) {
             if (ehStart) resposta = "🔒 O módulo **Kits** está disponível a partir do plano **Pro**.";
             else resposta = "No card **Kits**, você pode cadastrar novos modelos com nome, foto e preço! 🎁";
+        }
+        else if (msg.includes('reuniao') || msg.includes('reunião')) {
+            resposta = "Para agendar uma reunião, clique no card de **Reuniões** (ícone de calendário azul). Eu te aviso 30 minutos antes quando estiver chegando a hora! ⏰";
         }
         else if (msg.includes('ola') || msg.includes('oi') || msg.includes('bom dia')) {
             resposta = "Olá! Tudo bem? 💜 Eu sou o Neo Wave. Clique no botão de Comandos `>_` para ver atalhos rápidos ou me pergunte qualquer coisa!";
