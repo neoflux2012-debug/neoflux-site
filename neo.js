@@ -1669,3 +1669,35 @@ window.resetarTraducaoFVM = function() {
     const textoAjudaOrcReset = document.getElementById('texto-ajuda-orcamento');
     if (textoAjudaOrcReset) textoAjudaOrcReset.innerHTML = `<i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do kit escolhido.`;
 };
+window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
+    // Muda o título do modal
+    document.querySelector('#modal-criar-pasta h2').innerHTML = `<i data-lucide="folder-plus" style="color: #00d2ff;"></i> Adicionar na pasta: ${nomePasta}`;
+    
+    // Muda o botão para salvar edição
+    const btnSalvar = document.getElementById('btn-salvar-pasta');
+    btnSalvar.textContent = "Adicionar à Pasta";
+    btnSalvar.setAttribute('data-pasta-id', idPasta); // Guarda o ID da pasta no botão
+    btnSalvar.setAttribute('data-subsite-id', idSubsite);
+
+    // Prepara os checkboxes
+    const containerCheck = document.getElementById('lista-checkboxes-festas');
+    containerCheck.innerHTML = "";
+    
+    // Busca as festas que JÁ estão nessa pasta para deixar marcado
+    getDoc(doc(db, "pastas", idPasta)).then(snapPasta => {
+        const festasNaPasta = snapPasta.data().festas || [];
+        
+        festasGlobais.forEach(f => {
+            const label = document.createElement('label');
+            label.style.cssText = "display: flex; align-items: center; gap: 10px; cursor: pointer; color: #ccc; padding: 5px 0; font-size: 0.9rem;";
+            
+            const checked = festasNaPasta.includes(f.id) ? 'checked' : '';
+            
+            label.innerHTML = `<input type="checkbox" value="${f.id}" class="chk-festa-pasta" ${checked} style="width: 18px; height: 18px; accent-color: #00d2ff;"> ${f.nome} - ${f.data.split('-').reverse().join('/')}`;
+            containerCheck.appendChild(label);
+        });
+        
+        document.getElementById('modal-criar-pasta').style.display = 'flex';
+        lucide.createIcons();
+    });
+};
