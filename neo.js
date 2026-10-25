@@ -1103,77 +1103,74 @@ window.gerarContrato = window.abrirGeradorContratoPDF;
 
 window.gerarPDFDoModal = async function() {
     const select = document.getElementById('contrato-modelo-select');
-    const previa = document.getElementById('previa-contrato');
-
-    if (!select?.value) {
-        alert("Selecione um modelo de contrato primeiro.");
-        return;
-    }
+    if (!select?.value) return alert('Selecione um modelo de contrato primeiro.');
 
     atualizarPreviaContrato();
-
-    const texto = previa?.textContent?.trim();
-
-    if (!texto) {
-        alert("O contrato está vazio.");
-        return;
-    }
+    const texto = document.getElementById('previa-contrato')?.textContent?.trim();
+    if (!texto) return alert('O contrato está vazio.');
 
     const modelo = contratosSalvos.find(c => c.id === select.value);
-
-    const pagina = document.createElement('div');
-    pagina.style.cssText = `
-        background: white;
-        color: black;
-        padding: 35px;
-        font-family: Arial, sans-serif;
-        font-size: 12px;
-        line-height: 1.6;
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-    `;
-
-    if (modelo?.logo) {
-        const logo = document.createElement('img');
-        logo.src = modelo.logo;
-        logo.style.cssText = 'display:block;max-width:160px;max-height:100px;object-fit:contain;margin:0 auto 25px;';
-        pagina.appendChild(logo);
-    }
-
-    const conteudo = document.createElement('div');
-    conteudo.textContent = texto;
-    pagina.appendChild(conteudo);
-  pagina.style.position = 'fixed';
-pagina.style.left = '0';
-pagina.style.top = '0';
-pagina.style.width = '794px';
-pagina.style.zIndex = '-1';
-
-document.body.appendChild(pagina);
-
+    let pdf;
     try {
-        if (typeof window.html2pdf === 'undefined') {
+        if (!window.jspdf?.jsPDF) {
             await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
                 script.onload = resolve;
-                script.onerror = reject;
+                script.onerror = () => reject(new Error('Não foi possível carregar a biblioteca jsPDF.'));
                 document.head.appendChild(script);
             });
         }
+        pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+        const largura = 210;
+        const altura = 297;
+        const margem = 20;
+        const larguraTexto = largura - 2 * margem;
+        let y = margem;
 
-        await window.html2pdf().set({
-            margin: 10,
-            filename: 'contrato-' + Date.now() + '.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'] }
-        }).from(pagina).save();
+        if (modelo?.logo) {
+            try {
+                const imagem = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = modelo.logo;
+                });
+                const proporcao = Math.min(50 / imagem.width, 25 / imagem.height);
+                const w = imagem.width * proporcao;
+                const h = imagem.height * proporcao;
+                const formato = modelo.logo.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
+                pdf.addImage(modelo.logo, formato, (largura - w) / 2, y, w, h);
+                y += h + 10;
+            } catch (erroLogo) {
+                console.warn('Logo não pôde ser inserida:', erroLogo);
+            }
+        }
 
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(15);
+        pdf.text('CONTRATO', largura / 2, y, { align: 'center' });
+        y += 13;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10.5);
+        const linhasOriginais = texto.replace(/\r\n?/g, '\n').split('\n');
+        const passo = 5.5;
+        for (const paragrafo of linhasOriginais) {
+            const linhas = paragrafo.trim() ? pdf.splitTextToSize(paragrafo, larguraTexto) : [''];
+            for (const linha of linhas) {
+                if (y > altura - margem) {
+                    pdf.addPage();
+                    y = margem;
+                }
+                if (linha) pdf.text(linha, margem, y);
+                y += passo;
+            }
+        }
+        const nomeArquivo = (modelo?.nome || 'contrato').replace(/[^a-zA-Z0-9_-]/g, '_');
+        pdf.save(nomeArquivo + '.pdf');
     } catch (erro) {
-        console.error("Erro ao gerar PDF:", erro);
-        alert("Não foi possível gerar o PDF. Verifique o console.");
+        console.error('Erro ao gerar PDF:', erro);
+        alert('Não foi possível gerar o PDF: ' + erro.message);
     }
 };
 
