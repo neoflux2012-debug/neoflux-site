@@ -790,6 +790,61 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
 // 🔹 CONTRATOS COM VARIÁVEIS E PRÉVIA EM TEMPO REAL
 // ==========================================
 
+// Importação de PDF com texto selecionável. O PDF original não é enviado ao Firestore;
+// apenas o texto extraído é colocado no editor para conferência e edição.
+document.getElementById('contrato-arquivo')?.addEventListener('change', async (evento) => {
+    const arquivo = evento.target.files?.[0];
+    const status = document.getElementById('contrato-arquivo-status');
+    const campoTexto = document.getElementById('contrato-texto');
+    if (!arquivo || !campoTexto) return;
+    if (arquivo.type !== 'application/pdf' && !arquivo.name.toLowerCase().endsWith('.pdf')) {
+        if (status) status.textContent = 'Escolha um arquivo PDF.';
+        evento.target.value = '';
+        return;
+    }
+    if (arquivo.size > 10 * 1024 * 1024) {
+        if (status) status.textContent = 'PDF muito grande. Limite: 10 MB.';
+        evento.target.value = '';
+        return;
+    }
+    if (status) status.textContent = 'Lendo PDF...';
+    try {
+        const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+        const bytes = new Uint8Array(await arquivo.arrayBuffer());
+        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+        if (pdf.numPages > 30) throw new Error('Limite de 30 páginas por modelo.');
+        const paginas = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const pagina = await pdf.getPage(i);
+            const conteudo = await pagina.getTextContent();
+            let linhas = [];
+            let linha = '';
+            let ultimoY = null;
+            for (const item of conteudo.items) {
+                if (typeof item.str !== 'string') continue;
+                const y = item.transform?.[5];
+                if (ultimoY !== null && y !== undefined && Math.abs(y - ultimoY) > 3) {
+                    linhas.push(linha.trim()); linha = '';
+                }
+                linha += (linha && !linha.endsWith(' ') ? ' ' : '') + item.str;
+                if (y !== undefined) ultimoY = y;
+                if (item.hasEOL) { linhas.push(linha.trim()); linha = ''; ultimoY = null; }
+            }
+            if (linha.trim()) linhas.push(linha.trim());
+            paginas.push(linhas.filter(Boolean).join('\n'));
+        }
+        const texto = paginas.join('\n\n').trim();
+        if (!texto) throw new Error('Este PDF não contém texto selecionável. PDFs escaneados precisam de OCR.');
+        campoTexto.value = texto;
+        campoTexto.dispatchEvent(new Event('input', { bubbles: true }));
+        if (status) status.textContent = `PDF importado (${pdf.numPages} página(s)). Revise o texto e marque os campos variáveis antes de salvar.`;
+    } catch (erro) {
+        console.error('Erro ao importar modelo PDF:', erro);
+        if (status) status.textContent = `Não foi possível ler o PDF: ${erro.message}`;
+    }
+});
+
 // Função que insere a variável no texto ao clicar no botão
 document.querySelectorAll('.btn-variavel').forEach(btn => {
     btn.addEventListener('click', (e) => {
