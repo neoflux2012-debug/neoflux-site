@@ -1,982 +1,1457 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neo Flux | Criamos sites que conectam</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css">
-    <link rel="stylesheet" href="./neowave.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- 🔹 BIBLIOTECA DE COMPRESSÃO PARA OS CONTRATOS -->
-    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
-    <style>
-        /* Estilos específicos do chat Neo Wave (flutuante) e Loading */
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { border: 4px solid #333; border-top: 4px solid #00d2ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+// ==========================================
+// 1. IMPORTAÇÕES
+// ==========================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+    getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification,
+    signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged,
+    setPersistence, browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { 
+    getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs,
+    deleteDoc, updateDoc 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        .neo-wave-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 100%); border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(138,43,226,0.5); display: flex; justify-content: center; align-items: center; z-index: 9998; }
-        .neo-wave-btn i { color: white; width: 30px; height: 30px; }
-        .neo-wave-chat { position: fixed; bottom: 90px; right: 20px; width: 300px; height: 400px; background: #121212; border: 1px solid #333; border-radius: 12px; display: none; flex-direction: column; z-index: 9999; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .neo-wave-header { background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 100%); padding: 15px; color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .neo-wave-body { flex: 1; padding: 15px; overflow-y: auto; color: #ccc; font-size: 0.85rem; display: flex; flex-direction: column; gap: 10px; }
-        .msg-bot { background: #222; padding: 10px; border-radius: 8px; border-bottom-left-radius: 0; align-self: flex-start; max-width: 80%; }
-        .msg-user { background: #00d2ff; color: #000; padding: 10px; border-radius: 8px; border-bottom-right-radius: 0; align-self: flex-end; max-width: 80%; }
-        .neo-wave-input-area { display: flex; padding: 10px; border-top: 1px solid #333; }
-        .neo-wave-input-area input { flex: 1; padding: 8px; border-radius: 20px; border: none; background: #000; color: white; outline: none; }
-        .neo-wave-input-area button { background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 100%); border: none; border-radius: 50%; width: 35px; height: 35px; margin-left: 5px; cursor: pointer; color: white; }
+// ==========================================
+// 2. CONFIGURAÇÃO
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
+  authDomain: "neo-flux-c91c8.firebaseapp.com",
+  projectId: "neo-flux-c91c8",
+  storageBucket: "neo-flux-c91c8.firebasestorage.app",
+  messagingSenderId: "6686219198",
+  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-        /* Estilo do Card do Analista */
-        .card-analista {
-            background: linear-gradient(135deg, rgba(243,156,18,0.15) 0%, rgba(230,126,34,0.10) 100%), #121212 !important;
-            border: 1px solid #f39c12 !important;
-            position: relative;
-            overflow: hidden;
-            border-radius: 12px;
-            padding: 25px;
-            transition: 0.3s;
-            display: none;
-        }
-        .card-analista:hover {
-            border-color: #ffb347 !important;
-            box-shadow: 0 0 25px rgba(243,156,18,0.4);
-            transform: translateY(-3px);
-        }
-        .card-analista h3 { color: #f39c12 !important; }
-        .card-analista .btn-analista {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-            position: relative;
-            z-index: 1;
-        }
-        .card-analista .btn-analista:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(243,156,18,0.4); }
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.error("Erro ao configurar persistência do login:", error);
+});
+
+let subsiteAtualId = "";
+let planoAtual = "";
+let festasGlobais = [];
+let kitsDoSubsite = []; 
+
+window.neoflux_planoFVM = null;
+
+// ==========================================
+// 3. REGRAS E TEXTOS
+// ==========================================
+const termosPlanos = {
+    start: `<h3>Plano Start</h3><p>Ideal para começar. Inclui 1 subsite, 1 login por subsite e armazenamento local.</p>`,
+    pro: `<h3>Plano Pro</h3><p>Para quem quer crescer. Inclui 1 subsite, até 2 logins, armazenamento em nuvem e agendamento de reuniões.</p>`,
+    elite: `<h3>Plano Elite</h3><p>A experiência completa. Múltiplos subsites, múltiplos logins, nuvem completa e reuniões ilimitadas.</p>`,
+    elite_premium: `<h3>Plano Elite Premium</h3><p>Todas as ferramentas do Elite + Gerador de Contratos exclusivo.</p>`,
+    fvm_start: `<h3>Plano FVM Start</h3><p><strong>Faça Você Mesmo</strong> — versão de entrada. Mesmos recursos do Start (com limite de Kits).</p>`,
+    fvm_pro: `<h3>Plano FVM Pro</h3><p><strong>Faça Você Mesmo</strong> — intermediário. Mesmos recursos do Pro.</p>`,
+    fvm_elite: `<h3>Plano FVM Elite</h3><p><strong>Faça Você Mesmo</strong> — completo. Mesmos recursos do Elite.</p>`,
+    fvm_elite_premium: `<h3>Plano FVM Elite Premium</h3><p><strong>Faça Você Mesmo</strong> — avançado. Tudo do Elite, sem contratos.</p>`
+};
+
+const limitesPlanosBase = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
+const recursosPlanosBase = {
+    start:         { kits: false, relatorios: false, assistente: true,  valores: false, contratos: false, sugestaoMensagem: false, analista: false },
+    pro:           { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: false },
+    elite:         { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: true  },
+    elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  }
+};
+
+function getRecursos(plano) {
+    if (plano.startsWith('fvm_')) {
+        const planoBase = plano.replace('fvm_', '');
         
-        /* Animação para o card minimizar */
-        .card-festa.minimizado .card-conteudo { display: none !important; }
-
-        /* 🔹 FVM: Card do plano principal */
-        #card-fvm {
-            border-color: #00d2ff !important;
-            background: linear-gradient(135deg, rgba(0,210,255,0.12) 0%, rgba(138,43,226,0.12) 100%), #121212 !important;
-            position: relative;
+        if (planoBase === 'start') {
+            return { kits: true, maxKits: 3, relatorios: false, assistente: true, valores: false, contratos: false, sugestaoMensagem: false, analista: false };
         }
-        #card-fvm:hover {
-            border-color: #8a2be2 !important;
-            box-shadow: 0 10px 40px rgba(138,43,226,0.3), 0 0 20px rgba(0,210,255,0.2) !important;
-        }
-        #card-fvm h3 { color: #00d2ff !important; }
-        #card-fvm .subtitulo-fvm {
-            font-size: 0.8rem;
-            color: #b57bff;
-            margin-bottom: 8px;
-            font-weight: 500;
-            letter-spacing: 0.03em;
-        }
-        .btn-abrir-fvm {
-            width: 100%;
-            padding: 11px 20px;
-            border: none;
-            border-radius: 6px;
-            background: linear-gradient(135deg, #00d2ff, #8a2be2) !important;
-            color: white !important;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.25s;
-        }
-        .btn-abrir-fvm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(138,43,226,0.45);
-        }
-
-        /* 🔹 FVM: Modal dos subplanos */
-        #modal-fvm { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
-        #modal-fvm .modal-fvm-box { background: #121212; border: 1px solid #00d2ff; padding: 30px; border-radius: 12px; width: 100%; max-width: 900px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 40px rgba(0,210,255,0.25); }
-        .grid-fvm { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 15px; }
-        .card-fvm-sub { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 22px 16px; text-align: center; transition: 0.25s; }
-        .card-fvm-sub:hover { border-color: #00d2ff; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,210,255,0.15); }
-        .card-fvm-sub h3 { color: #00d2ff; font-size: 1.1rem; margin-bottom: 10px; }
-        .card-fvm-sub .preco { font-size: 1.35rem; font-weight: 700; color: white; margin-bottom: 16px; }
-        .card-fvm-sub button { width: 100%; padding: 10px; border: 1px solid #2a2a2a; border-radius: 6px; background: transparent; color: white; font-weight: 600; cursor: pointer; transition: 0.25s; font-size: 0.88rem; }
-        .card-fvm-sub button:hover { background: linear-gradient(135deg, #00d2ff, #8a2be2); border-color: transparent; }
-
-        /* 🔹 FVM: Badge visual no card do plano dentro do modal */
-        .badge-fvm { display: inline-block; font-size: 0.65rem; background: rgba(138,43,226,0.25); color: #b57bff; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.05em; }
-
-        /* 🔹 PIX: box do QR code no pagamento */
-        .caixa-pix { background: #0a0a0a; border: 1px dashed #00d2ff; padding: 20px; border-radius: 10px; text-align: center; margin: 15px 0; }
-        .caixa-pix img { max-width: 240px; width: 100%; border-radius: 8px; background: white; padding: 10px; margin-bottom: 12px; }
-        .caixa-pix .chave-pix { color: #00d2ff; font-weight: bold; font-size: 1.05rem; }
-
-        /* 🔹 FVM: Modal de Nicho */
-        #modal-nicho-fvm { display: none; }
-        #modal-nicho-fvm .card-nicho {
-            background: #0a0a0a;
-            border: 1px solid #2a2a2a;
-            border-radius: 12px;
-            padding: 20px 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.25s ease;
-        }
-        #modal-nicho-fvm .card-nicho:hover {
-            border-color: #00d2ff;
-            background: #121212;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,210,255,0.1);
-        }
-    </style>
-</head>
-<body>
-
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <p style="color: white; margin-top: 15px;">Carregando dados...</p>
-    </div>
-
-    <header style="flex-direction: column; align-items: center;">
-        <img src="./logo.png" alt="Logo Neo Flux" class="logo">
-        <p style="margin-top: 10px; font-size: 0.9rem; color: #888; letter-spacing: 0.1em; text-transform: uppercase;">Gestão que flui com você</p>
-    </header>
-
-    <main>
-        <!-- TELA 1: BOAS-VINDAS -->
-        <section id="tela-boas-vindas" class="tela ativa">
-            <div class="hero-container">
-                <div class="hero-topo">
-                    <div class="hero-titulo-box">
-                        <div class="badge-novo">✨ Novo: Conheça o plano FVM</div>
-                        <h1 class="hero-titulo">Gestão que <span class="texto-gradiente">flui</span> com você.</h1>
-                        <p class="hero-subtexto-lado">A ferramenta definitiva para organizar suas reservas, controlar seu estoque e encantar seus clientes.</p>
-                    </div>
-
-                    <div class="hero-info-box">
-                        <div class="info-header">
-                            <i data-lucide="info" class="icone-info"></i>
-                            <h3>O que é a Neo Flux?</h3>
-                        </div>
-                        <p>A Neo Flux é a plataforma comercial de gestão que transforma a maneira como você administra seus negócios. Do controle de festas e locações até os mínimos detalhes, nosso sistema foi desenhado para otimizar seu tempo e multiplicar seus resultados.</p>
-                    </div>
-                </div>
-
-                <div class="hero-centro">
-                    <p class="hero-subtitulo">A plataforma definitiva para organizar suas reservas, controlar estoques e encantar seus clientes. Tudo em um só lugar, do seu jeito.</p>
-                    <button id="btn-comecar" class="botao-principal botao-hero">Começar agora</button>
-                    <p class="link-troca">Já tem uma conta? <a href="#" id="ir-para-login">Faça login</a></p>
-                </div>
-            </div>
-        </section>
-
-        <!-- TELA 2: ESCOLHA DE PLANOS -->
-        <section id="tela-planos" class="tela">
-            <h2>Escolha o plano ideal para você</h2>
-            <div class="container-planos">
-                <div class="card-plano" data-plano="start"><h3>Start</h3><p class="preco">R$ 49,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
-                <div class="card-plano" data-plano="pro"><h3>Pro</h3><p class="preco">R$ 79,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
-                <div class="card-plano" data-plano="elite"><h3>Elite</h3><p class="preco">R$ 99,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
-                <div class="card-plano" data-plano="elite_premium"><h3>Elite Premium</h3><p class="preco">R$ 149,99</p><button class="btn-selecionar-plano">Selecionar</button></div>
-
-                <div class="card-plano" id="card-fvm" data-plano="fvm">
-                    <h3>FVM</h3>
-                    <p class="subtitulo-fvm">Faça Você Mesmo</p>
-                    <p class="preco">R$ 49,99+</p>
-                    <button class="btn-abrir-fvm" id="btn-abrir-fvm">Ver Planos FVM</button>
-                </div>
-            </div>
-
-            <div style="text-align: center; margin-top: 25px;">
-                <button id="btn-comparar-planos">
-                    <i data-lucide="bar-chart-3" style="width: 18px;"></i>
-                    Comparar Assinaturas
-                </button>
-            </div>
-
-            <p class="link-troca" style="margin-top: 20px;"><a href="#" id="voltar-inicio">Voltar</a></p>
-        </section>
-                <!-- TELA 3: TERMOS -->
-        <section id="tela-termos" class="tela">
-            <h2 id="titulo-termos">Termos e Condições</h2>
-
-            <div class="caixa-termos" style="max-height: none;">
-                <div id="texto-termos" style="margin-bottom: 20px;"></div>
-
-                <div style="background: rgba(138, 43, 226, 0.1); border: 1px solid #8a2be2; padding: 15px; border-radius: 8px;">
-                    <p style="text-align: left; margin-bottom: 10px; color: #ffffff;">
-                        <i data-lucide="external-link" style="width: 16px; vertical-align: middle; color: #00d2ff;"></i>
-                        Acesse o documento completo dos termos clicando no link abaixo:
-                    </p>
-                    <a href="https://forms.gle/NVJLjChvsJdEyasD6" target="_blank" style="display: block; text-align: left; color: #00d2ff; font-weight: bold; text-decoration: underline; margin-bottom: 15px;">
-                        Ler Termos de Contratação (Google Forms)
-                    </a>
-                    <p style="text-align: left; margin: 0; font-size: 0.85rem; color: #ccc;">
-                        <strong>Ao aceitar os termos deste site, você também declara estar ciente e de acordo com os termos preenchidos no formulário acima.</strong>
-                    </p>
-                </div>
-            </div>
-
-            <form id="form-termos">
-                <label for="nome-cliente">Nome Completo:</label>
-                <input type="text" id="nome-cliente" required>
-
-                <label for="doc-cliente">CPF ou CNPJ:</label>
-                <input type="text" id="doc-cliente" required>
-
-                <div class="checkbox-container" style="margin-top: 10px;">
-                    <input type="checkbox" id="aceite-termos" required>
-                    <label for="aceite-termos" style="font-weight: bold; color: #ffffff;">
-                        Li e aceito os Termos e Condições do site e do formulário.
-                    </label>
-                </div>
-
-                <button type="submit" class="botao-principal">Aceitar e Criar Conta</button>
-            </form>
-        </section>
-
-        <!-- TELA 4: CRIAÇÃO DE CONTA -->
-        <section id="tela-criar-conta" class="tela">
-            <h2>Crie sua conta</h2>
-            <p>Plano selecionado: <strong id="resumo-plano-conta">...</strong></p>
-            <form id="form-cadastro-final">
-                <label for="email-cadastro">E-mail:</label><input type="email" id="email-cadastro" required>
-                <label for="senha-cadastro">Senha:</label><input type="password" id="senha-cadastro" minlength="6" required>
-                <button type="submit" class="botao-principal">Criar minha conta</button>
-            </form>
-        </section>
-
-        <!-- TELA 5: VERIFICAÇÃO -->
-        <section id="tela-verificacao" class="tela">
-            <h2>Verifique seu e-mail</h2>
-            <p>Enviamos um link de confirmação.</p>
-            <button id="btn-ja-verifiquei" class="botao-principal">Já verifiquei, entrar</button>
-        </section>
-
-        <!-- TELA 6: LOGIN -->
-        <section id="tela-login" class="tela">
-            <h2>Bem-vindo de volta</h2>
-            <form id="form-login">
-                <label for="email-login">E-mail:</label><input type="email" id="email-login" required>
-                <label for="senha-login">Senha:</label><input type="password" id="senha-login" required>
-                <button type="submit" class="botao-principal">Entrar</button>
-            </form>
-            <p class="link-troca"><a href="#" id="ir-para-recuperar">Esqueci a senha</a> | <a href="#" id="voltar-para-cadastro">Criar conta</a></p>
-        </section>
-
-        <!-- TELA 7: RECUPERAÇÃO -->
-        <section id="tela-recuperar" class="tela">
-            <h2>Recuperar Senha</h2>
-            <form id="form-recuperar">
-                <label for="email-recuperar">E-mail:</label><input type="email" id="email-recuperar" required>
-                <button type="submit" class="botao-principal">Enviar link</button>
-            </form>
-        </section>
-
-        <!-- TELA 8: PAGAMENTO -->
-        <section id="tela-pagamento" class="tela">
-            <h2>Ative seu plano</h2>
-            <p>Sua conta foi criada, <strong id="resumo-nome-pagamento">...</strong>!</p>
-            <p style="text-align: left; color: #ccc;">Plano escolhido: <strong id="resumo-plano-pagamento" style="color: #00d2ff;">...</strong></p>
-
-            <div class="caixa-pix">
-                <p style="margin-bottom: 12px; color: #ccc;">Pague com Pix escaneando o QR Code abaixo:</p>
-                <img id="img-qrcode" src="./qrcode.png" alt="QR Code Pix">
-                <p style="margin: 0 0 6px 0; color: #888; font-size: 0.85rem;">Chave Pix (Telefone):</p>
-                <p class="chave-pix" style="margin: 0;">(61) 99161-4509</p>
-            </div>
-
-            <p style="font-size: 0.85rem; color: #888; margin: 10px 0 20px 0;">
-                Após o pagamento, envie o comprovante pelo WhatsApp <strong>(61) 99161-4509</strong> para liberação do acesso.
-            </p>
-
-            <button id="btn-ir-para-login" class="botao-principal">Já paguei, ir para o login</button>
-        </section>
-
-        <!-- TELA EXTRA: ESCOLHA DO ADMIN -->
-        <section id="tela-escolha-admin" class="tela">
-            <h2>Portal do Administrador</h2>
-            <p>Bem-vindo, Master. Como deseja acessar o sistema hoje?</p>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
-                <div class="card-plano" style="cursor: pointer; border-color: #f39c12;" onclick="window.location.href='./admin.html'">
-                    <i data-lucide="shield-check" style="color: #f39c12; width: 40px; height: 40px; margin-bottom: 15px;"></i>
-                    <h3 style="color: #f39c12;">Painel Administrativo</h3>
-                    <p style="font-size: 0.85rem; margin-bottom: 0;">Gerenciar clientes, cobranças, autopilot e relatórios gerais.</p>
-                </div>
-
-                <div class="card-plano" style="cursor: pointer; border-color: #00d2ff;" onclick="window.entrarComoClienteAdmin()">
-                    <i data-lucide="user" style="color: #00d2ff; width: 40px; height: 40px; margin-bottom: 15px;"></i>
-                    <h3 style="color: #00d2ff;">Visão do Cliente</h3>
-                    <p style="font-size: 0.85rem; margin-bottom: 0;">Simular a experiência de um cliente normal (suporte).</p>
-                </div>
-            </div>
-            
-            <div style="margin-top: 25px; padding: 20px; background: rgba(138,43,226,0.1); border: 1px dashed #8a2be2; border-radius: 12px;">
-                <h4 style="color: #b57bff; margin-bottom: 10px;">🧪 Área de Testes</h4>
-                <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">Altere o plano da sua conta Master rapidamente para testar as funcionalidades do sistema.</p>
-                <button class="botao-principal" style="background: #8a2be2; width: auto; padding: 10px 25px;" onclick="window.adminTestarPlano()">🎭 Testar Planos</button>
-            </div>
-
-            <button id="btn-logout-admin-escolha" class="botao-principal" style="background: #333; margin-top: 30px;">Sair da Conta</button>
-        </section>
-
-        <!-- TELA 9: ÁREA DO CLIENTE -->
-        <section id="tela-cliente" class="tela">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <h2 style="margin: 0;">Área do Cliente</h2>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="btn-voltar-escolha-admin" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #f39c12; display: none;">🔙 Voltar ao Portal Admin</button>
-                    
-                    <button id="btn-testar-plano" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #8a2be2; display: none;" onclick="window.adminTestarPlano()">🎭 Testar Planos</button>
-
-                    <button id="btn-pedir-upgrade" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem;">Fazer Upgrade</button>
-                </div>
-            </div>
-            <div class="caixa-termos">
-                <p><strong>Nome:</strong> <span id="cliente-nome">...</span></p>
-                <p><strong>Plano:</strong> <span id="cliente-plano">...</span></p>
-                <p><strong>Status:</strong> <span id="cliente-status">...</span></p>
-            </div>
-            <div class="caixa-termos">
-                <h3>Meus Subsites</h3>
-                <div id="area-criar-subsite" style="display: flex; gap: 10px;">
-                    <input type="text" id="titulo-subsite" placeholder="Título do subsite" style="flex: 1; padding: 10px;">
-                    <button id="btn-criar-subsite" class="botao-principal" style="width: auto;">Criar</button>
-                </div>
-                <ul id="lista-subsites" style="margin-top: 20px; list-style: none; padding: 0;"></ul>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                <button id="btn-enviar-feedback" class="botao-principal" style="width: auto; background: transparent; border: 1px solid var(--cor-azul); color: var(--cor-azul); display: inline-flex; align-items: center; gap: 8px;">
-                    <i data-lucide="message-square-plus" style="width: 18px;"></i> Enviar Feedback / Ideia
-                </button>
-            </div>
-
-            <button id="btn-logout" class="botao-principal" style="background: #333;">Sair da Conta</button>
-        </section>
-
-              <!-- TELA 10: PAINEL DO SUBSITE -->
-        <section id="tela-subsite" class="tela" style="max-width: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1 id="nome-do-subsite" style="color: #00d2ff; margin: 0;">...</h1>
-                <button id="btn-voltar-cliente" class="botao-principal" style="width: auto; background: #333;">Voltar</button>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
-                <div style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="party-popper" style="color: #f39c12; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;" id="titulo-card-1">Festas</h3>
-                    <button id="btn-agendar-festa" class="botao-principal" style="width: 100%; background: #f39c12;">Agendar Festa</button>
-                </div>
-
-                <div style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="package" style="color: #00d2ff; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;" id="titulo-card-2">Catálogo</h3>
-                    <button id="btn-abrir-catalogo" class="botao-principal" style="width: 100%; background: #00d2ff; color: #000;">Gerenciar</button>
-                </div>
-
-                <div id="card-kits" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="gift" style="color: #9b59b6; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;" id="titulo-card-3">Kits</h3>
-                    <button id="btn-abrir-kits" class="botao-principal" style="width: 100%;">Gerar Kit</button>
-                </div>
-
-                <!-- 🔹 NOVO CARD: AGENDAR REUNIÃO -->
-                <div id="card-reuniao" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="calendar" style="color: #3498db; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;" id="titulo-card-reuniao">Reuniões</h3>
-                    <button id="btn-abrir-reuniao" class="botao-principal" style="width: 100%; background: #3498db;">Agendar</button>
-                </div>
-
-                <div id="card-orcamento-inteligente" class="card-orcamento-inteligente" style="border-radius: 12px; padding: 25px; position: relative;">
-                    <i data-lucide="sparkles" style="color: #b57bff; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="margin: 0 0 6px 0;" id="titulo-card-4">Orçamento Inteligente</h3>
-                    <p style="color: #c9a8ff; font-size: 0.75rem; margin: 0 0 12px 0; text-align: left;">
-                        <i data-lucide="bot" style="width: 13px; vertical-align: middle;"></i> com Neo Wave
-                    </p>
-                    <button id="btn-abrir-orcamento-inteligente" class="btn-orcamento">Gerar Orçamento</button>
-                    
-                    <button id="btn-abrir-historico-orcamento" style="width: 100%; margin-top: 8px; padding: 8px; background: rgba(138,43,226,0.15); color: #c9a8ff; border: 1px solid var(--cor-roxo); border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.3s;" onmouseover="this.style.background='rgba(138,43,226,0.3)'" onmouseout="this.style.background='rgba(138,43,226,0.15)'">
-                        <i data-lucide="history" style="width: 14px; vertical-align: middle;"></i> Ver Histórico (30 dias)
-                    </button>
-                </div>
-
-                <div id="card-analista" class="card-analista">
-                    <i data-lucide="bar-chart-3" style="color: #f39c12; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="margin: 0 0 6px 0;">Neo Wave Analista</h3>
-                    <p style="color: #ffd699; font-size: 0.75rem; margin: 0 0 12px 0; text-align: left;">
-                        <i data-lucide="trending-up" style="width: 13px; vertical-align: middle;"></i> Exclusivo Elite+
-                    </p>
-                    <button id="btn-abrir-analista" class="btn-analista">Ver Análises</button>
-                </div>
-
-                <div id="card-contratos" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="file-text" style="color: #e67e22; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;">Contratos</h3>
-                    <button id="btn-abrir-contratos" class="botao-principal" style="width: 100%; background: #e67e22;">Gerenciar</button>
-                </div>
-
-                <div id="card-relatorios" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="bar-chart-2" style="color: #27ae60; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;">Relatórios</h3>
-                    <button id="btn-relatorios" class="botao-principal" style="width: 100%;">Ver Planilha</button>
-                </div>
-            </div>
-
-            <div style="margin: 40px 0 20px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <h3 style="color: white; margin: 0;" id="titulo-lista-festas">Próximas Festas</h3>
-                <input type="text" id="pesquisa-festas" placeholder="🔍 Pesquisar por nome..." style="padding: 10px; border-radius: 8px; border: 1px solid #333; background: #000; color: white; width: 300px;">
-            </div>
-
-            <div id="lista-pastas-container" style="margin-bottom: 20px;"></div>
-            <div id="lista-festas-criadas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;"></div>
-
-            <div style="margin-top: 30px; text-align: center;">
-                <button id="btn-abrir-modal-pasta" style="background: rgba(138,43,226,0.2); color: #c9a8ff; border: 1px solid var(--cor-roxo); padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;">
-                    <i data-lucide="folder-plus" style="width: 18px;"></i>
-                    Criar Pasta / Agrupar
-                </button>
-            </div>
-
-            <!-- MODAL CRIAR PASTA -->
-            <div id="modal-criar-pasta" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-                <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
-                    <h2 style="color: white; margin-top: 0; display: flex; align-items: center; gap: 10px;">
-                        <i data-lucide="folder" style="color: #8a2be2;"></i> Criar Nova Pasta
-                    </h2>
-                    <label style="color: #ccc; font-size: 0.9rem; display: block; margin-top: 15px;">Nome da Pasta:</label>
-                    <input type="text" id="nome-nova-pasta" placeholder="Ex: Festas de Novembro" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px;">
-
-                    <label style="color: #ccc; font-size: 0.9rem; display: block;">Selecione as festas para agrupar:</label>
-                    <div id="lista-checkboxes-festas" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; background: #0a0a0a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;"></div>
-
-                    <div style="display: flex; gap: 10px;">
-                        <button type="button" id="btn-cancelar-pasta" class="botao-principal" style="background: #333;">Cancelar</button>
-                        <button type="button" id="btn-salvar-pasta" class="botao-principal" style="background: #8a2be2;">Criar Pasta</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- MODAL AGENDAR FESTA -->
-        <div id="modal-agendar-festa" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <h2 style="color: white; margin-top: 0;" id="titulo-modal-festa">Agendar Nova Festa</h2>
-                <form id="form-agendar-festa">
-                    <input type="hidden" id="festa-id-edicao">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div><label style="color: #ccc;" id="label-festa-nome">Nome:</label><input type="text" id="festa-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                        <div id="div-festa-cpf"><label style="color: #ccc;" id="label-festa-cpf">CPF:</label><input type="text" id="festa-cpf" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                        <div><label style="color: #ccc;" id="label-festa-telefone">Telefone:</label><input type="tel" id="festa-telefone" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                        <div><label style="color: #ccc;" id="label-festa-data">Data:</label><input type="date" id="festa-data" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                    </div>
-                    <label style="color: #ccc; margin-top: 10px; display: block;" id="label-festa-tema">Tema (ou escolha um Kit salvo):</label>
-                    <input type="text" id="festa-tema" required list="lista-kits-salvos" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    <datalist id="lista-kits-salvos"></datalist>
-
-                    <label style="color: #ccc; margin-top: 10px; display: block;" id="label-festa-local">Localização:</label>
-                    <input type="text" id="festa-local" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;">
-
-                    <label style="color: #ccc; margin-top: 10px; display: block;" id="label-festa-pecas">Peças (Selecione no Catálogo):</label>
-                    <div style="display: flex; gap: 10px;">
-                        <select id="festa-pecas" multiple style="flex: 1; padding: 10px; background: #000; border: 1px solid #8a2be2; color: white; height: 120px; border-radius: 8px;"></select>
-                    </div>
-
-                    <div id="area-financeira-festa" style="display: none; background: #0a0a0a; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px dashed #555;">
-                        <h4 style="color: white; margin: 0 0 10px 0;">Calculadora de Frete</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                            <div><label style="color: #aaa; font-size: 0.8rem;">KM (Só Ida):</label><input type="number" id="frete-km" placeholder="Ex: 20" style="width: 100%; padding: 8px; background: #121212; border: 1px solid #333; color: white;"></div>
-                            <div><label style="color: #aaa; font-size: 0.8rem;">Preço Combustível (R$):</label><input type="number" id="frete-preco" placeholder="Ex: 5.80" value="5.80" step="0.01" style="width: 100%; padding: 8px; background: #121212; border: 1px solid #333; color: white;"></div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div><label style="color: #aaa; font-size: 0.8rem;">Carro faz (KM/L):</label><input type="number" id="frete-consumo" placeholder="Ex: 10" value="10" style="width: 100%; padding: 8px; background: #121212; border: 1px solid #333; color: white;"></div>
-                            <div><label style="color: #aaa; font-size: 0.8rem;">Vai e Volta?</label><select id="frete-ida-volta" style="width: 100%; padding: 8px; background: #121212; border: 1px solid #333; color: white;"><option value="2">Sim (Ida e Volta)</option><option value="1">Não (Só Ida)</option></select></div>
-                        </div>
-                        <p style="font-size: 0.9rem; color: #888; margin: 15px 0 0 0; text-align: right;">Total Frete: <strong id="total-frete" style="color: #00c853; font-size: 1.2rem;">R$ 0,00</strong></p>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; border-top: 1px solid #333; padding-top: 15px;">
-                            <div><label style="color: #ccc;">Valor da Festa (R$):</label><input type="number" id="festa-total" step="0.01" value="0.00" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                            <div><label style="color: #ccc;">Sinal Pago (R$):</label><input type="number" id="festa-sinal" step="0.01" value="0.00" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                        </div>
-                    </div>
-
-                    <label style="color: #ccc; margin-top: 15px; display: block;">Observações:</label>
-                    <textarea id="festa-obs" rows="2" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></textarea>
-
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button type="button" id="btn-fechar-modal-festa" class="botao-principal" style="background: #333;">Cancelar</button>
-                        <button type="submit" class="botao-principal" id="btn-salvar-festa">Agendar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-                <!-- MODAL CATÁLOGO -->
-        <div id="modal-catalogo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <h2 style="color: white; margin-top: 0;">Meu Catálogo</h2>
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                    <input type="text" id="cat-nome" placeholder="Nome do item" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    <input type="text" id="cat-categoria" placeholder="Categoria" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    
-                    <div style="display: flex; gap: 10px;">
-                        <input type="number" id="cat-preco-locacao" placeholder="Preço Locação (R$)" step="0.01" style="flex: 1; padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                        <input type="number" id="cat-preco-reposicao" placeholder="Preço Reposição (R$)" step="0.01" style="flex: 1; padding: 10px; background: #000; border: 1px solid #333; color: white;">
-                    </div>
-
-                    <label style="color: #ccc; font-size: 0.85rem;">Foto do Item (Opcional):</label>
-                    <input type="file" id="cat-imagem" accept="image/*" style="padding: 10px; background: #000; border: 1px solid #333; color: white; font-size: 0.85rem;">
-                    
-                    <button id="btn-add-item" class="botao-principal" style="width: auto; margin-top: 10px;">Adicionar ao Catálogo</button>
-                </div>
-                <ul id="lista-catalogo" style="list-style: none; padding: 0; max-height: 250px; overflow-y: auto;"></ul>
-                <button type="button" id="btn-fechar-modal-catalogo" class="botao-principal" style="background: #333; margin-top: 20px;">Fechar</button>
-            </div>
-        </div>
-        <!-- MODAL KITS -->
-        <div id="modal-kits" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px;">
-                <h2 style="color: white; margin-top: 0;" id="titulo-modal-kit">Gerador de Kit</h2>
-                <form id="form-kit">
-                    <label style="color: #ccc;" id="label-kit-nome">Nome do Kit:</label>
-                    <input type="text" id="kit-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px;">
-                    <label style="color: #ccc;" id="label-kit-modelo">Modelo do Kit:</label>
-                    <input type="text" id="kit-modelo" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px;">
-                    <label style="color: #ccc;">Preço do Modelo do Kit (R$):</label>
-                    <input type="number" id="kit-preco" step="0.01" min="0" placeholder="Ex: 150.00" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px;">
-                    <p style="font-size: 0.78rem; color: #888; margin: 0 0 12px 0; text-align: left;">Esse valor será usado automaticamente pelo <strong>Orçamento Inteligente</strong>.</p>
-                    <label style="color: #ccc;">Foto do Kit:</label>
-                    <input type="file" id="kit-imagem" accept="image/*" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 20px;">
-                    <div style="display: flex; gap: 10px;">
-                        <button type="button" id="btn-fechar-modal-kits" class="botao-principal" style="background: #333;">Cancelar</button>
-                        <button type="submit" class="botao-principal">Salvar Kit</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- MODAL CONTRATOS -->
-        <div id="modal-contratos" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <h2 style="color: white; margin-top: 0;">Modelos de Contrato</h2>
-                <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Cadastre um nome, a logo da sua empresa (para o cabeçalho) e faça o upload do arquivo em PDF.</p>
-                <form id="form-contrato">
-                    <label style="color: #ccc;">Nome do Modelo (ex: Contrato de Aluguel):</label>
-                    <input type="text" id="contrato-nome" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; margin-bottom: 10px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                        <div><label style="color: #ccc;">Logo da Empresa:</label><input type="file" id="contrato-logo" accept="image/*" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                        <div><label style="color: #ccc;">Arquivo do Contrato (.pdf):</label><input type="file" id="contrato-arquivo" accept=".pdf" required style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white;"></div>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button type="button" id="btn-fechar-modal-contratos" class="botao-principal" style="background: #333;">Fechar</button>
-                        <button type="submit" class="botao-principal" style="background: #e67e22;">Salvar Contrato</button>
-                    </div>
-                </form>
-                <h3 style="color: white; margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">Meus Contratos Salvos:</h3>
-                <ul id="lista-contratos" style="list-style: none; padding: 0; max-height: 200px; overflow-y: auto;"></ul>
-            </div>
-        </div>
-
-        <!-- MODAL RELATÓRIOS -->
-        <div id="modal-relatorios" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto;">
-                <h2 style="color: white; margin-top: 0;">Relatório Mensal de Vendas</h2>
-                <table style="width: 100%; border-collapse: collapse; color: #ccc; text-align: left;">
-                    <thead>
-                        <tr style="border-bottom: 1px solid #333;"><th style="padding: 10px;">Cliente</th><th style="padding: 10px;">Tema</th><th style="padding: 10px;">Data</th></tr>
-                    </thead>
-                    <tbody id="tabela-relatorio"></tbody>
-                </table>
-                <div style="margin-top: 20px; text-align: right; color: #00c853; font-size: 1.2rem; font-weight: bold;">Total do Mês: <span id="total-mes">R$ 0,00</span></div>
-                <button type="button" id="btn-fechar-relatorios" class="botao-principal" style="background: #333; margin-top: 20px;">Fechar</button>
-            </div>
-        </div>
-
-        <!-- MODAL ORÇAMENTO INTELIGENTE -->
-        <div id="modal-orcamento-inteligente" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 720px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 30px rgba(138,43,226,0.35);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;" id="titulo-modal-orcamento">
-                        <i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> Orçamento Inteligente
-                    </h2>
-                    <button id="btn-fechar-modal-orcamento" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
-                </div>
-                <p style="text-align: left; color: #a0a0a0; font-size: 0.85rem; margin-bottom: 18px;" id="texto-ajuda-orcamento">
-                    <i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do kit escolhido.
-                </p>
-                <label style="color: #ccc; font-size: 0.9rem;">Nome do cliente:</label>
-                <input type="text" id="orc-cliente" placeholder="Ex: Maria Silva" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 14px;">
-                <label style="color: #ccc; font-size: 0.9rem;" id="label-orc-kit">Selecione um kit cadastrado:</label>
-                <select id="orc-kit" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 14px;"><option value="">Carregando kits...</option></select>
-                <div id="orc-preview-kit" style="display: none; background: #0a0a0a; border: 1px dashed #444; border-radius: 10px; padding: 16px; margin-bottom: 14px;">
-                    <p style="margin: 0 0 6px 0; color: #ccc; font-size: 0.85rem;"><strong>Kit:</strong> <span id="orc-preview-nome">—</span></p>
-                    <p style="margin: 0 0 6px 0; color: #ccc; font-size: 0.85rem;"><strong>Itens/Modelo:</strong> <span id="orc-preview-modelo">—</span></p>
-                    <p style="margin: 0; color: #ccc; font-size: 0.85rem;"><strong>Preço do kit:</strong> <span id="orc-preview-preco" style="color: #00c853; font-weight: bold;">—</span></p>
-                </div>
-                <label style="color: #ccc; font-size: 0.9rem;">Valor do orçamento (R$):</label>
-                <input type="number" id="orc-valor" step="0.01" min="0" placeholder="Ex: 150.00" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 6px;">
-                <p id="orc-aviso-preco" style="display: none; color: #ff9800; font-size: 0.78rem; margin: 0 0 14px 0; text-align: left;">⚠️ Este kit não tem preço cadastrado. Informe o valor acima. (Não será salvo no kit.)</p>
-                <label style="color: #ccc; font-size: 0.9rem;">Observações (opcional):</label>
-                <textarea id="orc-obs" rows="2" placeholder="Ex: incluir montagem no local" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 14px;"></textarea>
-                <div style="border-top: 1px solid #333; padding-top: 16px; margin-top: 6px;">
-                    <label style="color: #ccc; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;"><i data-lucide="bot" style="width: 16px; color: #8a2be2;"></i> <strong>Mensagem do Neo Wave</strong> <span id="orc-badge-plano" style="font-size: 0.7rem; background: rgba(138,43,226,0.2); color: #b57bff; padding: 2px 8px; border-radius: 10px; margin-left: 6px;">Pro+</span></label>
-                    <select id="orc-estilo" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin: 8px 0 14px 0;"><option value="profissional">Profissional</option><option value="carinhoso">Carinhoso</option><option value="direto">Direto</option></select>
-                    <div id="orc-bloqueio-plano" style="display: none; background: rgba(255,152,0,0.08); border: 1px solid #ff9800; border-radius: 8px; padding: 12px; margin-bottom: 14px;"><p style="margin: 0; color: #ff9800; font-size: 0.85rem; text-align: left;">🔒 A <strong>sugestão automática do Neo Wave</strong> está disponível a partir do plano <strong>Pro</strong>. Você ainda pode gerar o orçamento manualmente.</p></div>
-                    <textarea id="orc-mensagem" rows="8" readonly style="width: 100%; padding: 12px; background: #0a0a0a; border: 1px solid #333; color: #ddd; border-radius: 8px; font-family: inherit; font-size: 0.9rem;"></textarea>
-                    <p style="font-size: 0.75rem; color: #888; text-align: left; margin: 6px 0 0 0;">Você poderá editar livremente antes de copiar ou enviar.</p>
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
-                    <button type="button" id="btn-gerar-orcamento" class="botao-principal" style="flex: 1; min-width: 160px;"><i data-lucide="sparkles" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento</button>
-                    <button type="button" id="btn-copiar-orcamento" class="botao-principal" style="flex: 1; min-width: 140px; background: #333;"><i data-lucide="copy" style="width: 16px; vertical-align: middle;"></i> Copiar</button>
-                    <button type="button" id="btn-whatsapp-orcamento" class="botao-principal" style="flex: 1; min-width: 160px; background: #25D366;"><i data-lucide="message-circle" style="width: 16px; vertical-align: middle;"></i> WhatsApp</button>
-                </div>
-                <button type="button" id="btn-fechar-modal-orcamento-footer" class="botao-principal" style="background: #222; margin-top: 12px;">Fechar</button>
-            </div>
-        </div>
-
-        <!-- MODAL HISTÓRICO DE ORÇAMENTOS -->
-        <div id="modal-historico-orcamento" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 30px rgba(138,43,226,0.35);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;"><i data-lucide="history" style="color: var(--cor-roxo); width: 26px;"></i> Histórico de Orçamentos</h2>
-                    <button id="btn-fechar-modal-historico" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
-                </div>
-                <p style="text-align: left; color: #a0a0a0; font-size: 0.85rem; margin-bottom: 20px;"><i data-lucide="calendar" style="width: 14px; vertical-align: middle;"></i> Exibindo orçamentos gerados nos últimos 30 dias. Registros mais antigos são removidos automaticamente.</p>
-                <div id="lista-historico-orcamento" style="display: flex; flex-direction: column; gap: 12px;"><p style="color: #888; text-align: center;">Carregando histórico...</p></div>
-                <button type="button" id="btn-fechar-modal-historico-footer" class="botao-principal" style="background: #333; margin-top: 20px;">Fechar</button>
-            </div>
-        </div>
-
-        <!-- MODAL NEO WAVE ANALISTA -->
-        <div id="modal-analista" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #f39c12; padding: 30px; border-radius: 12px; width: 100%; max-width: 900px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 40px rgba(243,156,18,0.2);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;"><i data-lucide="bar-chart-3" style="color: #f39c12; width: 28px;"></i> Neo Wave Analista</h2>
-                    <button id="btn-fechar-modal-analista" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333; text-align: center;">
-                        <i data-lucide="trending-up" style="color: #00c853; width: 24px; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #888; font-size: 0.85rem;">Faturamento do Mês</p>
-                        <h3 style="margin: 5px 0 0 0; color: #00c853; font-size: 1.8rem;" id="analista-total-mes">R$ 0,00</h3>
-                    </div>
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333; text-align: center;">
-                        <i data-lucide="party-popper" style="color: #00d2ff; width: 24px; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #888; font-size: 0.85rem;">Festas Agendadas</p>
-                        <h3 style="margin: 5px 0 0 0; color: white; font-size: 1.8rem;" id="analista-qtd-festas">0</h3>
-                    </div>
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333; text-align: center;">
-                        <i data-lucide="gift" style="color: #9b59b6; width: 24px; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #888; font-size: 0.85rem;">Kit Mais Vendido</p>
-                        <h3 style="margin: 5px 0 0 0; color: white; font-size: 1.2rem;" id="analista-kit-top">—</h3>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                        <h4 style="color: white; margin-top: 0; margin-bottom: 15px; font-size: 0.9rem;">Pico de Vendas (Faturamento por dia)</h4>
-                        <div style="position: relative; height: 220px; width: 100%;"><canvas id="graficoPicoVendas"></canvas></div>
-                    </div>
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                        <h4 style="color: white; margin-top: 0; margin-bottom: 15px; font-size: 0.9rem;">Modelos de Kits Mais Vendidos</h4>
-                        <div style="position: relative; height: 220px; width: 100%;"><canvas id="graficoKitsVendidos"></canvas></div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 25px;">
-                    <h3 style="color: white; margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px;">
-                        <i data-lucide="receipt" style="color: #00c853; width: 22px;"></i>
-                        Gerador de Recibo
-                    </h3>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <label style="color: #ccc; font-size: 0.85rem;">Selecione a Festa:</label>
-                            <select id="recibo-festa-select" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                                <option value="">Carregando festas...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="color: #ccc; font-size: 0.85rem;">Tipo de Recibo:</label>
-                            <select id="recibo-tipo" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                                <option value="sinal">Sinal (Entrada)</option>
-                                <option value="total">Quitação Total</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="recibo-preview" style="display: none; background: #0a0a0a; border: 1px solid #00c853; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
-                        <div style="text-align: center; border-bottom: 1px dashed #333; padding-bottom: 15px; margin-bottom: 15px;">
-                            <h4 style="color: white; margin: 0;">RECIBO DE PAGAMENTO</h4>
-                            <p style="color: #888; margin: 5px 0 0 0; font-size: 0.8rem;">Neo Flux - Gestão de Eventos</p>
-                        </div>
-                        <p style="color: #ccc; text-align: left; margin: 0 0 8px 0; font-size: 0.9rem;"><b>Valor:</b> <span id="recibo-valor" style="color: #00c853; font-weight: bold; font-size: 1.1rem;">R$ 0,00</span></p>
-                        <p style="color: #ccc; text-align: left; margin: 0 0 8px 0; font-size: 0.9rem;"><b>Cliente:</b> <span id="recibo-cliente">—</span></p>
-                        <p style="color: #ccc; text-align: left; margin: 0 0 8px 0; font-size: 0.9rem;"><b>Referente a:</b> <span id="recibo-referente">—</span></p>
-                        <p style="color: #ccc; text-align: left; margin: 0 0 8px 0; font-size: 0.9rem;"><b>Data do Evento:</b> <span id="recibo-data-evento">—</span></p>
-                        <p style="color: #888; text-align: left; margin: 15px 0 0 0; font-size: 0.75rem; font-style: italic;">Para maior clareza, firmamos o presente recibo.</p>
-                        <div style="text-align: center; margin-top: 20px;">
-                            <div style="border-top: 1px solid #555; width: 60%; margin: 0 auto; padding-top: 5px; color: #ccc; font-size: 0.8rem;">Assinatura da Empresa</div>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" id="btn-gerar-recibo" class="botao-principal" style="flex: 1; min-width: 150px; background: #00c853;">Gerar Recibo</button>
-                        <button type="button" id="btn-imprimir-recibo" class="botao-principal" style="flex: 1; min-width: 150px; background: #333;">Imprimir / PDF</button>
-                    </div>
-                </div>
-
-                <button type="button" id="btn-fechar-modal-analista-footer" class="botao-principal" style="background: #333; margin-top: 25px;">Fechar Painel</button>
-            </div>
-        </div>
-
-        <!-- BOTÃO FLUTUANTE NEO WAVE + BOTÃO DE COMANDOS -->
-        <button id="btn-comandos-neo-wave" class="neo-wave-btn" style="display: none; bottom: 90px; width: 60px; height: 60px; background: #121212; border: 2px solid #8a2be2;">
-            <i data-lucide="terminal" style="color: #8a2be2;"></i>
-        </button>
         
-        <button id="btn-neo-wave" class="neo-wave-btn" style="display: none;"><i data-lucide="message-circle"></i></button>
+        const regrasBase = recursosPlanosBase[planoBase] || recursosPlanosBase.start;
+        return { ...regrasBase, maxKits: 999, contratos: false };
+    }
+    
+    const regrasBase = recursosPlanosBase[plano] || recursosPlanosBase.start;
+    return { ...regrasBase, maxKits: 999 };
+}
+
+function getLimite(plano) {
+    if (plano.startsWith('fvm_')) {
+        const planoBase = plano.replace('fvm_', '');
+        return limitesPlanosBase[planoBase] || 1;
+    }
+    return limitesPlanosBase[plano] || 1;
+}
+
+const nomesPlanos = {
+    start: "Start", pro: "Pro", elite: "Elite", elite_premium: "Elite Premium",
+    fvm_start: "FVM Start", fvm_pro: "FVM Pro", fvm_elite: "FVM Elite", fvm_elite_premium: "FVM Elite Premium"
+};
+
+// ==========================================
+// 4. CONTROLE DE TELAS E LOADING
+// ==========================================
+const todasAsTelas = document.querySelectorAll('.tela');
+
+function mostrarTela(id) {
+    todasAsTelas.forEach(t => t.classList.remove('ativa'));
+    const tela = document.getElementById(id);
+    if (tela) tela.classList.add('ativa');
+
+    if (id === 'tela-pagamento') {
+        const imgQr = document.getElementById('img-qrcode');
+        if (imgQr) imgQr.src = `./qrcode.png?t=${new Date().getTime()}`;
+    }
+    window.scrollTo(0, 0);
+}
+
+function carregar(ativo) {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.style.display = ativo ? 'flex' : 'none';
+}
+
+// ==========================================
+// 5. NAVEGAÇÃO E CADASTRO
+// ==========================================
+document.getElementById('btn-comecar')?.addEventListener('click', () => mostrarTela('tela-planos'));
+document.getElementById('voltar-inicio')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
+document.getElementById('ir-para-login')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
+document.getElementById('voltar-para-cadastro')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-boas-vindas'); });
+document.getElementById('ir-para-recuperar')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-recuperar'); });
+document.getElementById('voltar-login-rec')?.addEventListener('click', (e) => { e.preventDefault(); mostrarTela('tela-login'); });
+document.getElementById('btn-voltar-cliente')?.addEventListener('click', () => mostrarTela('tela-cliente'));
+document.getElementById('btn-ir-para-login')?.addEventListener('click', () => mostrarTela('tela-login'));
+
+document.getElementById('btn-comparar-planos')?.addEventListener('click', () => { document.getElementById('modal-comparar').style.display = 'flex'; });
+document.getElementById('btn-fechar-modal-comparar')?.addEventListener('click', () => { document.getElementById('modal-comparar').style.display = 'none'; });
+document.getElementById('btn-fechar-modal-comparar-footer')?.addEventListener('click', () => { document.getElementById('modal-comparar').style.display = 'none'; });
+
+document.getElementById('btn-logout')?.addEventListener('click', async () => { await signOut(auth); mostrarTela('tela-boas-vindas'); });
+
+document.querySelectorAll('.btn-selecionar-plano').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const card = e.target.closest('.card-plano');
+        planoAtual = card.getAttribute('data-plano');
+        const nomePlano = card.querySelector('h3').textContent;
+        document.getElementById('titulo-termos').textContent = `Termos e Condições - ${nomePlano}`;
+        document.getElementById('texto-termos').innerHTML = termosPlanos[planoAtual] || "";
         
-        <div id="neo-wave-chat" class="neo-wave-chat">
-            <div class="neo-wave-header"><span>Neo Wave</span><button id="btn-fechar-neo-wave" style="background: none; border: none; color: white; cursor: pointer;">✕</button></div>
-            <div class="neo-wave-body" id="neo-wave-body"><div class="msg-bot">Olá! Sou o Neo Wave. Como posso ajudar com o seu subsite hoje?</div></div>
-            <div class="neo-wave-input-area"><input type="text" id="neo-wave-input" placeholder="Digite aqui..."><button id="btn-neo-wave-enviar"><i data-lucide="send" style="width: 16px; height: 16px;"></i></button></div>
-        </div>
+        const resumoConta = document.getElementById('resumo-plano-conta');
+        if (resumoConta) resumoConta.textContent = nomesPlanos[planoAtual] || nomePlano;
+        
+        mostrarTela('tela-termos');
+    });
+});
 
-        <!-- MODAL DE COMANDOS NEO WAVE -->
-        <div id="modal-comandos-neo-wave" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 0 40px rgba(138,43,226,0.3);">
-                <i data-lucide="terminal" style="color: #8a2be2; width: 40px; height: 40px; margin-bottom: 15px;"></i>
-                <h2 style="margin-top: 0;">Comandos do Neo Wave</h2>
-                <p style="color: #ccc; margin-bottom: 25px;">O que você gostaria que eu fizesse por você agora?</p>
-                
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('modal-registrar-quebra').style.display='flex';">Registrar Quebra de Peça</button>
-                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-abrir-orcamento-inteligente').click();">Gerar Orçamento Rápido</button>
-                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-agendar-festa').click();">Novo Pedido / Festa</button>
+document.getElementById('form-termos')?.addEventListener('submit', (e) => { e.preventDefault(); mostrarTela('tela-criar-conta'); });
+
+document.getElementById('form-cadastro-final')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); carregar(true);
+    try {
+        const email = document.getElementById('email-cadastro').value;
+        const senha = document.getElementById('senha-cadastro').value;
+        const nome = document.getElementById('nome-cliente').value;
+
+        if (window.neoflux_planoFVM && window.neoflux_planoFVM.startsWith('fvm_')) {
+            planoAtual = window.neoflux_planoFVM;
+        }
+
+        const cred = await createUserWithEmailAndPassword(auth, email, senha);
+        await updateProfile(cred.user, { displayName: nome });
+        await sendEmailVerification(cred.user);
+        await setDoc(doc(db, "usuarios", cred.user.uid), { nome: nome, email: email, planoPreferido: planoAtual, statusPagamento: "pendente" });
+        
+        document.getElementById('resumo-nome-pagamento').textContent = nome;
+        
+        const resumoPlanoPag = document.getElementById('resumo-plano-pagamento');
+        if (resumoPlanoPag) resumoPlanoPag.textContent = nomesPlanos[planoAtual] || planoAtual;
+
+        mostrarTela('tela-pagamento');
+    } catch (error) { alert("Erro ao cadastrar: " + error.message); } finally { carregar(false); }
+});
+
+document.getElementById('form-login')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); carregar(true);
+    try { await signInWithEmailAndPassword(auth, document.getElementById('email-login').value, document.getElementById('senha-login').value); } 
+    catch (error) { alert("E-mail ou senha incorretos."); } finally { carregar(false); }
+});
+
+document.getElementById('form-recuperar')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); carregar(true);
+    try { await sendPasswordResetEmail(auth, document.getElementById('email-recuperar').value); alert("Link de recuperação enviado!"); } 
+    catch (error) { alert("Erro ao enviar e-mail."); } finally { carregar(false); }
+});
+
+// ==========================================
+// 6. ÁREA DO CLIENTE E SUBSITES
+// ==========================================
+async function carregarDadosCliente(uid) {
+    carregar(true);
+    try {
+        const snap = await getDoc(doc(db, "usuarios", uid));
+        if (snap.exists()) {
+            const dados = snap.data();
+            planoAtual = dados.planoPreferido;
+            document.getElementById('cliente-nome').textContent = dados.nome;
+            document.getElementById('cliente-plano').textContent = (nomesPlanos[planoAtual] || planoAtual).toUpperCase();
+            document.getElementById('cliente-status').textContent = dados.statusPagamento;
+            
+            const btnTestar = document.getElementById('btn-testar-plano');
+            if (btnTestar) {
+                btnTestar.style.display = (auth.currentUser?.email === "neoflux2012@gmail.com") ? 'inline-block' : 'none';
+            }
+
+            const isAdmin = auth.currentUser?.email === "neoflux2012@gmail.com";
+            const limite = isAdmin ? 9999 : getLimite(planoAtual);
+            
+            await carregarSubsites(uid, limite);
+        }
+    } catch (error) { console.error(error); } finally { carregar(false); }
+}
+
+async function carregarSubsites(uid, limite) {
+    const lista = document.getElementById('lista-subsites'); if(!lista) return;
+    lista.innerHTML = "";
+    const snap = await getDocs(query(collection(db, "subsites"), where("idDono", "==", uid)));
+    
+    const btnCriar = document.getElementById('btn-criar-subsite'); 
+    const inputTitulo = document.getElementById('titulo-subsite');
+    
+    if (btnCriar && inputTitulo) {
+        if (snap.size >= limite) { 
+            btnCriar.disabled = true; 
+            inputTitulo.disabled = true; 
+            btnCriar.textContent = "Limite Atingido";
+            btnCriar.style.opacity = "0.5";
+        } else { 
+            btnCriar.disabled = false; 
+            inputTitulo.disabled = false; 
+            btnCriar.textContent = "Criar";
+            btnCriar.style.opacity = "1";
+        }
+    }
+    
+    snap.forEach(doc => {
+        const sub = doc.data();
+        const li = document.createElement('li');
+        li.style.cssText = "border: 1px solid #333; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; border-radius: 8px;";
+        li.innerHTML = `<strong>${sub.titulo}</strong><div style="display: flex; gap: 8px;"><button class="btn-acessar" data-id="${doc.id}" style="background: #00d2ff; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #000;">Acessar</button><button class="btn-apagar" data-id="${doc.id}" style="background: #e74c3c; padding: 6px 12px; border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: bold;">X</button></div>`;
+        lista.appendChild(li);
+    });
+    
+    document.querySelectorAll('.btn-acessar').forEach(btn => btn.addEventListener('click', (e) => abrirSubsite(e.target.getAttribute('data-id'))));
+    document.querySelectorAll('.btn-apagar').forEach(btn => btn.addEventListener('click', async (e) => {
+        if(confirm("Tem certeza que deseja apagar este subsite? Todos os dados dele serão perdidos.")) { 
+            carregar(true);
+            try {
+                await deleteDoc(doc(db, "subsites", e.target.getAttribute('data-id'))); 
+                await carregarDadosCliente(auth.currentUser.uid); 
+            } catch (err) {
+                alert("Erro ao apagar: " + err.message);
+            } finally {
+                carregar(false);
+            }
+        }
+    }));
+}
+document.getElementById('btn-criar-subsite')?.addEventListener('click', async () => {
+    const titulo = document.getElementById('titulo-subsite').value.trim();
+    if (!titulo) return alert("Digite um título para o subsite.");
+    
+    const isAdmin = auth.currentUser?.email === "neoflux2012@gmail.com";
+    const limite = isAdmin ? 9999 : getLimite(planoAtual);
+    
+    carregar(true);
+    try {
+        const snap = await getDocs(query(collection(db, "subsites"), where("idDono", "==", auth.currentUser.uid)));
+        
+        if (snap.size >= limite) {
+            return alert(`Você atingiu o limite de ${limite} subsite(s) do seu plano (${nomesPlanos[planoAtual] || planoAtual}).`);
+        }
+
+        await addDoc(collection(db, "subsites"), { 
+            idDono: auth.currentUser.uid, 
+            titulo: titulo, 
+            criadoEm: new Date() 
+        });
+        
+        document.getElementById('titulo-subsite').value = "";
+        await carregarDadosCliente(auth.currentUser.uid);
+    } catch (e) {
+        alert("Erro ao criar subsite: " + e.message);
+    } finally {
+        carregar(false);
+    }
+});
+
+async function abrirSubsite(id) {
+    subsiteAtualId = id;
+    const snap = await getDoc(doc(db, "subsites", id));
+    const dadosSubsite = snap.data();
+    document.getElementById('nome-do-subsite').textContent = dadosSubsite.titulo;
+    
+    if (planoAtual.startsWith('fvm_')) {
+        if (dadosSubsite.configFVM) {
+            window.aplicarTraducaoFVM(dadosSubsite.configFVM);
+        } else {
+            window.abrirModalNicho(id);
+        }
+    } else {
+        window.resetarTraducaoFVM();
+    }
+
+    const regras = getRecursos(planoAtual);
+
+    const btnKits = document.getElementById('btn-abrir-kits');
+    if(btnKits) { btnKits.disabled = !regras.kits; btnKits.style.background = regras.kits ? "var(--gradiente-neo)" : "#333"; }
+    const btnRel = document.getElementById('btn-relatorios');
+    if(btnRel) { btnRel.disabled = !regras.relatorios; btnRel.style.background = regras.relatorios ? "var(--gradiente-neo)" : "#333"; }
+    const btnContratos = document.getElementById('btn-abrir-contratos');
+    if(btnContratos) { btnContratos.disabled = !regras.contratos; btnContratos.style.background = regras.contratos ? "#e67e22" : "#333"; }
+    const btnNeo = document.getElementById('btn-neo-wave');
+    if(btnNeo) btnNeo.style.display = regras.assistente ? 'flex' : 'none';
+
+    const cardContratos = document.getElementById('card-contratos');
+    if (cardContratos) {
+        cardContratos.style.display = planoAtual.startsWith('fvm_') ? 'none' : 'block';
+    }
+
+    const cardAnalista = document.getElementById('card-analista');
+    if (cardAnalista) cardAnalista.style.display = regras.analista ? 'block' : 'none';
+
+    const datalist = document.getElementById('lista-kits-salvos');
+    if(datalist) {
+        datalist.innerHTML = "";
+        const snapKits = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", id)));
+        snapKits.forEach(k => { const opt = document.createElement('option'); opt.value = k.data().nome; datalist.appendChild(opt); });
+    }
+    
+    await carregarPecasNoSelect();
+    carregarFestas(id);
+    carregarContratos();
+    carregarKitsDoSubsite(id); 
+    mostrarTela('tela-subsite');
+}
+
+async function carregarPecasNoSelect() {
+    const selectPecas = document.getElementById('festa-pecas');
+    if(!selectPecas) return;
+    selectPecas.innerHTML = "";
+    const snapCat = await getDocs(query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId)));
+    snapCat.forEach(c => { 
+        const item = c.data(); 
+        const opt = document.createElement('option'); 
+        opt.value = item.nome; 
+        opt.textContent = `${item.nome} (${item.categoria})`; 
+        selectPecas.appendChild(opt); 
+    });
+}
+
+async function carregarFestas(id) {
+    const container = document.getElementById('lista-festas-criadas'); if(!container) return;
+    const containerPastas = document.getElementById('lista-pastas-container');
+    container.innerHTML = ""; 
+    if (containerPastas) containerPastas.innerHTML = "";
+    festasGlobais = [];
+    
+    const regras = getRecursos(planoAtual);
+    
+    const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", id)));
+    snap.forEach(doc => {
+        const festa = doc.data(); 
+        festa.id = doc.id; 
+        festasGlobais.push(festa);
+    });
+
+    let pastas = [];
+    const snapPastas = await getDocs(query(collection(db, "pastas"), where("idSubsite", "==", id)));
+    snapPastas.forEach(doc => {
+        pastas.push({ id: doc.id, ...doc.data() });
+    });
+
+    let idsFestasAgrupadas = [];
+    pastas.forEach(p => { if (p.festas) idsFestasAgrupadas = idsFestasAgrupadas.concat(p.festas); });
+
+    if (containerPastas) {
+        pastas.forEach(pasta => {
+            const divPasta = document.createElement('div');
+            divPasta.style.cssText = "background: #0a0a0a; border: 1px solid #8a2be2; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(138,43,226,0.1);";
+            
+            const header = document.createElement('div');
+            header.style.cssText = "display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding-bottom: 10px;";
+            header.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="folder" style="color: #b57bff; width: 24px;"></i>
+                    <h4 style="color: white; margin: 0; font-size: 1.1rem;">${pasta.nome}</h4>
+                    <span style="background: rgba(138,43,226,0.2); color: #b57bff; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">${pasta.festas ? pasta.festas.length : 0} itens</span>
                 </div>
-                <button class="botao-principal" style="background: #333; margin-top: 20px;" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'">Fechar</button>
-            </div>
-        </div>
-
-        <!-- MODAL DE REGISTRAR QUEBRA -->
-        <div id="modal-registrar-quebra" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #e74c3c; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px;">
-                <h2 style="color: #e74c3c; margin-top: 0; display: flex; align-items: center; gap: 10px;">
-                    <i data-lucide="alert-triangle"></i> Registrar Quebra
-                </h2>
-                <p style="color: #ccc; font-size: 0.9rem; text-align: left; margin-bottom: 20px;">Selecione a peça que quebrou e a quantidade para darmos baixa no seu estoque.</p>
-                
-                <label style="color: #ccc; display: block; margin-bottom: 5px;">Peça Danificada:</label>
-                <select id="quebra-peca-select" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 15px;"></select>
-                
-                <label style="color: #ccc; display: block; margin-bottom: 5px;">Quantidade:</label>
-                <input type="number" id="quebra-quantidade" value="1" min="1" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px;">
-                
                 <div style="display: flex; gap: 10px;">
-                    <button class="botao-principal" style="background: #333;" onclick="document.getElementById('modal-registrar-quebra').style.display='none'">Cancelar</button>
-                    <button class="botao-principal" style="background: #e74c3c;" onclick="window.confirmarQuebra()">Confirmar Baixa</button>
+                    <button onclick="event.stopPropagation(); window.apagarPasta('${pasta.id}', '${id}')" style="background: rgba(231,76,60,0.1); border: 1px solid #e74c3c; color: #e74c3c; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;"><i data-lucide="trash-2" style="width: 14px; vertical-align: middle;"></i></button>
+                    <button class="btn-toggle-pasta" style="background: rgba(138,43,226,0.2); border: 1px solid #8a2be2; color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;"><i data-lucide="chevron-down" style="width: 14px; vertical-align: middle;"></i></button>
                 </div>
+            `;
+            divPasta.appendChild(header);
+
+            const conteudo = document.createElement('div');
+            conteudo.style.cssText = "margin-top: 15px; display: none; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;";
+            
+            if (pasta.festas) {
+                pasta.festas.forEach(idFesta => {
+                    const f = festasGlobais.find(x => x.id === idFesta);
+                    if (f) conteudo.appendChild(renderizarCardFesta(f, regras));
+                });
+            }
+            divPasta.appendChild(conteudo);
+
+            const btnToggle = header.querySelector('.btn-toggle-pasta');
+            btnToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = conteudo.style.display === 'none';
+                conteudo.style.display = isHidden ? 'grid' : 'none';
+                btnToggle.innerHTML = isHidden ? '<i data-lucide="chevron-up" style="width: 14px; vertical-align: middle;"></i>' : '<i data-lucide="chevron-down" style="width: 14px; vertical-align: middle;"></i>';
+                lucide.createIcons();
+            });
+
+            containerPastas.appendChild(divPasta);
+        });
+    }
+
+    const festasNormais = festasGlobais.filter(f => !idsFestasAgrupadas.includes(f.id));
+    festasNormais.forEach(festa => {
+        container.appendChild(renderizarCardFesta(festa, regras));
+    });
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    const inputPesquisa = document.getElementById('pesquisa-festas');
+    if (inputPesquisa) {
+        inputPesquisa.addEventListener('input', (e) => {
+            const termo = e.target.value.toLowerCase();
+            container.querySelectorAll('.card-festa').forEach(card => {
+                card.style.display = card.innerText.toLowerCase().includes(termo) ? 'block' : 'none';
+            });
+        });
+    }
+}
+
+function renderizarCardFesta(festa, regras) {
+    const total = parseFloat(festa.total) || 0; 
+    const sinal = parseFloat(festa.sinal) || 0;
+    const falta = total - sinal;
+    const valorFaltaFormatado = falta > 0 ? `R$ ${falta.toFixed(2).replace('.', ',')}` : 'Pago';
+
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const dataFesta = new Date(festa.data + 'T00:00:00');
+    const dataPassou = dataFesta < hoje;
+
+    const blocoValores = regras.valores ? `
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="truck" style="width: 16px;"></i> Frete</p><p style="color: #00c853; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.frete || '0,00'}</p></div>
+            <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="dollar-sign" style="width: 16px;"></i> Total</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.total || '0,00'}</p></div>
+            <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="wallet" style="width: 16px;"></i> Sinal</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">R$ ${festa.sinal || '0,00'}</p></div>
+        </div>` : `<div><p style="color: #888; font-size: 0.8rem;">Valores disponíveis no plano Pro ou superior.</p></div>`;
+
+    const botaoContrato = regras.contratos ? `<button onclick="window.gerarContrato('${festa.id}')" style="flex: 1; min-width: 100px; padding: 10px; background: rgba(230, 126, 34, 0.1); color: #e67e22; border: 1px solid #e67e22; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="file-text" style="width: 16px;"></i> Contrato</button>` : '';
+
+    const pecasStr = festa.pecas && festa.pecas.length > 0 ? festa.pecas.join(", ") : "Nenhuma";
+    const blocoPecas = festa.pecas && festa.pecas.length > 0 ? `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;"><p style="color: #888; font-size: 0.8rem; margin: 0 0 4px 0;"><i data-lucide="package" style="width: 14px; vertical-align: middle;"></i> Peças:</p><p style="color: #00d2ff; font-size: 0.85rem; margin: 0;">${pecasStr}</p></div>` : '';
+
+    let areaDevolucao = "";
+    if (festa.itensDevolvidos) {
+        areaDevolucao = `<div style="width: 100%; padding: 12px; background: rgba(0,200,83,0.1); border: 1px solid #00c853; color: #00c853; border-radius: 6px; text-align: center; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;"><i data-lucide="check-circle" style="width: 18px;"></i> Devolução Registrada</div>`;
+    } else if (dataPassou && festa.pecas && festa.pecas.length > 0) {
+        areaDevolucao = `<button onclick="window.registrarDevolucao('${festa.id}')" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #8a2be2, #9b59b6); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 10px rgba(138,43,226,0.3);"><i data-lucide="package-check" style="width: 18px;"></i> Registrar Devolução</button>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'card-festa';
+    card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 20px; text-align: left; position: relative; transition: 0.3s;";
+    
+    card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="background: rgba(0, 210, 255, 0.1); padding: 8px; border-radius: 8px;"><i data-lucide="party-popper" style="color: #00d2ff; width: 20px; height: 20px;"></i></div>
+                <div><h4 style="color: white; margin: 0; font-size: 1.1rem;">${festa.nome}</h4><small style="color: #888;">Evento #${festa.id.substring(0, 4)}</small></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="background: rgba(255, 152, 0, 0.2); color: #ff9800; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; border: 1px solid #ff9800;">PENDENTE</span>
+                <button onclick="this.closest('.card-festa').classList.toggle('minimizado'); this.querySelector('i').setAttribute('data-lucide', this.closest('.card-festa').classList.contains('minimizado') ? 'chevron-down' : 'chevron-up'); lucide.createIcons();" style="background: rgba(255,255,255,0.05); border: 1px solid #333; color: #ccc; cursor: pointer; padding: 6px 8px; border-radius: 6px;"><i data-lucide="chevron-up" style="width: 18px;"></i></button>
             </div>
         </div>
-
-        <div id="mensagem-status" class="mensagem"></div>
-
-        <!-- MODAL COMPARAÇÃO DE PLANOS -->
-        <div id="modal-comparar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="color: white; margin: 0; background: linear-gradient(135deg, #00d2ff 0%, #8a2be2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Comparar Assinaturas</h2>
-                    <button id="btn-fechar-modal-comparar" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
+        <div class="card-conteudo" style="display: block;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="calendar" style="width: 16px;"></i> Data</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.data.split('-').reverse().join('/')}</p></div>
+                    <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="credit-card" style="width: 16px;"></i> CPF</p><p style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.cpf || '—'}</p></div>
+                    <div><p style="color: #888; font-size: 0.9rem; margin: 0 0 4px 0; display: flex; align-items: center; gap: 5px;"><i data-lucide="palette" style="width: 16px;"></i> Tema</p><p style="color: #00d2ff; font-weight: bold; margin: 0; font-size: 1.1rem;">${festa.tema}</p></div>
                 </div>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: center; color: #ccc;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid #333;"><th style="padding: 15px; text-align: left; color: #888; font-weight: normal;">Recursos</th><th style="padding: 15px; color: white; font-size: 1.1rem;">Start</th><th style="padding: 15px; color: #00d2ff; font-size: 1.1rem;">Pro</th><th style="padding: 15px; color: #8a2be2; font-size: 1.1rem;">Elite</th><th style="padding: 15px; color: #f39c12; font-size: 1.1rem;">Elite Premium</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left; font-weight: bold;">Preço Mensal</td><td style="padding: 15px;">R$ 49,99</td><td style="padding: 15px;">R$ 79,99</td><td style="padding: 15px;">R$ 99,99</td><td style="padding: 15px;">R$ 149,99</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Qtd. de Subsites</td><td style="padding: 15px;">1</td><td style="padding: 15px;">1</td><td style="padding: 15px;">Ilimitados</td><td style="padding: 15px;">Ilimitados</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Logins por Subsite</td><td style="padding: 15px;">1</td><td style="padding: 15px;">2</td><td style="padding: 15px;">Ilimitados</td><td style="padding: 15px;">Ilimitados</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Agendamento de Festas</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Detector de Conflito de Datas</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Calculadora de Frete</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Gerador de Kits</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Relatórios de Vendas</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Orçamento Inteligente e Histórico</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Sugestão de Mensagem (Neo Wave)</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Assistente Neo Wave (Chat)</td><td style="padding: 15px; color: #00c853;">✔️ (Dúvidas Básicas)</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Neo Wave Analista (Gráficos)</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #00c853;">✔️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                            <tr style="border-bottom: 1px solid #222;"><td style="padding: 15px; text-align: left;">Gerador de Contratos</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #e74c3c;">✖️</td><td style="padding: 15px; color: #00c853;">✔️</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 30px; text-align: center;">
-                    <p style="color: #888; margin-bottom: 15px;">Escolha o plano que melhor se adapta ao seu negócio.</p>
-                    <button id="btn-fechar-modal-comparar-footer" class="botao-principal" style="width: auto; padding: 12px 40px;">Voltar para os Planos</button>
-                </div>
+                ${blocoValores}
             </div>
-        </div>
-
-        <!-- 🔹 FVM: MODAL DOS SUBPLANOS -->
-        <div id="modal-fvm">
-            <div class="modal-fvm-box">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;">
-                        <i data-lucide="wrench" style="color: #00d2ff; width: 26px;"></i> Planos FVM
-                    </h2>
-                    <button id="btn-fechar-modal-fvm" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
-                </div>
-                <p style="text-align: left; color: #aaa; font-size: 0.9rem; margin-bottom: 25px;">
-                    <strong style="color: #00d2ff;">Faça Você Mesmo:</strong> todas as ferramentas da Neo Flux, mas com o foco no seu nicho. Escolha o seu nível de acesso:
-                </p>
-                
-                <div class="grid-fvm">
-                    <div class="card-fvm-sub">
-                        <span class="badge-fvm">START</span>
-                        <h3>FVM Start</h3>
-                        <p class="preco">R$ 49,99</p>
-                        <button class="btn-fvm-subplano" data-plano="fvm_start">Selecionar</button>
-                    </div>
-                    <div class="card-fvm-sub">
-                        <span class="badge-fvm">PRO</span>
-                        <h3>FVM Pro</h3>
-                        <p class="preco">R$ 79,99</p>
-                        <button class="btn-fvm-subplano" data-plano="fvm_pro">Selecionar</button>
-                    </div>
-                    <div class="card-fvm-sub">
-                        <span class="badge-fvm">ELITE</span>
-                        <h3>FVM Elite</h3>
-                        <p class="preco">R$ 99,99</p>
-                        <button class="btn-fvm-subplano" data-plano="fvm_elite">Selecionar</button>
-                    </div>
-                    <div class="card-fvm-sub">
-                        <span class="badge-fvm">PREMIUM</span>
-                        <h3>FVM Elite Premium</h3>
-                        <p class="preco">R$ 149,99</p>
-                        <button class="btn-fvm-subplano" data-plano="fvm_elite_premium">Selecionar</button>
-                    </div>
-                </div>
-
-                <div style="margin-top: 25px; background: rgba(0,210,255,0.06); border: 1px solid #00d2ff; border-radius: 8px; padding: 15px; text-align: left;">
-                    <h4 style="color: #00d2ff; margin: 0 0 10px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
-                        <i data-lucide="info" style="width: 16px;"></i> Como funciona o FVM?
-                    </h4>
-                    <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px; line-height: 1.5;">
-                        O FVM foi criado para quem <strong>não é do nicho de festas</strong>. Ele tem a mesma estrutura dos planos normais, mas com o seu painel adaptável ao seu ramo (Alimentação, Artesanato, Serviços, etc.).
-                    </p>
-                    <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px; line-height: 1.5;">
-                        <strong>⚠️ Limitações:</strong> O FVM <strong>não inclui</strong> o Gerador de Contratos. Os recursos de Kits, Relatórios e Analista seguem as regras do plano escolhido.
-                    </p>
-                    <p style="font-size: 0.85rem; color: #ccc; margin: 0; line-height: 1.5;">
-                        <strong>🔄 Mudou de ideia?</strong> Se você assinar um FVM e precisar do sistema completo de festas, basta chamar no WhatsApp <strong>(61) 99161-4509</strong> e nós migramos para o plano normal equivalente!
-                    </p>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="button" id="btn-comparar-fvm" class="botao-principal" style="flex: 1; background: transparent; border: 1px solid #00d2ff; color: #00d2ff; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <i data-lucide="bar-chart-3" style="width: 18px;"></i> Comparar Assinaturas
-                    </button>
-                    <button type="button" id="btn-fechar-modal-fvm-footer" class="botao-principal" style="flex: 1; background: #333;">Voltar</button>
-                </div>
+            ${blocoPecas}
+            ${regras.valores ? `<div style="text-align: right; border-top: 1px dashed #333; padding-top: 10px; margin-top: 10px; margin-bottom: 15px;"><span style="color: #888; font-size: 0.8rem;">Falta Pagar: </span><span style="color: #e74c3c; font-weight: bold; font-size: 1rem;">${valorFaltaFormatado}</span></div>` : ''}
+            ${areaDevolucao ? `<div style="margin-top: 10px; margin-bottom: 15px;">${areaDevolucao}</div>` : ''}
+            <div style="display: flex; gap: 8px; border-top: 1px solid #222; padding-top: 15px; margin-top: 10px; flex-wrap: wrap;">
+                ${botaoContrato}
+                <button onclick="window.editarFesta('${festa.id}')" style="flex: 1; min-width: 100px; padding: 10px; background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid #3498db; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="edit" style="width: 16px;"></i> Editar</button>
+                <button onclick="window.apagarFesta('${festa.id}')" style="flex: 1; min-width: 100px; padding: 10px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 5px;"><i data-lucide="trash-2" style="width: 16px;"></i> Apagar</button>
             </div>
-        </div>
+        </div>`;
+    return card;
+}
 
-        <!-- 🔹 FVM: MODAL DE ESCOLHA DE NICHO (ONBOARDING) -->
-        <div id="modal-nicho-fvm" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(5px);">
-            <div style="background: #121212; border: 1px solid #00d2ff; padding: 35px; border-radius: 16px; width: 100%; max-width: 750px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 50px rgba(0,210,255,0.2);">
-                
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <div style="background: rgba(0,210,255,0.1); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
-                        <i data-lucide="sparkles" style="color: #00d2ff; width: 35px; height: 35px;"></i>
-                    </div>
-                    <h2 style="color: white; margin: 0 0 10px 0; font-size: 1.8rem;">Bem-vindo ao seu novo espaço!</h2>
-                    <p style="color: #ccc; font-size: 0.95rem; max-width: 500px; margin: 0 auto; line-height: 1.6;">
-                        O <strong>FVM</strong> foi feito exatamente para quem <strong>NÃO</strong> é do nicho de festas. Escolha o seu ramo abaixo para personalizarmos o seu painel de trabalho.
-                    </p>
-                </div>
+if (!document.getElementById('style-card-minimizado')) {
+    const style = document.createElement('style');
+    style.id = 'style-card-minimizado';
+    style.innerHTML = `.card-festa.minimizado .card-conteudo { display: none !important; }`;
+    document.head.appendChild(style);
+}
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px;" id="grid-nichos-fvm">
-                    <div class="card-nicho" data-nicho="alimentacao" onclick="window.selecionarNichoFVM('alimentacao')">
-                        <i data-lucide="utensils" style="color: #f39c12; width: 30px; height: 30px; margin-bottom: 10px;"></i>
-                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Alimentação</h4>
-                    </div>
-                    <div class="card-nicho" data-nicho="artesanato" onclick="window.selecionarNichoFVM('artesanato')">
-                        <i data-lucide="palette" style="color: #e74c3c; width: 30px; height: 30px; margin-bottom: 10px;"></i>
-                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Artesanato</h4>
-                    </div>
-                    <div class="card-nicho" data-nicho="beleza" onclick="window.selecionarNichoFVM('beleza')">
-                        <i data-lucide="scissors" style="color: #9b59b6; width: 30px; height: 30px; margin-bottom: 10px;"></i>
-                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Beleza & Estética</h4>
-                    </div>
-                    <div class="card-nicho" data-nicho="servicos" onclick="window.selecionarNichoFVM('servicos')">
-                        <i data-lucide="wrench" style="color: #00d2ff; width: 30px; height: 30px; margin-bottom: 10px;"></i>
-                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Serviços</h4>
-                    </div>
-                    <div class="card-nicho" data-nicho="moda" onclick="window.selecionarNichoFVM('moda')">
-                        <i data-lucide="shirt" style="color: #2ecc71; width: 30px; height: 30px; margin-bottom: 10px;"></i>
-                        <h4 style="color: white; margin: 0; font-size: 0.95rem;">Moda & Costura</h4>
-                    </div>
-                    <div class="card-nicho" data-nicho="personalizado" onclick="window.abrirPersonalizacaoNicho()" style="border-color: #555; background: rgba(255,255,255,0.02);">
-                        <i data-lucide="plus-circle" style="color: #888; width: 30px; height: 30px; margin-bottom: 10px;"></i>
-                        <h4 style="color: #888; margin: 0; font-size: 0.85rem;">Meu nicho não está aqui >:( </h4>
-                    </div>
-                </div>
+window.registrarDevolucao = async function(idFesta) {
+    if (!confirm("Tem certeza que deseja registrar a devolução? O estoque das peças será reposto automaticamente.")) return;
+    try {
+        const festa = festasGlobais.find(f => f.id === idFesta);
+        if (!festa || !festa.pecas || festa.pecas.length === 0) return alert("Esta festa não tem peças para devolver.");
+        carregar(true);
 
-                <div id="area-personalizar-nicho" style="display: none; background: #0a0a0a; border: 1px dashed #8a2be2; border-radius: 12px; padding: 25px;">
-                    <h3 style="color: #b57bff; margin: 0 0 15px 0; font-size: 1.1rem;">Crie o seu Nicho Personalizado</h3>
-                    <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 20px; text-align: left;">Dê um nome ao seu negócio e escolha como os cards do seu painel devem aparecer.</p>
+        await updateDoc(doc(db, "festas", idFesta), { itensDevolvidos: true, dataDevolucao: new Date() });
+
+        for (const nomePeca of festa.pecas) {
+            const q = query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId), where("nome", "==", nomePeca));
+            const snapCat = await getDocs(q);
+            if (!snapCat.empty) {
+                const pecaDoc = snapCat.docs[0];
+                const qtdAtual = parseInt(pecaDoc.data().quantidade) || 0;
+                const qtdUsada = parseInt(festa.pecasQtd && festa.pecasQtd[nomePeca] ? festa.pecasQtd[nomePeca] : 1);
+                await updateDoc(doc(db, "catalogo", pecaDoc.id), { quantidade: qtdAtual + qtdUsada });
+            }
+        }
+        alert("✅ Devolução registrada e estoque atualizado!");
+        carregarFestas(subsiteAtualId);
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao registrar devolução: " + e.message);
+    } finally {
+        carregar(false);
+    }
+};
+
+document.getElementById('btn-abrir-modal-pasta')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-criar-pasta');
+    const containerCheck = document.getElementById('lista-checkboxes-festas');
+    containerCheck.innerHTML = "";
+    
+    festasGlobais.forEach(f => {
+        const label = document.createElement('label');
+        label.style.cssText = "display: flex; align-items: center; gap: 10px; cursor: pointer; color: #ccc; padding: 5px 0; font-size: 0.9rem;";
+        label.innerHTML = `<input type="checkbox" value="${f.id}" class="chk-festa-pasta" style="width: 18px; height: 18px; accent-color: #8a2be2;"> ${f.nome} - ${f.data.split('-').reverse().join('/')}`;
+        containerCheck.appendChild(label);
+    });
+    modal.style.display = 'flex';
+});
+
+document.getElementById('btn-cancelar-pasta')?.addEventListener('click', () => {
+    document.getElementById('modal-criar-pasta').style.display = 'none';
+});
+
+document.getElementById('btn-salvar-pasta')?.addEventListener('click', async () => {
+    const nome = document.getElementById('nome-nova-pasta').value.trim();
+    if (!nome) return alert("Digite o nome da pasta.");
+    
+    const selecionadas = [];
+    document.querySelectorAll('.chk-festa-pasta:checked').forEach(cb => selecionadas.push(cb.value));
+    if (selecionadas.length === 0) return alert("Selecione pelo menos uma festa.");
+
+    carregar(true);
+    try {
+        await addDoc(collection(db, "pastas"), {
+            idSubsite: subsiteAtualId,
+            nome: nome,
+            festas: selecionadas,
+            criadoEm: new Date()
+        });
+        alert("✅ Pasta criada com sucesso!");
+        document.getElementById('modal-criar-pasta').style.display = 'none';
+        document.getElementById('nome-nova-pasta').value = "";
+        carregarFestas(subsiteAtualId);
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao criar pasta: " + e.message);
+    } finally {
+        carregar(false);
+    }
+});
+
+window.apagarPasta = async function(idPasta, idSubsite) {
+    if (confirm("Apagar esta pasta? As festas voltarão para a lista normal.")) {
+        try {
+            await deleteDoc(doc(db, "pastas", idPasta));
+            carregarFestas(idSubsite);
+        } catch (e) {
+            alert("Erro ao apagar pasta: " + e.message);
+        }
+    }
+};
+// ==========================================
+// 8. RESTO DO ARQUIVO (ORÇAMENTOS, KITS, ETC)
+// ==========================================
+
+window.apagarFesta = async function(id) { if(confirm("Tem certeza que deseja apagar esta festa?")) { await deleteDoc(doc(db, "festas", id)); carregarFestas(subsiteAtualId); } };
+
+window.editarFesta = function(id) {
+    const festa = festasGlobais.find(f => f.id === id); if(!festa) return;
+    document.getElementById('festa-id-edicao').value = id; document.getElementById('titulo-modal-festa').textContent = "Editar Festa";
+    document.getElementById('festa-nome').value = festa.nome || ""; document.getElementById('festa-cpf').value = festa.cpf || ""; document.getElementById('festa-telefone').value = festa.telefone || "";
+    document.getElementById('festa-data').value = festa.data || ""; document.getElementById('festa-tema').value = festa.tema || ""; document.getElementById('festa-local').value = festa.local || "";
+    document.getElementById('festa-obs').value = festa.obs || ""; document.getElementById('festa-total').value = festa.total || "0.00"; document.getElementById('festa-sinal').value = festa.sinal || "0.00";
+    const selectPecas = document.getElementById('festa-pecas');
+    if (selectPecas && festa.pecas) { for (let i = 0; i < selectPecas.options.length; i++) { selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value); } }
+    document.getElementById('modal-agendar-festa').style.display = 'flex';
+};
+
+function calcularFrete() {
+    const km = parseFloat(document.getElementById('frete-km').value) || 0; const preco = parseFloat(document.getElementById('frete-preco').value) || 0;
+    const consumo = parseFloat(document.getElementById('frete-consumo').value) || 1; const multiplicador = parseFloat(document.getElementById('frete-ida-volta').value) || 2; 
+    const total = (km * multiplicador / consumo) * preco;
+    document.getElementById('total-frete').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+}
+['frete-km', 'frete-preco', 'frete-consumo', 'frete-ida-volta'].forEach(id => { document.getElementById(id)?.addEventListener('input', calcularFrete); });
+document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
+
+document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    carregar(true);
+    
+    const idEdicao = document.getElementById('festa-id-edicao').value;
+    const dataFesta = document.getElementById('festa-data').value;
+    const nomeCliente = document.getElementById('festa-nome').value;
+
+    if (!idEdicao) {
+        const festasNoMesmoDia = festasGlobais.filter(f => f.data === dataFesta);
+        if (festasNoMesmoDia.length > 0) {
+            let nomes = festasNoMesmoDia.map(f => f.nome).join(", ");
+            const continuar = confirm(`⚠️ ATENÇÃO: Já existe(m) festa(s) agendada(s) para o dia ${dataFesta.split('-').reverse().join('/')}.\n\nCliente(s): ${nomes}\n\nDeseja continuar agendando mesmo assim?`);
+            if (!continuar) { carregar(false); return; }
+        }
+    }
+
+    const selectPecas = document.getElementById('festa-pecas'); 
+    const pecasSelecionadas = [];
+    if (selectPecas) { for (let i = 0; i < selectPecas.options.length; i++) { if (selectPecas.options[i].selected) pecasSelecionadas.push(selectPecas.options[i].value); } }
+
+    const dadosFesta = {
+        idSubsite: subsiteAtualId, 
+        nome: nomeCliente, 
+        cpf: document.getElementById('festa-cpf').value,
+        telefone: document.getElementById('festa-telefone').value, 
+        data: dataFesta, 
+        tema: document.getElementById('festa-tema').value,
+        local: document.getElementById('festa-local').value, 
+        obs: document.getElementById('festa-obs').value, 
+        frete: document.getElementById('total-frete').textContent.replace('R$ ', ''),
+        total: document.getElementById('festa-total').value, 
+        sinal: document.getElementById('festa-sinal').value, 
+        pecas: pecasSelecionadas
+    };
+
+    try {
+        if (idEdicao) { await updateDoc(doc(db, "festas", idEdicao), dadosFesta); alert("Festa atualizada!"); } 
+        else { await addDoc(collection(db, "festas"), dadosFesta); alert("Festa agendada!"); }
+        document.getElementById('form-agendar-festa').reset(); 
+        document.getElementById('festa-id-edicao').value = "";
+        document.getElementById('titulo-modal-festa').textContent = "Agendar Nova Festa"; 
+        document.getElementById('modal-agendar-festa').style.display = 'none';
+        carregarFestas(subsiteAtualId);
+    } catch (error) { alert("Erro ao salvar: " + error.message); } finally { carregar(false); }
+});
+
+document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => { document.getElementById('modal-catalogo').style.display = 'flex'; carregarCatalogo(); });
+
+document.getElementById('btn-abrir-kits')?.addEventListener('click', async () => {
+    const regras = getRecursos(planoAtual);
+    if (regras.kits && regras.maxKits < 999) {
+        const snap = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", subsiteAtualId)));
+        if (snap.size >= regras.maxKits) {
+            return alert(`Seu plano (${nomesPlanos[planoAtual]}) permite apenas ${regras.maxKits} kits. Faça upgrade para liberar mais!`);
+        }
+    }
+    document.getElementById('modal-kits').style.display = 'flex';
+});
+
+document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
+    const regras = getRecursos(planoAtual);
+    document.getElementById('area-financeira-festa').style.display = regras.valores ? 'block' : 'none';
+    document.getElementById('modal-agendar-festa').style.display = 'flex';
+});
+
+document.getElementById('btn-relatorios')?.addEventListener('click', () => {
+    document.getElementById('modal-relatorios').style.display = 'flex';
+    const tbody = document.getElementById('tabela-relatorio'); tbody.innerHTML = "";
+    const hoje = new Date(); const mesAtual = hoje.getMonth(); const anoAtual = hoje.getFullYear(); let totalMes = 0;
+    festasGlobais.forEach(f => {
+        const dataFesta = new Date(f.data + 'T00:00:00');
+        if (dataFesta.getMonth() === mesAtual && dataFesta.getFullYear() === anoAtual) {
+            tbody.innerHTML += `<tr style="border-bottom: 1px solid #333;"><td style="padding: 10px;">${f.nome}</td><td style="padding: 10px;">${f.tema}</td><td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td></tr>`;
+            totalMes += parseFloat(f.total) || 0;
+        }
+    });
+    if (tbody.innerHTML === "") tbody.innerHTML = "<tr><td colspan='3' style='padding: 10px; text-align: center; color: #888;'>Nenhuma festa agendada para este mês.</td></tr>";
+    document.getElementById('total-mes').textContent = `R$ ${totalMes.toFixed(2).replace('.', ',')}`;
+});
+
+document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); carregar(true);
+    const nome = document.getElementById('kit-nome').value; const modelo = document.getElementById('kit-modelo').value;
+    const preco = parseFloat(document.getElementById('kit-preco').value) || 0; const fileInput = document.getElementById('kit-imagem');
+    let base64Imagem = "";
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        base64Imagem = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 500; canvas.width = MAX_WIDTH; canvas.height = img.height * (MAX_WIDTH / img.width); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = ev.target.result; };
+            reader.readAsDataURL(file);
+        });
+    }
+    try {
+        await addDoc(collection(db, "kits"), { idSubsite: subsiteAtualId, nome: nome, modelo: modelo, preco: preco, imagem: base64Imagem });
+        alert("Kit salvo!"); document.getElementById('form-kit').reset(); document.getElementById('modal-kits').style.display = 'none'; abrirSubsite(subsiteAtualId); 
+    } catch (error) { alert("Erro ao salvar kit: " + error.message); } finally { carregar(false); }
+});
+
+// ==========================================
+// 🔹 CONTRATOS COM COMPRESSÃO LZ-STRING
+// ==========================================
+document.getElementById('btn-abrir-contratos')?.addEventListener('click', () => { document.getElementById('modal-contratos').style.display = 'flex'; carregarContratos(); });
+
+document.getElementById('form-contrato')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    carregar(true);
+    
+    const nome = document.getElementById('contrato-nome').value; 
+    const fileInputArquivo = document.getElementById('contrato-arquivo'); 
+    const fileInputLogo = document.getElementById('contrato-logo');
+    
+    let base64Arquivo = ""; 
+    let base64Logo = "";
+
+    if (fileInputArquivo.files.length > 0) { 
+        const file = fileInputArquivo.files[0]; 
+        const base64Original = await new Promise((resolve) => { 
+            const reader = new FileReader(); 
+            reader.onloadend = () => resolve(reader.result); 
+            reader.readAsDataURL(file); 
+        }); 
+        base64Arquivo = LZString.compressToUTF16(base64Original); 
+    }
+
+    if (fileInputLogo.files.length > 0) {
+        const fileLogo = fileInputLogo.files[0];
+        base64Logo = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 400; canvas.width = MAX_WIDTH; canvas.height = img.height * (MAX_WIDTH / img.width); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/png')); }; img.src = ev.target.result; };
+            reader.readAsDataURL(fileLogo);
+        });
+    }
+    
+    try { 
+        await addDoc(collection(db, "contratos"), { 
+            idSubsite: subsiteAtualId, 
+            nome: nome, 
+            arquivoComprimido: base64Arquivo, 
+            logo: base64Logo 
+        }); 
+        alert("Contrato salvo com sucesso!"); 
+        document.getElementById('form-contrato').reset(); 
+        carregarContratos(); 
+    } 
+    catch (error) { alert("Erro ao salvar: " + error.message); } 
+    finally { carregar(false); }
+});
+
+async function carregarContratos() {
+    const lista = document.getElementById('lista-contratos'); if(!lista) return;
+    lista.innerHTML = "<li>Carregando...</li>";
+    const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
+    lista.innerHTML = ""; if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum contrato cadastrado.</li>";
+    
+    snap.forEach(doc => { 
+        const item = doc.data(); 
+        const li = document.createElement('li'); 
+        li.style.cssText = "background: #0a0a0a; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;"; 
+        
+        li.innerHTML = `
+            <span style="color: white; display: flex; align-items: center; gap: 5px;">
+                <i data-lucide="file-text" style="width: 16px; color: #e67e22;"></i> ${item.nome}
+            </span>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="window.abrirPdfComprimido('${doc.id}')" style="background: rgba(0, 210, 255, 0.2); color: #00d2ff; border: 1px solid #00d2ff; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">Abrir Contrato</button>
+                <button onclick="window.apagarContrato('${doc.id}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><i data-lucide="trash-2" style="width: 14px;"></i></button>
+            </div>
+        `; 
+        lista.appendChild(li); 
+    });
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+window.abrirPdfComprimido = async function(id) {
+    try {
+        const docSnap = await getDoc(doc(db, "contratos", id));
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (!data.arquivoComprimido) return alert("Este contrato não tem arquivo anexado.");
+            const base64Descomprimido = LZString.decompressFromUTF16(data.arquivoComprimido);
+            const novaAba = window.open();
+            novaAba.document.write(`<iframe src="${base64Descomprimido}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+        }
+    } catch (e) {
+        alert("Erro ao abrir contrato: " + e.message);
+    }
+};
+
+window.apagarContrato = async function(id) { if(confirm("Tem certeza que deseja apagar este modelo de contrato?")) { await deleteDoc(doc(db, "contratos", id)); carregarContratos(); } };
+
+document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => { btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; }); });
+document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
+
+// ==========================================
+// 🔹 MÓDULO DE REUNIÕES
+// ==========================================
+
+const btnAbrirReuniao = document.getElementById('btn-abrir-reuniao');
+const btnFecharReuniao = document.getElementById('btn-fechar-modal-reuniao');
+const modalReuniao = document.getElementById('modal-reuniao');
+
+if (btnAbrirReuniao && modalReuniao) {
+    btnAbrirReuniao.addEventListener('click', () => {
+        modalReuniao.style.display = 'flex';
+    });
+}
+
+if (btnFecharReuniao && modalReuniao) {
+    btnFecharReuniao.addEventListener('click', () => {
+        modalReuniao.style.display = 'none';
+    });
+}
+
+document.getElementById('form-reuniao')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    carregar(true);
+    
+    const nome = document.getElementById('reuniao-nome').value;
+    const data = document.getElementById('reuniao-data').value;
+    const hora = document.getElementById('reuniao-hora').value;
+    const local = document.getElementById('reuniao-local').value;
+    const obs = document.getElementById('reuniao-obs').value;
+
+    try {
+        await addDoc(collection(db, "reunioes"), {
+            idSubsite: subsiteAtualId,
+            nome: nome,
+            data: data,
+            hora: hora,
+            local: local,
+            obs: obs,
+            criadoEm: new Date()
+        });
+        
+        alert("✅ Reunião agendada!");
+        document.getElementById('form-reuniao').reset();
+        modalReuniao.style.display = 'none';
+    } catch (error) {
+        alert("Erro: " + error.message);
+    } finally {
+        carregar(false);
+    }
+});
+// ==========================================
+// 10. OBSERVADOR DE ESTADO E ADMIN
+// ==========================================
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        if (!user.emailVerified) { 
+            mostrarTela('tela-verificacao'); 
+        } else {
+            getDoc(doc(db, "usuarios", user.uid)).then(snap => {
+                const dados = snap.exists() ? snap.data() : { statusPagamento: "pendente" };
+                const isAdmin = (user.email === "neoflux2012@gmail.com");
+
+                if (!isAdmin && dados.statusPagamento !== "ativo") {
+                    document.getElementById('resumo-nome-pagamento').textContent = dados.nome || user.displayName || "Cliente";
+                    const resumoPlanoPag = document.getElementById('resumo-plano-pagamento');
+                    if (resumoPlanoPag) resumoPlanoPag.textContent = nomesPlanos[dados.planoPreferido] || dados.planoPreferido || "—";
                     
-                    <label style="color: #ccc; font-size: 0.9rem; display: block; margin-bottom: 5px;">Nome do seu Nicho:</label>
-                    <input type="text" id="custom-nicho-nome" placeholder="Ex: Pet Shop, Doceria..." style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 20px;">
+                    mostrarTela('tela-pagamento');
+                    alert("Sua conta está com pagamento pendente. Pague o Pix e envie o comprovante para liberar o acesso.");
+                } else {
+                    if (isAdmin) {
+                        document.getElementById('btn-neo-wave').style.display = 'none';
+                        mostrarTela('tela-escolha-admin');
+                    } else {
+                        const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
+                        if (btnVoltar) btnVoltar.style.display = 'none';
+                        
+                        carregarDadosCliente(user.uid); 
+                        mostrarTela('tela-cliente');
+                    }
+                }
+            });
+        }
+    } else {
+        const telaAtual = document.querySelector('.tela.ativa');
+        if (telaAtual && !['tela-login', 'tela-criar-conta', 'tela-recuperar', 'tela-boas-vindas', 'tela-termos', 'tela-pagamento', 'tela-planos'].includes(telaAtual.id)) {
+            mostrarTela('tela-boas-vindas');
+        }
+    }
+});
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <div>
-                            <label style="color: #ccc; font-size: 0.85rem; display: block; margin-bottom: 5px;">Card 1 (Substitui "Festas"):</label>
-                            <input type="text" id="custom-card-1" placeholder="Ex: Pedidos / Ordens" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                        </div>
-                        <div>
-                            <label style="color: #ccc; font-size: 0.85rem; display: block; margin-bottom: 5px;">Card 2 (Substitui "Catálogo"):</label>
-                            <input type="text" id="custom-card-2" placeholder="Ex: Cardápio / Produtos" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                        </div>
-                        <div>
-                            <label style="color: #ccc; font-size: 0.85rem; display: block; margin-bottom: 5px;">Card 3 (Substitui "Kits"):</label>
-                            <input type="text" id="custom-card-3" placeholder="Ex: Combos / Materiais" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                        </div>
-                        <div>
-                            <label style="color: #ccc; font-size: 0.85rem; display: block; margin-bottom: 5px;">Card 4 (Substitui "Orçamento"):</label>
-                            <input type="text" id="custom-card-4" placeholder="Ex: Calculadora / Vendas" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                        </div>
-                    </div>
+// ==========================================
+// 🔹 ADMIN MASTER: TESTAR PLANOS FACILMENTE
+// ==========================================
+const ADMIN_EMAIL = "neoflux2012@gmail.com";
 
-                    <div style="display: flex; gap: 10px;">
-                        <button type="button" onclick="window.voltarGridNichos()" class="botao-principal" style="background: #333; flex: 1;">Voltar</button>
-                        <button type="button" onclick="window.salvarNichoPersonalizado()" class="botao-principal" style="background: #8a2be2; flex: 1;">Salvar Meu Nicho</button>
-                    </div>
-                </div>
+window.adminTestarPlano = function() {
+    if (auth.currentUser?.email !== ADMIN_EMAIL) return;
+    
+    const planos = ['start', 'pro', 'elite', 'elite_premium', 'fvm_start', 'fvm_pro', 'fvm_elite', 'fvm_elite_premium'];
+    const atual = planoAtual || 'start';
+    
+    const novo = prompt(`🎭 MODO TESTE (Admin Master)\n\nDigite o plano que deseja simular:\n${planos.join(', ')}\n\nPlano atual: ${atual.toUpperCase()}`, atual);
+    
+    if (!novo) return;
+    const novoLimpo = novo.toLowerCase().trim();
+    
+    if (!planos.includes(novoLimpo)) return alert("Plano inválido! Digite exatamente como na lista.");
+    
+    planoAtual = novoLimpo;
+    
+    const nomeBonito = nomesPlanos[planoAtual] || planoAtual.toUpperCase();
+    const clientePlano = document.getElementById('cliente-plano');
+    if (clientePlano) clientePlano.textContent = nomeBonito.toUpperCase();
+    
+    alert(`✅ Interface atualizada para o plano: ${nomeBonito}\n\nEntre em um subsite para ver os recursos liberados!`);
+    
+    if (subsiteAtualId) {
+        abrirSubsite(subsiteAtualId);
+    }
+};
 
-                <div style="text-align: center; margin-top: 20px;">
-                    <p style="color: #666; font-size: 0.75rem; margin: 0;">Você poderá alterar essas configurações a qualquer momento dentro do seu painel.</p>
-                </div>
+window.entrarComoClienteAdmin = async function() {
+    const adminUid = auth.currentUser.uid;
+    carregar(true);
+    try {
+        await carregarDadosCliente(adminUid);
+        
+        const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
+        if (btnVoltar) btnVoltar.style.display = 'block';
+        
+        mostrarTela('tela-cliente');
+    } catch (e) {
+        alert("Erro ao carregar visão de cliente.");
+    } finally {
+        carregar(false);
+    }
+};
+
+document.getElementById('btn-voltar-escolha-admin')?.addEventListener('click', () => {
+    const btnVoltar = document.getElementById('btn-voltar-escolha-admin');
+    if (btnVoltar) btnVoltar.style.display = 'none';
+    mostrarTela('tela-escolha-admin');
+});
+
+document.getElementById('btn-logout-admin-escolha')?.addEventListener('click', async () => {
+    await signOut(auth);
+    mostrarTela('tela-boas-vindas');
+});
+
+// ==========================================
+// 11. ORÇAMENTO INTELIGENTE E HISTÓRICO
+// ==========================================
+async function carregarKitsDoSubsite(idSubsite) {
+    kitsDoSubsite = []; const select = document.getElementById('orc-kit');
+    if (select) select.innerHTML = '<option value="">Carregando kits...</option>';
+    try {
+        const snap = await getDocs(query(collection(db, "kits"), where("idSubsite", "==", idSubsite)));
+        snap.forEach(d => { kitsDoSubsite.push({ id: d.id, ...d.data() }); });
+        if (select) {
+            select.innerHTML = '<option value="">— Selecione um kit —</option>';
+            if (kitsDoSubsite.length === 0) select.innerHTML = '<option value="">Nenhum kit cadastrado</option>';
+            kitsDoSubsite.forEach(k => { const opt = document.createElement('option'); opt.value = k.id; opt.textContent = k.nome || 'Sem nome'; select.appendChild(opt); });
+        }
+    } catch (err) { if (select) select.innerHTML = '<option value="">Erro ao carregar kits</option>'; }
+}
+
+document.getElementById('btn-abrir-orcamento-inteligente')?.addEventListener('click', () => {
+    const regras = getRecursos(planoAtual);
+    if (!regras.kits) return alert("O módulo Kits está disponível a partir do plano Pro.");
+    document.getElementById('orc-cliente').value = ''; document.getElementById('orc-valor').value = '';
+    document.getElementById('orc-obs').value = ''; document.getElementById('orc-mensagem').value = '';
+    document.getElementById('orc-preview-kit').style.display = 'none'; document.getElementById('orc-aviso-preco').style.display = 'none';
+    const bloqueio = document.getElementById('orc-bloqueio-plano'); const btnGerar = document.getElementById('btn-gerar-orcamento');
+    if (!regras.sugestaoMensagem) { bloqueio.style.display = 'block'; btnGerar.innerHTML = '<i data-lucide="file-text" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento (manual)'; } 
+    else { bloqueio.style.display = 'none'; btnGerar.innerHTML = '<i data-lucide="sparkles" style="width: 16px; vertical-align: middle;"></i> Gerar Orçamento'; }
+    carregarKitsDoSubsite(subsiteAtualId);
+    document.getElementById('modal-orcamento-inteligente').style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+
+['btn-fechar-modal-orcamento', 'btn-fechar-modal-orcamento-footer'].forEach(id => { document.getElementById(id)?.addEventListener('click', () => { document.getElementById('modal-orcamento-inteligente').style.display = 'none'; }); });
+
+document.getElementById('orc-kit')?.addEventListener('change', (e) => {
+    const id = e.target.value; const preview = document.getElementById('orc-preview-kit'); const aviso = document.getElementById('orc-aviso-preco'); const inputValor = document.getElementById('orc-valor');
+    if (!id) { preview.style.display = 'none'; aviso.style.display = 'none'; inputValor.value = ''; return; }
+    const kit = kitsDoSubsite.find(k => k.id === id); if (!kit) return;
+    document.getElementById('orc-preview-nome').textContent = kit.nome || '—'; document.getElementById('orc-preview-modelo').textContent = kit.modelo || 'Itens conforme cadastro';
+    const precoKit = parseFloat(kit.preco) || 0; document.getElementById('orc-preview-preco').textContent = precoKit > 0 ? `R$ ${precoKit.toFixed(2).replace('.', ',')}` : 'Não cadastrado';
+    preview.style.display = 'block';
+    if (precoKit > 0) { inputValor.value = precoKit.toFixed(2); aviso.style.display = 'none'; } else { inputValor.value = ''; aviso.style.display = 'block'; }
+});
+
+function gerarTextoOrcamento(estilo, cliente, kit, valor, obs) {
+    const nomeKit = kit.nome || 'Kit'; const itens = kit.modelo || 'Itens conforme cadastro';
+    const precoFmt = valor > 0 ? `R$ ${valor.toFixed(2).replace('.', ',')}` : 'a combinar'; const obsTxt = obs ? `\nObservações: ${obs}` : '';
+    if (estilo === 'carinhoso') return `Olá, ${cliente}! Tudo bem? 💜\n\nSomos da Neo Flux e preparamos seu orçamento com muito carinho!\n\n🎉 Kit: ${nomeKit}\n✨ Itens inclusos: ${itens}\n💰 Valor: ${precoFmt}${obsTxt}\n\nSerá um prazer fazer parte desse momento especial! Estamos à disposição para qualquer dúvida.`;
+    if (estilo === 'direto') return `Olá, ${cliente}.\n\nKit: ${nomeKit}\nItens: ${itens}\nValor: ${precoFmt}${obsTxt}\n\nPodemos confirmar?`;
+    return `Olá, ${cliente}.\n\nSegue o orçamento referente ao ${nomeKit}.\nItens inclusos: ${itens}.\nValor total: ${precoFmt}.${obsTxt}\n\nFicamos à disposição para esclarecimentos.`;
+}
+
+document.getElementById('btn-gerar-orcamento')?.addEventListener('click', async () => {
+    const cliente = document.getElementById('orc-cliente').value.trim(); const idKit = document.getElementById('orc-kit').value;
+    const valor = parseFloat(document.getElementById('orc-valor').value) || 0; const obs = document.getElementById('orc-obs').value.trim(); const estilo = document.getElementById('orc-estilo').value;
+    if (!cliente) return alert("Informe o nome do cliente."); if (!idKit) return alert("Selecione um kit.");
+    const kit = kitsDoSubsite.find(k => k.id === idKit); if (!kit) return alert("Kit não encontrado.");
+    if (!valor || valor <= 0) return alert("Informe o valor do orçamento antes de gerar.");
+    const regras = getRecursos(planoAtual);
+    if (!regras.sugestaoMensagem) {
+        const textoManual = `Olá, ${cliente}.\n\nKit: ${kit.nome || 'Kit'}\nItens: ${kit.modelo || 'Itens conforme cadastro'}\nValor: R$ ${valor.toFixed(2).replace('.', ',')}${obs ? '\nObservações: ' + obs : ''}`;
+        document.getElementById('orc-mensagem').value = textoManual; document.getElementById('orc-mensagem').readOnly = false;
+        salvarOrcamentoHistorico(cliente, kit.nome, valor, textoManual, estilo); return;
+    }
+    const texto = gerarTextoOrcamento(estilo, cliente, kit, valor, obs);
+    const textarea = document.getElementById('orc-mensagem'); textarea.value = texto; textarea.readOnly = false;
+    salvarOrcamentoHistorico(cliente, kit.nome, valor, texto, estilo);
+});
+
+async function salvarOrcamentoHistorico(cliente, nomeKit, valor, mensagem, estilo) {
+    try { await addDoc(collection(db, "historico_orcamentos"), { idSubsite: subsiteAtualId, cliente: cliente, kit: nomeKit, valor: valor, mensagem: mensagem, estilo: estilo, criadoEm: new Date() }); } 
+    catch (err) { console.error("Erro ao salvar no histórico:", err); }
+}
+
+document.getElementById('btn-copiar-orcamento')?.addEventListener('click', async () => {
+    const texto = document.getElementById('orc-mensagem').value; if (!texto.trim()) return alert("Gere o orçamento antes de copiar.");
+    try { await navigator.clipboard.writeText(texto); alert("✅ Mensagem copiada!"); } catch (e) { const ta = document.getElementById('orc-mensagem'); ta.select(); document.execCommand('copy'); alert("✅ Mensagem copiada!"); }
+});
+
+document.getElementById('btn-whatsapp-orcamento')?.addEventListener('click', () => {
+    const texto = document.getElementById('orc-mensagem').value; if (!texto.trim()) return alert("Gere o orçamento antes de abrir o WhatsApp.");
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+});
+
+document.getElementById('btn-abrir-historico-orcamento')?.addEventListener('click', () => { document.getElementById('modal-historico-orcamento').style.display = 'flex'; carregarHistoricoOrcamentos(); });
+['btn-fechar-modal-historico', 'btn-fechar-modal-historico-footer'].forEach(id => { document.getElementById(id)?.addEventListener('click', () => { document.getElementById('modal-historico-orcamento').style.display = 'none'; }); });
+
+async function carregarHistoricoOrcamentos() {
+    const container = document.getElementById('lista-historico-orcamento'); if (!container) return;
+    container.innerHTML = '<p style="color: #888; text-align: center;">Buscando histórico...</p>';
+    try {
+        const dataCorte = new Date(); dataCorte.setDate(dataCorte.getDate() - 30);
+        const q = query(collection(db, "historico_orcamentos"), where("idSubsite", "==", subsiteAtualId));
+        const snap = await getDocs(q); let orcamentos = []; let idsParaDeletar = [];
+        snap.forEach(doc => {
+            const data = doc.data(); const dataCriacao = data.criadoEm?.toDate ? data.criadoEm.toDate() : new Date(data.criadoEm);
+            if (dataCriacao >= dataCorte) { orcamentos.push({ id: doc.id, ...data, dataFormatada: dataCriacao.toLocaleDateString('pt-BR') }); } else { idsParaDeletar.push(doc.id); }
+        });
+        if (idsParaDeletar.length > 0) { idsParaDeletar.forEach(async (id) => { try { await deleteDoc(doc(db, "historico_orcamentos", id)); } catch(e) {} }); }
+        orcamentos.sort((a, b) => { const dA = a.criadoEm?.toDate ? a.criadoEm.toDate() : new Date(a.criadoEm); const dB = b.criadoEm?.toDate ? b.criadoEm.toDate() : new Date(b.criadoEm); return dB - dA; });
+        if (orcamentos.length === 0) { container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Nenhum orçamento gerado nos últimos 30 dias.</p>'; return; }
+        container.innerHTML = '';
+        orcamentos.forEach(orc => {
+            const valorFmt = parseFloat(orc.valor).toFixed(2).replace('.', ',');
+            const card = document.createElement('div'); card.style.cssText = "background: #0a0a0a; border: 1px solid #333; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 8px;";
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;"><strong style="color: white; font-size: 1rem;">${orc.cliente}</strong><span style="color: #888; font-size: 0.8rem;">${orc.dataFormatada}</span></div>
+                <div style="font-size: 0.85rem; color: #ccc;">🎁 <b>Kit:</b> ${orc.kit} <br>💰 <b>Valor:</b> <span style="color: #00c853; font-weight: bold;">R$ ${valorFmt}</span></div>
+                <div style="background: #121212; padding: 10px; border-radius: 6px; font-size: 0.8rem; color: #aaa; white-space: pre-wrap; max-height: 100px; overflow-y: auto; border: 1px solid #222; margin-top: 4px;">${orc.mensagem}</div>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button onclick="window.copiarMensagemHistorico('${orc.id}')" style="flex: 1; padding: 8px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">📋 Copiar</button>
+                    <button onclick="window.enviarWhatsHistorico('${orc.id}')" style="flex: 1; padding: 8px; background: #25D366; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">📱 WhatsApp</button>
+                    <button onclick="window.apagarOrcamentoHistorico('${orc.id}')" style="padding: 8px 12px; background: rgba(231,76,60,0.2); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">🗑️</button>
+                </div>`;
+            container.appendChild(card);
+        });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    } catch (err) { container.innerHTML = '<p style="color: #e74c3c; text-align: center;">Erro ao carregar o histórico.</p>'; }
+}
+window.copiarMensagemHistorico = async function(id) { try { const docSnap = await getDoc(doc(db, "historico_orcamentos", id)); if (docSnap.exists()) { await navigator.clipboard.writeText(docSnap.data().mensagem); alert("✅ Mensagem copiada!"); } } catch (e) { alert("Erro ao copiar."); } };
+window.enviarWhatsHistorico = async function(id) { try { const docSnap = await getDoc(doc(db, "historico_orcamentos", id)); if (docSnap.exists()) { window.open(`https://wa.me/?text=${encodeURIComponent(docSnap.data().mensagem)}`, '_blank'); } } catch (e) { alert("Erro ao abrir WhatsApp."); } };
+window.apagarOrcamentoHistorico = async function(id) { if (confirm("Apagar este orçamento do histórico?")) { try { await deleteDoc(doc(db, "historico_orcamentos", id)); carregarHistoricoOrcamentos(); } catch (e) { alert("Erro ao apagar."); } } };
+
+// ==========================================
+// 12. NEO WAVE ANALISTA (DASHBOARD ELITE)
+// ==========================================
+let chartPicoInstance = null; let chartKitsInstance = null;
+
+document.getElementById('btn-abrir-analista')?.addEventListener('click', async () => { 
+    document.getElementById('modal-analista').style.display = 'flex'; 
+    await gerarRelatorioAnalista(); 
+    await carregarFestasParaRecibo();
+});
+['btn-fechar-modal-analista', 'btn-fechar-modal-analista-footer'].forEach(id => { document.getElementById(id)?.addEventListener('click', () => { document.getElementById('modal-analista').style.display = 'none'; }); });
+
+async function gerarRelatorioAnalista() {
+    const hoje = new Date(); const mesAtual = hoje.getMonth(); const anoAtual = hoje.getFullYear();
+    let faturamentoTotal = 0; let qtdFestas = 0; let faturamentoPorDia = {}; let kitsContagem = {};
+
+    try {
+        const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", subsiteAtualId)));
+        snap.forEach(doc => {
+            const festa = doc.data(); if (!festa.data) return;
+            const dataFesta = new Date(festa.data + 'T00:00:00');
+            if (dataFesta.getMonth() === mesAtual && dataFesta.getFullYear() === anoAtual) {
+                const valorTotal = (parseFloat(festa.total) || 0) + (parseFloat(festa.frete) || 0);
+                faturamentoTotal += valorTotal; qtdFestas++;
+                const dia = festa.data; if (!faturamentoPorDia[dia]) faturamentoPorDia[dia] = 0; faturamentoPorDia[dia] += valorTotal;
+                const nomeKit = festa.kit || festa.tema || "Não informado"; if (!kitsContagem[nomeKit]) kitsContagem[nomeKit] = 0; kitsContagem[nomeKit]++;
+            }
+        });
+        document.getElementById('analista-total-mes').textContent = `R$ ${faturamentoTotal.toFixed(2).replace('.', ',')}`;
+        document.getElementById('analista-qtd-festas').textContent = qtdFestas;
+        let kitTop = "—"; let maxVendas = 0;
+        for (const [kit, qtd] of Object.entries(kitsContagem)) { if (qtd > maxVendas) { maxVendas = qtd; kitTop = kit; } }
+        document.getElementById('analista-kit-top').textContent = kitTop;
+
+        // Gráfico 1
+        const ctxPico = document.getElementById('graficoPicoVendas').getContext('2d');
+        if (chartPicoInstance) chartPicoInstance.destroy();
+        const diasOrdenados = Object.keys(faturamentoPorDia).sort();
+        const dadosPico = diasOrdenados.map(d => faturamentoPorDia[d]);
+        const labelsPico = diasOrdenados.map(d => { const [ano, mes, dia] = d.split('-'); return `${dia}/${mes}`; });
+        chartPicoInstance = new Chart(ctxPico, {
+            type: 'line', data: { labels: labelsPico.length > 0 ? labelsPico : ['Sem dados'], datasets: [{ label: 'Faturamento (R$)', data: dadosPico.length > 0 ? dadosPico : [0], borderColor: '#00d2ff', backgroundColor: 'rgba(0, 210, 255, 0.1)', borderWidth: 3, pointBackgroundColor: '#8a2be2', pointBorderColor: '#fff', pointRadius: 5, fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ` R$ ${context.parsed.y.toFixed(2).replace('.', ',')}`; } } } }, scales: { y: { beginAtZero: true, grid: { color: '#222' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
+        });
+
+        // Gráfico 2
+        const ctxKits = document.getElementById('graficoKitsVendidos').getContext('2d');
+        if (chartKitsInstance) chartKitsInstance.destroy();
+        const kitsOrdenados = Object.entries(kitsContagem).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const labelsKits = kitsOrdenados.map(k => k[0]); const dadosKits = kitsOrdenados.map(k => k[1]);
+        chartKitsInstance = new Chart(ctxKits, {
+            type: 'bar', data: { labels: labelsKits.length > 0 ? labelsKits : ['Sem dados'], datasets: [{ label: 'Qtd. de Vendas', data: dadosKits.length > 0 ? dadosKits : [0], backgroundColor: '#8a2be2', borderRadius: 6, hoverBackgroundColor: '#9d4ee8' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ` ${context.parsed.y} venda(s)`; } } } }, scales: { y: { beginAtZero: true, grid: { color: '#222' }, ticks: { stepSize: 1, color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
+        });
+    } catch (err) { console.error("Erro ao gerar análise:", err); alert("Erro ao carregar os dados do analista."); }
+}
+
+// ==========================================
+// 13. GERADOR DE RECIBO
+// ==========================================
+async function carregarFestasParaRecibo() {
+    const select = document.getElementById('recibo-festa-select');
+    if (!select) return;
+    select.innerHTML = '<option value="">— Selecione uma festa —</option>';
+    
+    try {
+        const snap = await getDocs(query(collection(db, "festas"), where("idSubsite", "==", subsiteAtualId)));
+        const festas = [];
+        snap.forEach(doc => festas.push({ id: doc.id, ...doc.data() }));
+        festas.sort((a, b) => new Date(b.data) - new Date(a.data));
+        
+        festas.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = `${f.nome} - ${f.data.split('-').reverse().join('/')}`;
+            select.appendChild(opt);
+        });
+    } catch (err) { console.error("Erro ao carregar festas para recibo:", err); }
+}
+
+document.getElementById('recibo-festa-select')?.addEventListener('change', atualizarPreviewRecibo);
+document.getElementById('recibo-tipo')?.addEventListener('change', atualizarPreviewRecibo);
+
+async function atualizarPreviewRecibo() {
+    const idFesta = document.getElementById('recibo-festa-select').value;
+    const tipo = document.getElementById('recibo-tipo').value;
+    const preview = document.getElementById('recibo-preview');
+    
+    if (!idFesta) { preview.style.display = 'none'; return; }
+
+    try {
+        const docSnap = await getDoc(doc(db, "festas", idFesta));
+        if (!docSnap.exists()) return;
+        
+        const festa = docSnap.data();
+        const valorTotal = (parseFloat(festa.total) || 0) + (parseFloat(festa.frete) || 0);
+        const sinal = parseFloat(festa.sinal) || 0;
+        
+        let valorRecibo = tipo === 'sinal' ? sinal : valorTotal;
+        let referente = tipo === 'sinal' ? 'Sinal / Entrada' : 'Quitação Total do Evento';
+
+        document.getElementById('recibo-valor').textContent = `R$ ${valorRecibo.toFixed(2).replace('.', ',')}`;
+        document.getElementById('recibo-cliente').textContent = festa.nome || '—';
+        document.getElementById('recibo-referente').textContent = referente;
+        document.getElementById('recibo-data-evento').textContent = festa.data ? festa.data.split('-').reverse().join('/') : '—';
+        
+        preview.style.display = 'block';
+    } catch (err) { console.error("Erro ao gerar preview do recibo:", err); }
+}
+
+document.getElementById('btn-gerar-recibo')?.addEventListener('click', () => {
+    const idFesta = document.getElementById('recibo-festa-select').value;
+    if (!idFesta) return alert("Selecione uma festa para gerar o recibo.");
+    atualizarPreviewRecibo();
+});
+
+document.getElementById('btn-imprimir-recibo')?.addEventListener('click', () => {
+    const idFesta = document.getElementById('recibo-festa-select').value;
+    if (!idFesta) return alert("Selecione e gere o recibo primeiro.");
+    
+    const preview = document.getElementById('recibo-preview');
+    const conteudo = preview.innerHTML;
+    
+    const janela = window.open('', '_blank');
+    janela.document.write(`
+        <html>
+        <head>
+            <title>Recibo - Neo Flux</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; color: #333; background: #fff; }
+                h4 { color: #000; font-size: 20px; margin-bottom: 5px; }
+                .recibo-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+                .recibo-linha { margin-bottom: 10px; font-size: 14px; }
+                .recibo-linha b { color: #000; }
+                .recibo-valor { font-size: 18px; font-weight: bold; color: #00c853; margin: 15px 0; }
+                .recibo-footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                .assinatura { margin-top: 50px; border-top: 1px solid #333; width: 60%; margin-left: auto; margin-right: auto; padding-top: 5px; text-align: center; font-size: 13px; }
+            </style>
+        </head>
+        <body>
+            <div class="recibo-header">
+                <h4>RECIBO DE PAGAMENTO</h4>
+                <div style="font-size: 12px; color: #666;">Neo Flux - Gestão de Eventos</div>
             </div>
-        </div>
+            ${conteudo.replace(/background: #0a0a0a;/g, 'background: #fff;').replace(/color: #ccc;/g, 'color: #333;').replace(/color: #888;/g, 'color: #666;').replace(/color: white;/g, 'color: #000;').replace(/border: 1px solid #00c853;/g, 'border: none;')}
+            <div class="recibo-footer">
+                Este recibo é válido como comprovante de pagamento.
+            </div>
+        </body>
+        </html>
+    `);
+    janela.document.close();
+    setTimeout(() => { janela.print(); }, 500);
+});
 
-    </main>
+// ==========================================
+// 14. VERIFICAÇÃO DE ESTOQUE POR DATA
+// ==========================================
+async function verificarEstoquePorData() {
+    const dataFesta = document.getElementById('festa-data').value;
+    const selectPecas = document.getElementById('festa-pecas');
+    if (!selectPecas) return;
 
-    <script>lucide.createIcons();</script>
+    if (!dataFesta) {
+        await carregarPecasNoSelect();
+        return;
+    }
+
+    carregar(true);
+    try {
+        const qFestas = query(
+            collection(db, "festas"), 
+            where("idSubsite", "==", subsiteAtualId), 
+            where("data", "==", dataFesta)
+        );
+        const snapFestas = await getDocs(qFestas);
+
+        const pecasUsadas = {};
+        snapFestas.forEach(doc => {
+            const festa = doc.data();
+            if (festa.itensDevolvidos) return; 
+
+            if (festa.pecas && Array.isArray(festa.pecas)) {
+                festa.pecas.forEach(nomePeca => {
+                    const qtd = (festa.pecasQtd && festa.pecasQtd[nomePeca]) ? parseInt(festa.pecasQtd[nomePeca]) : 1;
+                    if (!pecasUsadas[nomePeca]) pecasUsadas[nomePeca] = 0;
+                    pecasUsadas[nomePeca] += qtd;
+                });
+            }
+        });
+
+        const qCatalogo = query(collection(db, "catalogo"), where("idSubsite", "==", subsiteAtualId));
+        const snapCat = await getDocs(qCatalogo);
+
+        selectPecas.innerHTML = ""; 
+        snapCat.forEach(doc => {
+            const item = doc.data();
+            const nome = item.nome;
+            const estoqueTotal = parseInt(item.quantidade) || 1;
+            
+            const usadaNestaData = pecasUsadas[nome] || 0;
+            const disponivel = estoqueTotal - usadaNestaData;
+
+            const opt = document.createElement("option");
+            opt.value = nome;
+            
+            if (disponivel <= 0) {
+                opt.textContent = `${nome} (❌ ESGOTADO nesta data)`;
+                opt.disabled = true;
+                opt.style.color = "#e74c3c";
+            } else {
+                opt.textContent = `${nome} (${disponivel} disp.)`;
+            }
+            selectPecas.appendChild(opt);
+        });
+
+    } catch (error) {
+        console.error("Erro ao verificar estoque por data:", error);
+    } finally {
+        carregar(false);
+    }
+}
+
+document.getElementById('festa-data')?.addEventListener('change', verificarEstoquePorData);
+
+// ==========================================
+// 15. MÓDULO FVM (FAÇA VOCÊ MESMO)
+// ==========================================
+
+window.abrirModalNicho = function(idSubsite) {
+    subsiteAtualId = idSubsite;
+    const modal = document.getElementById('modal-nicho-fvm');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.getElementById('grid-nichos-fvm').style.display = 'grid';
+        document.getElementById('area-personalizar-nicho').style.display = 'none';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+};
+
+window.selecionarNichoFVM = function(nicho) {
+    const mapNomes = {
+        alimentacao: { c1: 'Pedidos de Hoje', c2: 'Cardápio Digital', c3: 'Combos Fechados', c4: 'Calculadora de Vendas' },
+        artesanato: { c1: 'Encomendas', c2: 'Meus Produtos', c3: 'Kits de Materiais', c4: 'Orçamentos' },
+        beleza: { c1: 'Agendamentos', c2: 'Serviços', c3: 'Combos de Tratamento', c4: 'Orçamentos' },
+        servicos: { c1: 'Ordens de Serviço', c2: 'Materiais', c3: 'Pacotes de Serviço', c4: 'Orçamentos' },
+        moda: { c1: 'Pedidos / Encomendas', c2: 'Minhas Peças', c3: 'Combos / Looks', c4: 'Orçamentos' }
+    };
+
+    const nomes = mapNomes[nicho];
+    if (!nomes) return;
+
+    const config = { nicho: nicho, card1: nomes.c1, card2: nomes.c2, card3: nomes.c3, card4: nomes.c4 };
     
-    <!-- Carrega o cérebro principal do sistema (Festas, FVM, Gráficos) -->
-    <script type="module" src="./neo.js"></script>
-    
-    <!-- Carrega o cérebro do chat (Neo Wave) -->
-    <script type="module" src="./neowave.js"></script>
+    window.aplicarTraducaoFVM(config);
+    window.salvarNichoNoBanco(config);
+};
 
-</body>
-</html>
+window.abrirPersonalizacaoNicho = function() {
+    document.getElementById('grid-nichos-fvm').style.display = 'none';
+    document.getElementById('area-personalizar-nicho').style.display = 'block';
+};
+
+window.voltarGridNichos = function() {
+    document.getElementById('grid-nichos-fvm').style.display = 'grid';
+    document.getElementById('area-personalizar-nicho').style.display = 'none';
+};
+
+window.salvarNichoPersonalizado = async function() {
+    const nomeNicho = document.getElementById('custom-nicho-nome').value.trim();
+    const c1 = document.getElementById('custom-card-1').value.trim() || 'Projetos';
+    const c2 = document.getElementById('custom-card-2').value.trim() || 'Catálogo';
+    const c3 = document.getElementById('custom-card-3').value.trim() || 'Kits';
+    const c4 = document.getElementById('custom-card-4').value.trim() || 'Orçamentos';
+
+    if (!nomeNicho) return alert("Dê um nome ao seu nicho.");
+
+    const config = { nicho: nomeNicho, card1: c1, card2: c2, card3: c3, card4: c4 };
+
+    window.aplicarTraducaoFVM(config);
+    await window.salvarNichoNoBanco(config);
+};
+
+window.salvarNichoNoBanco = async function(config) {
+    carregar(true);
+    try {
+        await updateDoc(doc(db, "subsites", subsiteAtualId), { configFVM: config });
+        alert("✅ Painel personalizado com sucesso!");
+        document.getElementById('modal-nicho-fvm').style.display = 'none';
+    } catch (e) {
+        alert("Erro ao salvar a personalização: " + e.message);
+    } finally {
+        carregar(false);
+    }
+};
+
+window.aplicarTraducaoFVM = function(config) {
+    // 1. Traduzir os Cards
+    document.getElementById('titulo-card-1').textContent = config.card1 || 'Projetos';
+    document.getElementById('titulo-card-2').textContent = config.card2 || 'Catálogo';
+    document.getElementById('titulo-card-3').textContent = config.card3 || 'Kits';
+    document.getElementById('titulo-card-4').textContent = config.card4 || 'Orçamento';
+    document.getElementById('titulo-lista-festas').textContent = config.card1 || 'Projetos';
+    document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${config.card1 || 'Projeto'}`;
+
+    // Tradução do Card de Reunião
+    const tituloReuniao = document.getElementById('titulo-card-reuniao');
+    if (tituloReuniao) {
+        if (config.nicho === 'alimentacao') tituloReuniao.textContent = 'Degustações';
+        else if (config.nicho === 'servicos') tituloReuniao.textContent = 'Visitas Técnicas';
+        else if (config.nicho === 'artesanato') tituloReuniao.textContent = 'Reuniões com Clientes';
+        else tituloReuniao.textContent = 'Reuniões';
+    }
+
+    // 2. Traduzir os Modais (se não for festa)
+    if (config.nicho !== 'festa') {
+        document.getElementById('div-festa-cpf').style.display = 'none';
+        document.getElementById('festa-cpf').required = false;
+        document.getElementById('festa-cpf').value = "";
+
+        document.getElementById('label-festa-tema').textContent = "O que ele pediu? (Descrição)";
+        document.getElementById('label-festa-local').textContent = "Endereço de Entrega / Local";
+        document.getElementById('label-festa-pecas').textContent = "Itens do Pedido (Selecione no Catálogo)";
+        document.getElementById('btn-salvar-festa').textContent = "Salvar Pedido";
+
+        document.getElementById('titulo-modal-kit').textContent = `Gerador de ${config.card3 || 'Combo'}`;
+        document.getElementById('label-kit-nome').textContent = `Nome do ${config.card3 || 'Combo'}`;
+        document.getElementById('label-kit-modelo').textContent = "O que vai incluso?";
+        document.getElementById('label-orc-kit').textContent = `Selecione um(a) ${config.card3 || 'Combo'} cadastrado(a):`;
+
+        const tituloOrc = document.getElementById('titulo-modal-orcamento');
+        if (tituloOrc) tituloOrc.innerHTML = `<i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> ${config.card4 || 'Orçamento'}`;
+        
+        const textoAjudaOrc = document.getElementById('texto-ajuda-orcamento');
+        if (textoAjudaOrc) textoAjudaOrc.innerHTML = `<i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do(a) ${config.card3 || 'item'} escolhido(a).`;
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+};
+
+window.resetarTraducaoFVM = function() {
+    document.getElementById('titulo-card-1').textContent = 'Festas';
+    document.getElementById('titulo-card-2').textContent = 'Catálogo';
+    document.getElementById('titulo-card-3').textContent = 'Kits';
+    document.getElementById('titulo-card-4').textContent = 'Orçamento Inteligente';
+    document.getElementById('titulo-lista-festas').textContent = 'Próximas Festas';
+    document.getElementById('btn-agendar-festa').textContent = 'Agendar Festa';
+
+    const tituloReuniao = document.getElementById('titulo-card-reuniao');
+    if (tituloReuniao) tituloReuniao.textContent = 'Reuniões';
+
+    document.getElementById('div-festa-cpf').style.display = 'block';
+    document.getElementById('festa-cpf').required = true;
+    document.getElementById('label-festa-tema').textContent = "Tema (ou escolha um Kit salvo):";
+    document.getElementById('label-festa-local').textContent = "Localização:";
+    document.getElementById('label-festa-pecas').textContent = "Peças (Selecione no Catálogo):";
+    document.getElementById('btn-salvar-festa').textContent = "Agendar";
+
+    document.getElementById('titulo-modal-kit').textContent = "Gerador de Kit";
+    document.getElementById('label-kit-nome').textContent = "Nome do Kit:";
+    document.getElementById('label-kit-modelo').textContent = "Modelo do Kit:";
+    document.getElementById('label-orc-kit').textContent = "Selecione um kit cadastrado:";
+
+    const tituloOrcReset = document.getElementById('titulo-modal-orcamento');
+    if (tituloOrcReset) tituloOrcReset.innerHTML = `<i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> Orçamento Inteligente`;
+    
+    const textoAjudaOrcReset = document.getElementById('texto-ajuda-orcamento');
+    if (textoAjudaOrcReset) textoAjudaOrcReset.innerHTML = `<i data-lucide="bot" style="width: 14px; vertical-align: middle; color: #8a2be2;"></i> O <strong>Neo Wave</strong> vai montar uma mensagem pronta com os dados reais do kit escolhido.`;
+};
