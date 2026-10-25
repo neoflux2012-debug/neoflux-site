@@ -209,6 +209,7 @@ async function carregarDadosCliente(uid) {
         }
     } catch (error) { console.error(error); } finally { carregar(false); }
 }
+
 async function carregarSubsites(uid, limite) {
     const lista = document.getElementById('lista-subsites'); if(!lista) return;
     lista.innerHTML = "";
@@ -254,7 +255,6 @@ async function carregarSubsites(uid, limite) {
         }
     }));
 }
-
 document.getElementById('btn-criar-subsite')?.addEventListener('click', async () => {
     const titulo = document.getElementById('titulo-subsite').value.trim();
     if (!titulo) return alert("Digite um título para o subsite.");
@@ -747,6 +747,49 @@ window.apagarContrato = async function(id) { if(confirm("Tem certeza que deseja 
 
 document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => { btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; }); });
 document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
+
+// ==========================================
+// 🔹 MÓDULO DE REUNIÕES
+// ==========================================
+
+document.getElementById('btn-abrir-reuniao')?.addEventListener('click', () => {
+    document.getElementById('modal-reuniao').style.display = 'flex';
+});
+
+document.getElementById('btn-fechar-modal-reuniao')?.addEventListener('click', () => {
+    document.getElementById('modal-reuniao').style.display = 'none';
+});
+
+document.getElementById('form-reuniao')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    carregar(true);
+    
+    const nome = document.getElementById('reuniao-nome').value;
+    const data = document.getElementById('reuniao-data').value;
+    const hora = document.getElementById('reuniao-hora').value;
+    const local = document.getElementById('reuniao-local').value;
+    const obs = document.getElementById('reuniao-obs').value;
+
+    try {
+        await addDoc(collection(db, "reunioes"), {
+            idSubsite: subsiteAtualId,
+            nome: nome,
+            data: data,
+            hora: hora,
+            local: local,
+            obs: obs,
+            criadoEm: new Date()
+        });
+        
+        alert("✅ Reunião agendada!");
+        document.getElementById('form-reuniao').reset();
+        document.getElementById('modal-reuniao').style.display = 'none';
+    } catch (error) {
+        alert("Erro: " + error.message);
+    } finally {
+        carregar(false);
+    }
+});
 
 // ==========================================
 // 10. OBSERVADOR DE ESTADO E ADMIN
@@ -1275,6 +1318,15 @@ window.aplicarTraducaoFVM = function(config) {
     document.getElementById('titulo-lista-festas').textContent = config.card1 || 'Projetos';
     document.getElementById('btn-agendar-festa').textContent = `Novo(a) ${config.card1 || 'Projeto'}`;
 
+    // Tradução do Card de Reunião
+    const tituloReuniao = document.getElementById('titulo-card-reuniao');
+    if (tituloReuniao) {
+        if (config.nicho === 'alimentacao') tituloReuniao.textContent = 'Degustações';
+        else if (config.nicho === 'servicos') tituloReuniao.textContent = 'Visitas Técnicas';
+        else if (config.nicho === 'artesanato') tituloReuniao.textContent = 'Reuniões com Clientes';
+        else tituloReuniao.textContent = 'Reuniões';
+    }
+
     // 2. Traduzir os Modais (se não for festa)
     if (config.nicho !== 'festa') {
         document.getElementById('div-festa-cpf').style.display = 'none';
@@ -1291,7 +1343,6 @@ window.aplicarTraducaoFVM = function(config) {
         document.getElementById('label-kit-modelo').textContent = "O que vai incluso?";
         document.getElementById('label-orc-kit').textContent = `Selecione um(a) ${config.card3 || 'Combo'} cadastrado(a):`;
 
-        // 🔹 TRADUÇÃO DO ORÇAMENTO INTELIGENTE
         const tituloOrc = document.getElementById('titulo-modal-orcamento');
         if (tituloOrc) tituloOrc.innerHTML = `<i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> ${config.card4 || 'Orçamento'}`;
         
@@ -1310,6 +1361,9 @@ window.resetarTraducaoFVM = function() {
     document.getElementById('titulo-lista-festas').textContent = 'Próximas Festas';
     document.getElementById('btn-agendar-festa').textContent = 'Agendar Festa';
 
+    const tituloReuniao = document.getElementById('titulo-card-reuniao');
+    if (tituloReuniao) tituloReuniao.textContent = 'Reuniões';
+
     document.getElementById('div-festa-cpf').style.display = 'block';
     document.getElementById('festa-cpf').required = true;
     document.getElementById('label-festa-tema').textContent = "Tema (ou escolha um Kit salvo):";
@@ -1322,7 +1376,6 @@ window.resetarTraducaoFVM = function() {
     document.getElementById('label-kit-modelo').textContent = "Modelo do Kit:";
     document.getElementById('label-orc-kit').textContent = "Selecione um kit cadastrado:";
 
-    // 🔹 RESET DO ORÇAMENTO INTELIGENTE
     const tituloOrcReset = document.getElementById('titulo-modal-orcamento');
     if (tituloOrcReset) tituloOrcReset.innerHTML = `<i data-lucide="sparkles" style="color: #8a2be2; width: 26px;"></i> Orçamento Inteligente`;
     
