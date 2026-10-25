@@ -752,13 +752,21 @@ document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () =
 // 🔹 MÓDULO DE REUNIÕES
 // ==========================================
 
-document.getElementById('btn-abrir-reuniao')?.addEventListener('click', () => {
-    document.getElementById('modal-reuniao').style.display = 'flex';
-});
+const btnAbrirReuniao = document.getElementById('btn-abrir-reuniao');
+const btnFecharReuniao = document.getElementById('btn-fechar-modal-reuniao');
+const modalReuniao = document.getElementById('modal-reuniao');
 
-document.getElementById('btn-fechar-modal-reuniao')?.addEventListener('click', () => {
-    document.getElementById('modal-reuniao').style.display = 'none';
-});
+if (btnAbrirReuniao && modalReuniao) {
+    btnAbrirReuniao.addEventListener('click', () => {
+        modalReuniao.style.display = 'flex';
+    });
+}
+
+if (btnFecharReuniao && modalReuniao) {
+    btnFecharReuniao.addEventListener('click', () => {
+        modalReuniao.style.display = 'none';
+    });
+}
 
 document.getElementById('form-reuniao')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -783,7 +791,7 @@ document.getElementById('form-reuniao')?.addEventListener('submit', async (e) =>
         
         alert("✅ Reunião agendada!");
         document.getElementById('form-reuniao').reset();
-        document.getElementById('modal-reuniao').style.display = 'none';
+        modalReuniao.style.display = 'none';
     } catch (error) {
         alert("Erro: " + error.message);
     } finally {
