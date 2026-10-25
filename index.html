@@ -363,7 +363,43 @@
             <button id="btn-logout" class="botao-principal" style="background: #333;">Sair da Conta</button>
         </section>
 
-              <!-- TELA 10: PAINEL DO SUBSITE -->
+              <!-- NEO FLUX MARKETPLACE: editor inicial local, ainda sem publicação -->
+        <section id="tela-marketplace" class="tela">
+            <div class="market-topo">
+                <div class="market-marca"><strong>Neo Flux</strong><span>Marketplace</span></div>
+                <button id="btn-voltar-marketplace" type="button" class="market-voltar">Voltar ao painel</button>
+            </div>
+            <div class="market-conteudo">
+                <div class="market-editor">
+                    <h2>Monte sua Vitrine</h2>
+                    <p>Personalize e visualize o perfil público da sua empresa. Esta versão é apenas uma prévia.</p>
+                    <label for="market-nome">Nome da empresa</label>
+                    <input id="market-nome" maxlength="80" placeholder="Nome da sua empresa">
+                    <label for="market-descricao">Apresentação</label>
+                    <textarea id="market-descricao" maxlength="300" placeholder="Conte o que sua empresa oferece"></textarea>
+                    <label for="market-whatsapp">WhatsApp comercial (somente números)</label>
+                    <input id="market-whatsapp" inputmode="numeric" maxlength="15" placeholder="5561999999999">
+                    <label for="market-cor">Cor de destaque</label>
+                    <input id="market-cor" type="color" value="#8a2be2">
+                    <div class="market-nota">Rascunho local de demonstração. Ainda não é salvo nem publicado no Firebase.</div>
+                </div>
+                <div class="market-preview" aria-label="Prévia da vitrine">
+                    <span class="market-preview-tag">PRÉVIA DO PERFIL</span>
+                    <div class="market-preview-capa"></div>
+                    <div class="market-preview-info">
+                        <div class="market-preview-logo"><i data-lucide="store"></i></div>
+                        <h3 id="market-preview-nome">Minha empresa</h3>
+                        <p id="market-preview-descricao">Seu portfólio e seus produtos aparecerão aqui.</p>
+                        <span class="market-preview-estrelas">★★★★★ <small>Nova empresa · Sem avaliações</small></span>
+                        <a id="market-preview-contato" class="market-preview-contato" href="#" aria-disabled="true">WhatsApp (prévia)</a>
+                        <div class="market-preview-abas"><span>Portfólio</span><span>Produtos</span><span>Avaliações</span></div>
+                        <div class="market-preview-vazio">Seus trabalhos e anúncios serão exibidos aqui após a configuração.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA 10: PAINEL DO SUBSITE -->
         <section id="tela-subsite" class="tela" style="max-width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h1 id="nome-do-subsite" style="color: #00d2ff; margin: 0;">...</h1>
@@ -387,6 +423,13 @@
                     <i data-lucide="gift" style="color: #9b59b6; width: 28px; height: 28px; margin-bottom: 10px;"></i>
                     <h3 style="color: white; margin: 0 0 10px 0;" id="titulo-card-3">Kits</h3>
                     <button id="btn-abrir-kits" class="botao-principal" style="width: 100%;">Gerar Kit</button>
+                </div>
+
+                <!-- NEO FLUX MARKETPLACE: acesso pelo subsite -->
+                <div id="card-marketplace" style="background:#121212;border:1px solid #8a2be2;border-radius:12px;padding:25px;">
+                    <i data-lucide="store" style="color:#b57bff;width:28px;height:28px;margin-bottom:10px;"></i>
+                    <h3 style="color:white;margin:0 0 10px;">Marketplace</h3>
+                    <button id="btn-abrir-marketplace" class="botao-principal" type="button">Monte sua Vitrine</button>
                 </div>
 
                 <!-- 🔹 NOVO CARD: AGENDAR REUNIÃO -->
