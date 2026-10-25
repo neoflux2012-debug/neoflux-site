@@ -398,13 +398,32 @@ async function carregarFestas(id) {
             `;
             divPasta.appendChild(header);
 
-            const conteudo = document.createElement('div');
-            conteudo.style.cssText = "margin-top: 15px; display: none; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;";
+                       const conteudo = document.createElement('div');
+            conteudo.style.cssText = "margin-top: 15px; display: none;";
+            
+            // 🔹 BARRA DE PESQUISA DENTRO DA PASTA
+            const barraPesquisa = document.createElement('input');
+            barraPesquisa.type = 'text';
+            barraPesquisa.placeholder = '🔍 Pesquisar festa nesta pasta...';
+            barraPesquisa.style.cssText = "width: 100%; padding: 10px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; border-radius: 6px; font-size: 0.85rem;";
+            
+            const gridFestas = document.createElement('div');
+            gridFestas.style.cssText = "display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;";
+            
+            barraPesquisa.addEventListener('input', (e) => {
+                const termo = e.target.value.toLowerCase();
+                gridFestas.querySelectorAll('.card-festa').forEach(card => {
+                    card.style.display = card.innerText.toLowerCase().includes(termo) ? 'block' : 'none';
+                });
+            });
+            
+            conteudo.appendChild(barraPesquisa);
+            conteudo.appendChild(gridFestas);
             
             if (pasta.festas) {
                 pasta.festas.forEach(idFesta => {
                     const f = festasGlobais.find(x => x.id === idFesta);
-                    if (f) conteudo.appendChild(renderizarCardFesta(f, regras));
+                    if (f)gridFesta.appendChild(renderizarCardFesta(f, regras));
                 });
             }
             divPasta.appendChild(conteudo);
@@ -413,7 +432,7 @@ async function carregarFestas(id) {
             btnToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const isHidden = conteudo.style.display === 'none';
-                conteudo.style.display = isHidden ? 'grid' : 'none';
+                conteudo.style.display = isHidden ? 'block' : 'none';
                 btnToggle.innerHTML = isHidden ? '<i data-lucide="chevron-up" style="width: 14px; vertical-align: middle;"></i>' : '<i data-lucide="chevron-down" style="width: 14px; vertical-align: middle;"></i>';
                 lucide.createIcons();
             });
@@ -724,30 +743,79 @@ document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
 });
 
 // ==========================================
-// 🔹 CONTRATOS COM COMPRESSÃO LZ-STRING
+// 🔹 CONTRATOS COM VARIÁVEIS E PRÉVIA EM TEMPO REAL
 // ==========================================
-document.getElementById('btn-abrir-contratos')?.addEventListener('click', () => { document.getElementById('modal-contratos').style.display = 'flex'; carregarContratos(); });
 
+// Função que insere a variável no texto ao clicar no botão
+document.querySelectorAll('.btn-variavel').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const variavel = e.target.getAttribute('data-variavel');
+        const textarea = document.getElementById('contrato-texto');
+        if (!textarea) return;
+        
+        const startPos = textarea.selectionStart;
+        const endPos = textarea.selectionEnd;
+        
+        textarea.value = textarea.value.substring(0, startPos) + variavel + textarea.value.substring(endPos, textarea.value.length);
+        textarea.selectionStart = textarea.selectionEnd = startPos + variavel.length;
+        textarea.focus();
+        
+        atualizarPreviaContrato(); // Atualiza a prévia ao inserir
+    });
+});
+
+// Atualiza a prévia em tempo real quando digita no texto base ou nos campos de teste
+document.getElementById('contrato-texto')?.addEventListener('input', atualizarPreviaContrato);
+['teste-nome', 'teste-cpf', 'teste-data', 'teste-tema', 'teste-local', 'teste-pecas', 'teste-valor', 'teste-sinal'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', atualizarPreviaContrato);
+});
+
+function atualizarPreviaContrato() {
+    const textoBase = document.getElementById('contrato-texto')?.value || '';
+    
+    // Pega os valores digitados (ou deixa a tag visível se não digitou nada)
+    const nome = document.getElementById('teste-nome')?.value || '[NOME_CLIENTE]';
+    const cpf = document.getElementById('teste-cpf')?.value || '[CPF]';
+    const data = document.getElementById('teste-data')?.value || '[DATA]';
+    const tema = document.getElementById('teste-tema')?.value || '[TEMA]';
+    const local = document.getElementById('teste-local')?.value || '[LOCAL]';
+    const pecas = document.getElementById('teste-pecas')?.value || '[PECAS]';
+    const valor = document.getElementById('teste-valor')?.value || '[VALOR_TOTAL]';
+    const sinal = document.getElementById('teste-sinal')?.value || '[SINAL]';
+
+    // Substitui as tags no texto
+    let textoFinal = textoBase
+        .replace(/\[NOME_CLIENTE\]/g, nome)
+        .replace(/\[CPF\]/g, cpf)
+        .replace(/\[DATA\]/g, data)
+        .replace(/\[TEMA\]/g, tema)
+        .replace(/\[LOCAL\]/g, local)
+        .replace(/\[PECAS\]/g, pecas)
+        .replace(/\[VALOR_TOTAL\]/g, valor)
+        .replace(/\[SINAL\]/g, sinal);
+
+    // Mostra na prévia
+    const previaDiv = document.getElementById('previa-contrato');
+    if (previaDiv) previaDiv.textContent = textoFinal;
+}
+
+// Abrir o modal
+document.getElementById('btn-abrir-contratos')?.addEventListener('click', () => { 
+    document.getElementById('modal-contratos').style.display = 'flex'; 
+    carregarContratos(); 
+    atualizarPreviaContrato(); 
+});
+
+// Salvar o modelo no banco
 document.getElementById('form-contrato')?.addEventListener('submit', async (e) => {
     e.preventDefault(); 
     carregar(true);
     
     const nome = document.getElementById('contrato-nome').value; 
-    const fileInputArquivo = document.getElementById('contrato-arquivo'); 
+    const textoBase = document.getElementById('contrato-texto').value;
     const fileInputLogo = document.getElementById('contrato-logo');
     
-    let base64Arquivo = ""; 
     let base64Logo = "";
-
-    if (fileInputArquivo.files.length > 0) { 
-        const file = fileInputArquivo.files[0]; 
-        const base64Original = await new Promise((resolve) => { 
-            const reader = new FileReader(); 
-            reader.onloadend = () => resolve(reader.result); 
-            reader.readAsDataURL(file); 
-        }); 
-        base64Arquivo = LZString.compressToUTF16(base64Original); 
-    }
 
     if (fileInputLogo.files.length > 0) {
         const fileLogo = fileInputLogo.files[0];
@@ -762,22 +830,24 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
         await addDoc(collection(db, "contratos"), { 
             idSubsite: subsiteAtualId, 
             nome: nome, 
-            arquivoComprimido: base64Arquivo, 
+            textoBase: textoBase, 
             logo: base64Logo 
         }); 
-        alert("Contrato salvo com sucesso!"); 
+        alert("Modelo de contrato salvo com sucesso!"); 
         document.getElementById('form-contrato').reset(); 
+        atualizarPreviaContrato(); // Limpa a prévia após salvar
         carregarContratos(); 
     } 
     catch (error) { alert("Erro ao salvar: " + error.message); } 
     finally { carregar(false); }
 });
 
+// Carregar a lista de contratos salvos
 async function carregarContratos() {
     const lista = document.getElementById('lista-contratos'); if(!lista) return;
     lista.innerHTML = "<li>Carregando...</li>";
     const snap = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
-    lista.innerHTML = ""; if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum contrato cadastrado.</li>";
+    lista.innerHTML = ""; if (snap.empty) return lista.innerHTML = "<li style='color:#888;'>Nenhum modelo cadastrado.</li>";
     
     snap.forEach(doc => { 
         const item = doc.data(); 
@@ -789,7 +859,6 @@ async function carregarContratos() {
                 <i data-lucide="file-text" style="width: 16px; color: #e67e22;"></i> ${item.nome}
             </span>
             <div style="display: flex; gap: 10px;">
-                <button onclick="window.abrirPdfComprimido('${doc.id}')" style="background: rgba(0, 210, 255, 0.2); color: #00d2ff; border: 1px solid #00d2ff; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">Abrir Contrato</button>
                 <button onclick="window.apagarContrato('${doc.id}')" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; padding: 5px 10px; border-radius: 4px; cursor: pointer;"><i data-lucide="trash-2" style="width: 14px;"></i></button>
             </div>
         `; 
@@ -799,23 +868,103 @@ async function carregarContratos() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-window.abrirPdfComprimido = async function(id) {
+// Apagar modelo
+window.apagarContrato = async function(id) { 
+    if(confirm("Tem certeza que deseja apagar este modelo de contrato?")) { 
+        await deleteDoc(doc(db, "contratos", id)); 
+        carregarContratos(); 
+    } 
+};
+
+// ==========================================
+// 🔹 GERADOR DE CONTRATO AUTOMÁTICO (HTML2PDF)
+// ==========================================
+window.abrirGeradorContratoPDF = async function(idFesta) {
+    carregar(true);
     try {
-        const docSnap = await getDoc(doc(db, "contratos", id));
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            if (!data.arquivoComprimido) return alert("Este contrato não tem arquivo anexado.");
-            const base64Descomprimido = LZString.decompressFromUTF16(data.arquivoComprimido);
-            const novaAba = window.open();
-            novaAba.document.write(`<iframe src="${base64Descomprimido}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+        // 1. Busca os dados da festa
+        const docFesta = await getDoc(doc(db, "festas", idFesta));
+        if (!docFesta.exists()) return alert("Festa não encontrada.");
+        const festa = docFesta.data();
+
+        // 2. Busca os modelos de contrato salvos
+        const snapContratos = await getDocs(query(collection(db, "contratos"), where("idSubsite", "==", subsiteAtualId)));
+        if (snapContratos.empty) return alert("Nenhum modelo cadastrado. Vá em 'Contratos' e cadastre um modelo primeiro.");
+
+        const modelo = snapContratos.docs[0].data();
+        let texto = modelo.textoBase;
+
+        // 3. Substitui as variáveis com os dados reais da festa
+        const dataFormatada = festa.data.split('-').reverse().join('/');
+        const pecasStr = festa.pecas && festa.pecas.length > 0 ? festa.pecas.join(", ") : "Nenhuma";
+        const total = parseFloat(festa.total) || 0;
+        const sinal = parseFloat(festa.sinal) || 0;
+
+        texto = texto
+            .replace(/\[NOME_CLIENTE\]/g, festa.nome || '—')
+            .replace(/\[CPF\]/g, festa.cpf || '—')
+            .replace(/\[DATA\]/g, dataFormatada || '—')
+            .replace(/\[TEMA\]/g, festa.tema || '—')
+            .replace(/\[LOCAL\]/g, festa.local || '—')
+            .replace(/\[PECAS\]/g, pecasStr)
+            .replace(/\[VALOR_TOTAL\]/g, `R$ ${total.toFixed(2).replace('.', ',')}`)
+            .replace(/\[SINAL\]/g, `R$ ${sinal.toFixed(2).replace('.', ',')}`);
+
+        // 4. Monta o HTML do PDF
+        const logoHtml = modelo.logo ? `<img src="${modelo.logo}" style="max-width: 150px; max-height: 100px; margin-bottom: 20px; object-fit: contain;">` : '';
+        const textoFormatado = texto.replace(/\n/g, '<br>');
+
+        const htmlContrato = `
+            <div id="contrato-para-pdf" style="font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; max-width: 800px; margin: 0 auto; background: #fff;">
+                <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 20px; margin-bottom: 30px;">
+                    ${logoHtml}
+                    <h2 style="margin: 0; font-size: 22px;">CONTRATO</h2>
+                </div>
+                <div style="font-size: 14px; text-align: justify;">
+                    ${textoFormatado}
+                </div>
+                <div style="margin-top: 60px; text-align: center;">
+                    <div style="border-top: 1px solid #333; width: 60%; margin: 0 auto; padding-top: 5px; font-size: 12px;">Assinatura do Contratante</div>
+                    <div style="border-top: 1px solid #333; width: 60%; margin: 40px auto 0 auto; padding-top: 5px; font-size: 12px;">Assinatura da Empresa</div>
+                </div>
+                <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #888;">Gerado automaticamente pelo sistema Neo Flux.</div>
+            </div>
+        `;
+
+        // 5. Cria o elemento invisível e gera o PDF
+        const containerTemp = document.createElement('div');
+        containerTemp.innerHTML = htmlContrato;
+        document.body.appendChild(containerTemp);
+        const elemento = document.getElementById('contrato-para-pdf');
+        
+        const opt = {
+            margin:       0,
+            filename:     `Contrato_${festa.nome.replace(/\s+/g, '_')}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Carrega o html2pdf dinamicamente
+        if (typeof html2pdf === 'undefined') {
+            const script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+            script.onload = () => { html2pdf().set(opt).from(elemento).save().then(() => containerTemp.remove()); };
+            document.head.appendChild(script);
+        } else {
+            await html2pdf().set(opt).from(elemento).save();
+            containerTemp.remove();
         }
+
     } catch (e) {
-        alert("Erro ao abrir contrato: " + e.message);
+        console.error(e);
+        alert("Erro ao gerar contrato: " + e.message);
+    } finally {
+        carregar(false);
     }
 };
 
-window.apagarContrato = async function(id) { if(confirm("Tem certeza que deseja apagar este modelo de contrato?")) { await deleteDoc(doc(db, "contratos", id)); carregarContratos(); } };
-
+// (Mantém o fechamento dos modais que já existia)
 document.querySelectorAll('[id^="btn-fechar-modal"]').forEach(btn => { btn.addEventListener('click', (e) => { e.target.closest('[id^="modal-"]').style.display = 'none'; }); });
 document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () => document.getElementById('modal-relatorios').style.display = 'none');
 
