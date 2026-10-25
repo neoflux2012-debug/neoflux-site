@@ -885,9 +885,8 @@ document.getElementById('form-contrato')?.addEventListener('submit', async (e) =
             textoBase: textoBase, 
             logo: base64Logo 
         }); 
-        alert("Modelo de contrato salvo com sucesso!"); 
+        alert("Informações salvas com sucesso!"); 
         document.getElementById('form-contrato').reset(); 
-        atualizarPreviaContrato(); // Limpa a prévia após salvar
         carregarContratos(); 
     } 
     catch (error) { alert("Erro ao salvar: " + error.message); } 
