@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, setPersistence, browserLocalPersistence, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -1876,9 +1876,9 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
  function preview(){const d=formulario();$('market-preview-nome').textContent=d.nome||'Minha empresa';$('market-preview-descricao').textContent=d.descricao||'Seu portfólio e seus produtos aparecerão aqui.';const capa=$('.market-preview-capa');capa.style.backgroundImage=d.capaUrl&&safeUrl(d.capaUrl)?`url("${safeUrl(d.capaUrl)}")`:`linear-gradient(125deg,#00d2ff,${d.cor})`;capa.style.backgroundSize='cover';const logo=$('market-preview-logo');logo.replaceChildren();if(safeUrl(d.logoUrl)){const img=document.createElement('img');img.src=safeUrl(d.logoUrl);img.alt='Logo';logo.append(img)}else logo.append(texto('span','🏬'));$('market-preview-contato').textContent=d.whatsapp?'WhatsApp configurado (prévia)':'WhatsApp (prévia)';const a=$('market-preview-itens');a.replaceChildren();itens.forEach(it=>{const c=document.createElement('div');c.className='market-mini-item';if(safeUrl(it.foto)){const im=document.createElement('img');im.src=safeUrl(it.foto);im.alt='';c.append(im)}c.append(texto('strong',it.nome));if(it.preco!==null)c.append(texto('small',`R$ ${Number(it.preco).toFixed(2)}`));a.append(c)});if(!itens.length)a.append(texto('p','Adicione seus produtos e trabalhos.'))}
  async function validarDono(id){if(!auth.currentUser||!id)throw Error('Entre na sua conta e abra um subsite.');const s=await getDoc(doc(db,'subsites',id));if(!s.exists()||s.data().idDono!==auth.currentUser.uid)throw Error('Subsite não pertence à sua conta.')}
  async function abrirEditor(){const id=subsiteAtualId;if(!id)return alert('Abra primeiro um subsite.');retorno='tela-subsite';mostrarTela('tela-marketplace');aplicar({...padrao,nome:$('nome-do-subsite').textContent});msg('Carregando...');try{await validarDono(id);const s=await getDoc(doc(db,'marketplaceRascunhos',id));if(id!==subsiteAtualId)return;if(s.exists())aplicar({...padrao,...s.data()});msg(s.exists()?'Dados carregados.':'Nova vitrine.');}catch(e){msg('Erro: '+e.message)}}
- async function salvar(publicar=false){const id=subsiteAtualId,d=formulario();if(!d.nome)return alert('Informe o nome da empresa.');if(d.whatsapp&&(d.whatsapp.length<10||d.whatsapp.length>15))return alert('Confira o WhatsApp.');if(d.itens.length>60)return alert('Limite técnico de 60 itens por vitrine nesta versão.');if([d.logoUrl,d.capaUrl,...d.itens.map(x=>x.foto)].some(u=>u&&!safeUrl(u)))return alert('Use URLs HTTPS válidas nas imagens.');const b=publicar?$('market-publicar'):$('btn-market-salvar');b.disabled=true;msg(publicar?'Publicando...':'Salvando...');try{await validarDono(id);const base={...d,idSubsite:id,idDono:auth.currentUser.uid,atualizadoEm:new Date()};await setDoc(doc(db,'marketplaceRascunhos',id),base,{merge:true});if(publicar){await setDoc(doc(db,'marketplacePublicos',id),{...base,publicado:true},{merge:false});msg('Vitrine publicada! Ela já pode aparecer na pesquisa.')}else msg('Rascunho salvo. Se a vitrine já estiver publicada, use Publicar para atualizar o conteúdo público.')}catch(e){msg('Erro: '+e.message)}finally{b.disabled=false}}
+ async function salvar(publicar=false){const id=subsiteAtualId,d=formulario();if(!d.nome)return alert('Informe o nome da empresa.');if(d.whatsapp&&(d.whatsapp.length<10||d.whatsapp.length>15))return alert('Confira o WhatsApp.');if(d.itens.length>60)return alert('Limite técnico de 60 itens por vitrine nesta versão.');if([d.logoUrl,d.capaUrl,...d.itens.map(x=>x.foto)].some(u=>u&&!safeUrl(u)))return alert('Use URLs HTTPS válidas nas imagens.');const b=publicar?$('market-publicar'):$('btn-market-salvar');b.disabled=true;msg(publicar?'Publicando...':'Salvando...');try{await validarDono(id);const base={...d,idSubsite:id,idDono:auth.currentUser.uid,atualizadoEm:new Date()};await setDoc(doc(db,'marketplaceRascunhos',id),base,{merge:true});if(publicar){await setDoc(doc(db,'marketplacePublicos',id),{...base,publicado:true},{merge:true});msg('Vitrine publicada! Ela já pode aparecer na pesquisa.')}else msg('Rascunho salvo. Se a vitrine já estiver publicada, use Publicar para atualizar o conteúdo público.')}catch(e){msg('Erro: '+e.message)}finally{b.disabled=false}}
  async function despublicar(){if(!confirm('Retirar sua vitrine da pesquisa pública?'))return;try{await validarDono(subsiteAtualId);await deleteDoc(doc(db,'marketplacePublicos',subsiteAtualId));msg('Vitrine retirada do ar. Rascunho preservado.')}catch(e){msg('Erro: '+e.message)}}
- async function buscar(){mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';try{const s=await getDocs(query(collection(db,'marketplacePublicos'),where('segmento','==',ambiente)));const termo=$('market-search-input').value.toLocaleLowerCase('pt-BR').trim();let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));lista=lista.slice(0,80);$('market-search-status').textContent=`${lista.length} vitrine(s) encontrada(s).`;lista.forEach(x=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt='';c.append(img)}const info=document.createElement('div');info.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'),texto('small','Nova empresa · Sem avaliações'));c.append(info);const b=texto('button','Ver vitrine');b.onclick=()=>abrirPerfil(x);c.append(b);$('market-search-results').append(c)})}catch(e){$('market-search-status').textContent='Não foi possível pesquisar: '+e.message}}
+ async function buscar(){mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';try{const s=await getDocs(query(collection(db,'marketplacePublicos'),where('segmento','==',ambiente)));const termo=$('market-search-input').value.toLocaleLowerCase('pt-BR').trim();let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));lista.sort((a,b)=>((b.boosterAte?.toMillis?.()||0)>Date.now())-((a.boosterAte?.toMillis?.()||0)>Date.now()));lista=lista.slice(0,80);$('market-search-status').textContent=`${lista.length} vitrine(s) encontrada(s).`;lista.forEach(x=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt='';c.append(img)}const info=document.createElement('div');info.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'),texto('small',(x.boosterAte?.toMillis?.()>Date.now()?'🚀 Patrocinado · ':'')+'Nova empresa · Sem avaliações'));c.append(info);const b=texto('button','Ver vitrine');b.onclick=()=>abrirPerfil(x);c.append(b);$('market-search-results').append(c)})}catch(e){$('market-search-status').textContent='Não foi possível pesquisar: '+e.message}}
   function abrirPerfil(x){perfilAberto=x;mostrarTela('tela-market-perfil');const a=$('market-perfil-conteudo');a.replaceChildren();const capa=document.createElement('div');capa.className='market-perfil-capa';capa.style.background=safeUrl(x.capaUrl)?`url("${safeUrl(x.capaUrl)}") center/cover`:`linear-gradient(125deg,#00d2ff,${x.cor||'#8a2be2'})`;a.append(capa);a.append(texto('h1',x.nome||'Empresa'),texto('p',x.categoria||''),texto('p',x.descricao||''),texto('p','Nova empresa · Sem avaliações'));if(x.whatsapp){const w=texto('a','Falar pelo WhatsApp');w.href=`https://wa.me/${String(x.whatsapp).replace(/\D/g,'')}`;w.target='_blank';w.rel='noopener noreferrer';a.append(w)}a.append(texto('h2','Portfólio e anúncios'));const grid=document.createElement('div');grid.className='market-resultados';(x.itens||[]).forEach(it=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(it.foto)){const img=document.createElement('img');img.src=safeUrl(it.foto);img.alt='';c.append(img)}const content=document.createElement('div');content.append(texto('h3',it.nome),texto('p',it.tipo==='portfolio'?'Portfólio':'Produto / Serviço'));if(it.preco!==null&&it.preco!==undefined)content.append(texto('strong',`R$ ${Number(it.preco).toFixed(2)}`));c.append(content);grid.append(c)});a.append(grid)}
  $('btn-abrir-marketplace')?.addEventListener('click',abrirEditor);
  $('btn-market-explorar')?.addEventListener('click',()=>{retorno='tela-subsite';escolha('neo');buscar()});
@@ -1895,4 +1895,88 @@ window.abrirModalAdicionarNaPasta = function(idPasta, nomePasta, idSubsite) {
  $('btn-market-salvar')?.addEventListener('click',()=>salvar(false));$('market-publicar')?.addEventListener('click',()=>salvar(true));$('market-despublicar')?.addEventListener('click',despublicar);
  Object.values(campos).forEach(id=>$(id)?.addEventListener('input',()=>{preview();msg('Alterações não salvas.')}));
  $('market-denunciar')?.addEventListener('click',async()=>{if(!perfilAberto)return;if(!auth.currentUser)return alert('Entre na sua conta para enviar uma denúncia.');const motivo=prompt('Descreva o motivo da denúncia (mínimo 10 caracteres):');if(!motivo)return;if(motivo.trim().length<10)return alert('Descreva melhor a denúncia.');try{await addDoc(collection(db,'marketplaceDenuncias'),{idVitrine:perfilAberto.id,motivo:motivo.trim().slice(0,1000),idAutor:auth.currentUser?.uid||null,criadoEm:new Date(),status:'pendente'});alert('Denúncia enviada para análise.')}catch(e){alert('Erro ao denunciar: '+e.message)}});
+})();
+
+// NEO FLUX BOOSTER + MODERAÇÃO (Pix manual, 14 dias)
+(function iniciarBoosterModeracao(){
+ const $=id=>document.getElementById(id);
+ const ADMIN_EMAIL='neoflux2012@gmail.com';
+ const admin=()=>auth.currentUser?.email===ADMIN_EMAIL && auth.currentUser?.emailVerified===true;
+ const el=(tag,txt)=>{const e=document.createElement(tag);e.textContent=txt;return e};
+ const status=t=>{if($('market-admin-status'))$('market-admin-status').textContent=t};
+ const config=doc(db,'marketplaceConfig','booster');
+ async function solicitar(){
+   if(!auth.currentUser)return alert('Entre na sua conta para solicitar o Booster.');
+   const id=subsiteAtualId;
+   if(!id)return alert('Abra seu subsite e publique uma vitrine antes de solicitar.');
+   const sub=await getDoc(doc(db,'subsites',id));
+   if(!sub.exists()||sub.data().idDono!==auth.currentUser.uid)return alert('Você só pode impulsionar a sua vitrine.');
+   const pub=await getDoc(doc(db,'marketplacePublicos',id));
+   if(!pub.exists())return alert('Publique sua vitrine primeiro.');
+   const cfg=await getDoc(config);
+   const chave=cfg.exists()?cfg.data().chavePix:'';
+   if(!chave)return alert('Pix ainda não configurado pelo administrador.');
+   if(!confirm('Solicitar Booster por R$ 10,00 com 14 dias de destaque após aprovação?'))return;
+   try{
+     const r=await addDoc(collection(db,'marketplaceBoosterPedidos'),{
+       idSubsite:id,idDono:auth.currentUser.uid,valorCentavos:1000,dias:14,status:'pendente',criadoEm:new Date()
+     });
+     await navigator.clipboard?.writeText(chave).catch(()=>{});
+     alert('Solicitação '+r.id+' registrada!\n\nPague R$ 10,00 na chave Pix:\n'+chave+'\n\nCopiamos a chave, se permitido pelo navegador. O destaque só será ativado após conferência do pagamento pelo administrador.');
+   }catch(e){alert('Erro ao solicitar Booster: '+e.message)}
+ }
+ async function abrirAdmin(){
+   if(!admin())return alert('Acesso exclusivo do administrador verificado.');
+   mostrarTela('tela-market-admin');status('Carregando...');
+   try{
+     const cfg=await getDoc(config);$('market-admin-pix').value=cfg.exists()?cfg.data().chavePix||'':'';
+     const [ped,den]=await Promise.all([
+       getDocs(collection(db,'marketplaceBoosterPedidos')),
+       getDocs(collection(db,'marketplaceDenuncias'))
+     ]);
+     const p=$('market-admin-pedidos');p.replaceChildren();
+     ped.docs.sort((a,b)=>(b.data().criadoEm?.toMillis?.()||0)-(a.data().criadoEm?.toMillis?.()||0)).forEach(s=>{
+       const d=s.data(),r=el('article',`Vitrine: ${d.idSubsite} | ${d.status} | R$ ${(d.valorCentavos/100).toFixed(2)} | ${d.dias} dias`);
+       if(d.status==='pendente'){
+         const b=el('button','Confirmar Pix recebido e ativar');
+         b.onclick=async()=>{
+           if(!confirm('Você conferiu o crédito de R$ 10 no seu banco? Esta ação ativa o destaque por 14 dias.'))return;
+           b.disabled=true;
+           try{
+             const vit=doc(db,'marketplacePublicos',d.idSubsite);
+             const snap=await getDoc(vit);if(!snap.exists())throw Error('Vitrine não publicada.');
+             const inicio=new Date(),fim=new Date(inicio.getTime()+14*86400000);
+             // Duas gravações administrativas. Se a segunda falhar, mostrar erro e revisar pedido.
+             const lote=writeBatch(db);lote.update(vit,{boosterAte:fim});lote.update(s.ref,{status:'aprovado',aprovadoEm:inicio,expiraEm:fim});await lote.commit();
+             await abrirAdmin();
+           }catch(e){alert('Falha ao aprovar: '+e.message);b.disabled=false}
+         };r.append(b);
+         const negar=el('button','Recusar pedido');negar.onclick=async()=>{if(!confirm('Recusar solicitação?'))return;try{await updateDoc(s.ref,{status:'recusado'});await abrirAdmin()}catch(e){alert(e.message)}};r.append(negar);
+       }
+       p.append(r);
+     });if(p.childElementCount===0)p.append(el('p','Nenhuma solicitação.'));
+     const n=$('market-admin-denuncias');n.replaceChildren();
+     den.docs.forEach(s=>{const d=s.data(),r=el('article',`Vitrine: ${d.idVitrine} | ${d.status} | Motivo: ${d.motivo}`);
+       if(d.status==='pendente'){
+         const resolver=async(acao)=>{
+           if(!confirm(acao==='suspensa'?'Suspender esta vitrine pública?':'Encerrar denúncia sem suspensão?'))return;
+           try{
+             const lote=writeBatch(db);if(acao==='suspensa'){lote.set(doc(db,'marketplaceSuspensoes',d.idVitrine),{ativo:true,motivo:d.motivo,criadoEm:new Date()});lote.delete(doc(db,'marketplacePublicos',d.idVitrine));}lote.update(s.ref,{status:acao,analisadoEm:new Date()});await lote.commit();await abrirAdmin();
+           }catch(e){alert('Erro na moderação: '+e.message)}
+         };
+         const susp=el('button','Suspender vitrine');susp.onclick=()=>resolver('suspensa');r.append(susp);
+         const desc=el('button','Rejeitar denúncia');desc.onclick=()=>resolver('rejeitada');r.append(desc);
+       }n.append(r)
+     });if(n.childElementCount===0)n.append(el('p','Nenhuma denúncia.'));
+     status('Dados atualizados. Confira os pagamentos diretamente no banco antes de aprovar.');
+   }catch(e){status('Erro: '+e.message)}
+ }
+ $('market-solicitar-booster')?.addEventListener('click',solicitar);
+ $('btn-market-admin')?.addEventListener('click',abrirAdmin);
+ $('market-admin-voltar')?.addEventListener('click',()=>mostrarTela('tela-escolha-admin'));
+ $('market-admin-salvar-pix')?.addEventListener('click',async()=>{
+   if(!admin())return;
+   const chave=$('market-admin-pix').value.trim();if(chave.length<5||chave.length>150)return alert('Confira a chave Pix.');
+   try{await setDoc(config,{chavePix:chave,atualizadoEm:new Date()});status('Chave Pix salva.')}catch(e){status('Erro: '+e.message)}
+ });
 })();
