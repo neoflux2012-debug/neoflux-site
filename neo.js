@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { getAuth, setPersistence, browserLocalPersistence, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -15,7 +14,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 console.log("Firebase conectado com sucesso! O erro do projectId sumiu!");
 
@@ -1863,21 +1861,53 @@ window.resetarTraducaoFVM = function() {
  let itens=[],ambiente='neo',retorno='tela-subsite',perfilAberto=null;
  const fotosPendentes={logo:null,capa:null};
  const previewsLocais={logo:null,capa:null};
+ const CLOUDINARY_CLOUD='ok1crp5r';
+ const CLOUDINARY_PRESET='neoflux_marketplace';
  const tiposImagem=['image/jpeg','image/png','image/webp'];
  function validarImagem(file){
-   if(!file)return;
+   if(!file)throw Error('Selecione uma imagem.');
    if(!tiposImagem.includes(file.type))throw Error('Use uma imagem JPG, PNG ou WebP.');
-   if(file.size>5*1024*1024)throw Error('A imagem deve ter no máximo 5 MB.');
+   if(file.size>20*1024*1024)throw Error('A imagem original deve ter no máximo 20 MB.');
+ }
+ async function comprimirImagem(file,tipo){
+   validarImagem(file);
+   const img=await createImageBitmap(file);
+   try{
+     const limite=tipo==='logo'?800:tipo==='capa'?1600:1400;
+     const escala=Math.min(1,limite/Math.max(img.width,img.height));
+     let largura=Math.max(1,Math.round(img.width*escala));
+     let altura=Math.max(1,Math.round(img.height*escala));
+     const formato=file.type==='image/png'?'image/webp':'image/jpeg';
+     for(let tentativa=0;tentativa<6;tentativa++){
+       const canvas=document.createElement('canvas');canvas.width=largura;canvas.height=altura;
+       const ctx=canvas.getContext('2d');
+       if(!ctx)throw Error('Seu navegador não conseguiu processar a imagem.');
+       if(formato==='image/jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,largura,altura);}
+       ctx.drawImage(img,0,0,largura,altura);
+       const qualidade=Math.max(.5,.85-tentativa*.07);
+       const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Falha ao comprimir a imagem.')),formato,qualidade));
+       if(blob.size<=5*1024*1024){
+         const extensao=formato==='image/webp'?'webp':'jpg';
+         return new File([blob],`neoflux-${Date.now()}.${extensao}`,{type:formato});
+       }
+       largura=Math.max(1,Math.round(largura*.8));
+       altura=Math.max(1,Math.round(altura*.8));
+     }
+     throw Error('Não foi possível reduzir a imagem para menos de 5 MB.');
+   }finally{img.close?.();}
  }
  async function enviarImagem(file,id,tipo){
    validarImagem(file);
    if(!auth.currentUser)throw Error('Faça login para enviar imagens.');
    await validarDono(id);
-   const extensoes={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
-   const nome=crypto.randomUUID()+'.'+extensoes[file.type];
-   const destino=storageRef(storage,`marketplace/${auth.currentUser.uid}/${id}/${tipo}/${nome}`);
-   await uploadBytes(destino,file,{contentType:file.type});
-   return await getDownloadURL(destino);
+   const otimizada=await comprimirImagem(file,tipo);
+   const form=new FormData();
+   form.append('file',otimizada);
+   form.append('upload_preset',CLOUDINARY_PRESET);
+   const resposta=await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,{method:'POST',body:form});
+   const dados=await resposta.json().catch(()=>({}));
+   if(!resposta.ok||!dados.secure_url)throw Error(dados.error?.message||'Falha ao enviar imagem ao Cloudinary.');
+   return dados.secure_url;
  }
  function limparPreviews(){
    for(const k of ['logo','capa']){
@@ -1906,16 +1936,7 @@ window.resetarTraducaoFVM = function() {
  const formulario=()=>{const d={};Object.entries(campos).forEach(([k,id])=>d[k]=$(id).value.trim());d.whatsapp=d.whatsapp.replace(/\D/g,'');d.itens=itens.map(x=>({...x}));return d};
  const aplicar=d=>{limparPreviews();Object.entries(campos).forEach(([k,id])=>$(id).value=d[k]||padrao[k]);itens=Array.isArray(d.itens)?d.itens.slice(0,60):[];desenharItens();preview()};
  function desenharItens(){const area=$('market-itens-editor');area.replaceChildren();itens.forEach((it,i)=>{const r=document.createElement('div');r.className='market-item-linha';r.append(texto('span',`${it.tipo==='portfolio'?'Portfólio':'Anúncio'}: ${it.nome}`));const b=texto('button','Excluir');b.type='button';b.onclick=()=>{itens.splice(i,1);desenharItens();preview();msg('Alterações não salvas.')};r.append(b);area.append(r)})}
- function preview(){const d=formulario();$('market-preview-nome').textContent=d.nome||'Minha empresa';$('market-preview-descricao').textContent=d.descricao||'Seu portfólio e seus produtos aparecerão aqui.';const capa = document.querySelector('.market-preview-capa');
-
-if (capa) {
-    capa.style.backgroundImage =
-        (previewsLocais.capa || safeUrl(d.capaUrl))
-            ? `url("${previewsLocais.capa || safeUrl(d.capaUrl)}")`
-            : `linear-gradient(125deg,#00d2ff,${d.cor})`;
-
-    capa.style.backgroundSize = 'cover';
-}capa.style.backgroundImage=(previewsLocais.capa||safeUrl(d.capaUrl))?`url("${previewsLocais.capa||safeUrl(d.capaUrl)}")`:`linear-gradient(125deg,#00d2ff,${d.cor})`;capa.style.backgroundSize='cover';const logo=$('market-preview-logo');logo.replaceChildren();if(previewsLocais.logo||safeUrl(d.logoUrl)){const img=document.createElement('img');img.src=previewsLocais.logo||safeUrl(d.logoUrl);img.alt='Logo';logo.append(img)}else logo.append(texto('span','🏬'));$('market-preview-contato').textContent=d.whatsapp?'WhatsApp configurado (prévia)':'WhatsApp (prévia)';const a=$('market-preview-itens');a.replaceChildren();itens.forEach(it=>{const c=document.createElement('div');c.className='market-mini-item';if(safeUrl(it.foto)){const im=document.createElement('img');im.src=safeUrl(it.foto);im.alt='';c.append(im)}c.append(texto('strong',it.nome));if(it.preco!==null)c.append(texto('small',`R$ ${Number(it.preco).toFixed(2)}`));a.append(c)});if(!itens.length)a.append(texto('p','Adicione seus produtos e trabalhos.'))}
+ function preview(){const d=formulario();$('market-preview-nome').textContent=d.nome||'Minha empresa';$('market-preview-descricao').textContent=d.descricao||'Seu portfólio e seus produtos aparecerão aqui.';const capa=document.querySelector('.market-preview-capa');if(capa){capa.style.backgroundImage=(previewsLocais.capa||safeUrl(d.capaUrl))?`url("${previewsLocais.capa||safeUrl(d.capaUrl)}")`:`linear-gradient(125deg,#00d2ff,${d.cor})`;capa.style.backgroundSize='cover';}const logo=$('market-preview-logo');logo.replaceChildren();if(previewsLocais.logo||safeUrl(d.logoUrl)){const img=document.createElement('img');img.src=previewsLocais.logo||safeUrl(d.logoUrl);img.alt='Logo';logo.append(img)}else logo.append(texto('span','🏬'));$('market-preview-contato').textContent=d.whatsapp?'WhatsApp configurado (prévia)':'WhatsApp (prévia)';const a=$('market-preview-itens');a.replaceChildren();itens.forEach(it=>{const c=document.createElement('div');c.className='market-mini-item';if(safeUrl(it.foto)){const im=document.createElement('img');im.src=safeUrl(it.foto);im.alt='';c.append(im)}c.append(texto('strong',it.nome));if(it.preco!==null)c.append(texto('small',`R$ ${Number(it.preco).toFixed(2)}`));a.append(c)});if(!itens.length)a.append(texto('p','Adicione seus produtos e trabalhos.'))}
  async function validarDono(id){if(!auth.currentUser||!id)throw Error('Entre na sua conta e abra um subsite.');const s=await getDoc(doc(db,'subsites',id));if(!s.exists()||s.data().idDono!==auth.currentUser.uid)throw Error('Subsite não pertence à sua conta.')}
  async function abrirEditor(){const id=subsiteAtualId;if(!id)return alert('Abra primeiro um subsite.');retorno='tela-subsite';mostrarTela('tela-marketplace');aplicar({...padrao,nome:$('nome-do-subsite').textContent});msg('Carregando...');try{await validarDono(id);const s=await getDoc(doc(db,'marketplaceRascunhos',id));if(id!==subsiteAtualId)return;if(s.exists())aplicar({...padrao,...s.data()});msg(s.exists()?'Dados carregados.':'Nova vitrine.');}catch(e){msg('Erro: '+e.message)}}
  async function salvar(publicar=false){
