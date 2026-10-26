@@ -1986,12 +1986,20 @@ window.resetarTraducaoFVM = function() {
      lista=lista.slice(0,80);
      $('market-search-status').textContent=`${lista.length} vitrine(s) encontrada(s).`;
      lista.forEach(x=>{
-       const c=document.createElement('article');c.className='market-resultado';
-       if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt='';c.append(img)}
-       const info=document.createElement('div');
-       info.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'),texto('small',(x.boosterAte?.toMillis?.()>Date.now()?'🚀 Patrocinado · ':'')+'Nova empresa · Sem avaliações'));
-       c.append(info);
-       const b=texto('button','Ver vitrine');b.onclick=()=>abrirPerfil(x);c.append(b);
+       const c=document.createElement('article');c.className='market-resultado market-vitrine-card';
+       const capa=document.createElement('div');capa.className='market-card-capa';
+       if(safeUrl(x.capaUrl)) capa.style.backgroundImage=`url("${safeUrl(x.capaUrl)}")`;
+       c.append(capa);
+       const corpo=document.createElement('div');corpo.className='market-card-corpo';
+       const logo=document.createElement('div');logo.className='market-card-logo';
+       if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt=`Logo de ${x.nome||'empresa'}`;logo.append(img)}
+       else logo.textContent='🏬';
+       corpo.append(logo);
+       corpo.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'));
+       const detalhes=texto('small',(x.boosterAte?.toMillis?.()>Date.now()?'🚀 Patrocinado · ':'')+'Sem avaliações');
+       corpo.append(detalhes);
+       const b=texto('button','Ver vitrine');b.type='button';b.onclick=()=>abrirPerfil(x);corpo.append(b);
+       c.append(corpo);
        $('market-search-results').append(c);
      });
    }catch(e){$('market-search-status').textContent='Não foi possível pesquisar: '+e.message}
