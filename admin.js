@@ -6,7 +6,12 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from
 import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU", authDomain: "neo-flux-c91c8.firebaseapp.com", projectId: "neo-flux-c91c8", storageBucket: "neo-flux-c91c8.firebasestorage.app", messagingSenderId: "6686219198", appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
+  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
+  authDomain: "neo-flux-c91c8.firebaseapp.com",
+  projectId: "neo-flux-c91c8",
+  storageBucket: "neo-flux-c91c8.firebasestorage.app",
+  messagingSenderId: "6686219198",
+  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -203,7 +208,6 @@ window.adminSuspender = async function(uid) {
 
 window.adminAlterarPlano = async function(uid) {
     const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
-    // 🔹 Adicionado suporte aos planos FVM no prompt
     const novoPlano = prompt(`Alterar plano de ${cliente.nome}:\n\nDigite: start, pro, elite, elite_premium, fvm_start, fvm_pro, fvm_elite ou fvm_elite_premium`, cliente.planoPreferido);
     if (!novoPlano) return;
     const planoLimpo = novoPlano.toLowerCase().trim();
@@ -214,17 +218,15 @@ window.adminAlterarPlano = async function(uid) {
     catch (e) { alert("Erro: " + e.message); }
 };
 
-// 🔹 NOVA FUNÇÃO: EXCLUIR CONTA
 window.adminExcluirConta = async function(uid) {
     const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
     
     if (!confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR a conta de ${cliente.nome}?\n\nTodos os dados de plano, cobranças e status serão apagados permanentemente.\n\n(Nota: O login deste e-mail no Firebase Auth deverá ser apagado manualmente pelo Console do Firebase).`)) return;
     
     try {
-        // Apaga o documento do banco de dados
         await deleteDoc(doc(db, "usuarios", uid));
         alert("🗑️ Conta excluída com sucesso do banco de dados!");
-        carregarClientes(); // Recarrega a lista
+        carregarClientes();
     } catch (e) {
         alert("Erro ao excluir: " + e.message);
     }
