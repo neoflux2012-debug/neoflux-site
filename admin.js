@@ -3,7 +3,7 @@
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
@@ -373,6 +373,7 @@ onAuthStateChanged(auth, (user) => {
     if (user && user.email === emailAdmin) {
         mostrarTela('tela-admin-painel');
         carregarClientes();
+        carregarMarketplaceAdmin();
     } else if (user) {
         signOut(auth);
         alert("Acesso negado. Você não é o administrador.");
@@ -380,3 +381,96 @@ onAuthStateChanged(auth, (user) => {
         mostrarTela('tela-admin-login');
     }
 });
+
+// ==========================================
+// MARKETPLACE - ADMINISTRAÇÃO CENTRALIZADA
+// ==========================================
+const marketAdminEmail = 'neoflux2012@gmail.com';
+const marketAdminAutorizado = () => auth.currentUser?.email === marketAdminEmail && auth.currentUser?.emailVerified === true;
+const marketEl = (tag, txt) => { const el = document.createElement(tag); el.textContent = String(txt ?? ''); return el; };
+const marketStatus = txt => { const el=document.getElementById('market-admin-status'); if(el)el.textContent=txt; };
+const marketData = value => value?.toDate ? value.toDate().toLocaleString('pt-BR') : '—';
+
+async function carregarMarketplaceAdmin(){
+  if(!marketAdminAutorizado()) { marketStatus('Confirme o e-mail do administrador para acessar a moderação.'); return; }
+  marketStatus('Carregando dados do Marketplace...');
+  const pedidos=document.getElementById('market-admin-pedidos');
+  const denuncias=document.getElementById('market-admin-denuncias');
+  const suspensoes=document.getElementById('market-admin-suspensoes');
+  try {
+    const [p,d,s]=await Promise.all([
+      getDocs(collection(db,'marketplaceBoosterPedidos')),
+      getDocs(collection(db,'marketplaceDenuncias')),
+      getDocs(collection(db,'marketplaceSuspensoes'))
+    ]);
+    pedidos.replaceChildren(); denuncias.replaceChildren(); suspensoes.replaceChildren();
+    document.getElementById('market-total-pedidos').textContent=p.docs.filter(x=>x.data().status==='pendente').length;
+    document.getElementById('market-total-denuncias').textContent=d.docs.filter(x=>x.data().status==='pendente').length;
+    document.getElementById('market-total-suspensoes').textContent=s.docs.filter(x=>x.data().ativo===true).length;
+
+    for(const snap of p.docs.sort((a,b)=>(b.data().criadoEm?.toMillis?.()||0)-(a.data().criadoEm?.toMillis?.()||0))){
+      const item=snap.data(); const card=marketEl('article','');
+      card.append(marketEl('strong',item.nomeVitrine||item.idSubsite||'Vitrine'));
+      card.append(marketEl('p',`${item.nomeCliente||'Cliente'} • ${item.status||'—'} • R$ ${((item.valorCentavos||1000)/100).toFixed(2)} • ${item.dias||14} dias • ${marketData(item.criadoEm)}`));
+      if(item.status==='pendente'){
+        const aprovar=marketEl('button','✓ Confirmar Pix e ativar');
+        aprovar.onclick=async()=>{
+          if(!marketAdminAutorizado())return;
+          if(!confirm('Você conferiu o recebimento do Pix no banco? Ativar destaque por 14 dias?'))return;
+          aprovar.disabled=true;
+          try{
+            const refVitrine=doc(db,'marketplacePublicos',item.idSubsite);
+            const vitrine=await getDoc(refVitrine);
+            if(!vitrine.exists())throw Error('Vitrine não está publicada.');
+            const inicio=new Date(),fim=new Date(inicio.getTime()+14*86400000);
+            const batch=writeBatch(db);
+            batch.update(refVitrine,{boosterAte:fim});
+            batch.update(snap.ref,{status:'aprovado',aprovadoEm:inicio,expiraEm:fim});
+            await batch.commit(); await carregarMarketplaceAdmin();
+          }catch(e){alert('Falha ao aprovar: '+e.message);aprovar.disabled=false;}
+        };
+        const recusar=marketEl('button','Recusar');
+        recusar.onclick=async()=>{if(!confirm('Recusar solicitação?'))return;try{await updateDoc(snap.ref,{status:'recusado'});await carregarMarketplaceAdmin()}catch(e){alert(e.message)}};
+        card.append(aprovar,recusar);
+      }
+      pedidos.append(card);
+    }
+    if(!p.size)pedidos.append(marketEl('p','Nenhuma solicitação de Booster.'));
+
+    for(const snap of d.docs){
+      const item=snap.data(),card=marketEl('article','');
+      card.append(marketEl('strong',`Vitrine: ${item.idVitrine||'—'} • ${item.status||'—'}`));
+      card.append(marketEl('p',`Motivo: ${item.motivo||'—'}`));
+      if(item.status==='pendente'){
+        const resolver=async suspender=>{
+          if(!confirm(suspender?'Suspender a vitrine pública?':'Rejeitar denúncia?'))return;
+          try{
+            const batch=writeBatch(db);
+            if(suspender){
+              batch.set(doc(db,'marketplaceSuspensoes',item.idVitrine),{ativo:true,motivo:item.motivo||'',criadoEm:new Date()});
+              batch.delete(doc(db,'marketplacePublicos',item.idVitrine));
+            }
+            batch.update(snap.ref,{status:suspender?'suspensa':'rejeitada',analisadoEm:new Date()});
+            await batch.commit(); await carregarMarketplaceAdmin();
+          }catch(e){alert('Erro: '+e.message)}
+        };
+        const suspender=marketEl('button','Suspender vitrine');suspender.onclick=()=>resolver(true);
+        const rejeitar=marketEl('button','Rejeitar denúncia');rejeitar.onclick=()=>resolver(false);
+        card.append(suspender,rejeitar);
+      }
+      denuncias.append(card);
+    }
+    if(!d.size)denuncias.append(marketEl('p','Nenhuma denúncia recebida.'));
+
+    for(const snap of s.docs.filter(x=>x.data().ativo===true)){
+      const item=snap.data(),card=marketEl('article','');
+      card.append(marketEl('strong',`Vitrine: ${snap.id}`));
+      card.append(marketEl('p',`Motivo: ${item.motivo||'—'} • ${marketData(item.criadoEm)}`));
+      card.append(marketEl('p','Suspensão ativa. A reativação exige revisão antes de republicar.'));
+      suspensoes.append(card);
+    }
+    if(!s.docs.some(x=>x.data().ativo===true))suspensoes.append(marketEl('p','Nenhuma vitrine suspensa.'));
+    marketStatus('Dados atualizados. Confira cada pagamento diretamente no banco.');
+  }catch(e){console.error(e);marketStatus('Erro ao carregar Marketplace: '+e.message)}
+}
+document.getElementById('market-admin-atualizar')?.addEventListener('click',carregarMarketplaceAdmin);
