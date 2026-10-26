@@ -694,3 +694,13 @@ input:focus, select:focus {
 .admin-market-list article strong{display:block;margin-bottom:10px}
 .admin-market-list article p{text-align:left;margin:0 0 12px;font-size:.85rem}
 @media(max-width:650px){.admin-marketplace{padding:16px}.admin-market-stats{grid-template-columns:1fr}}
+
+/* Painel de precos */
+.admin-precos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:14px}
+.admin-precos-item{border:1px solid #49405f;background:rgba(138,43,226,.07);border-radius:12px;padding:15px;display:flex;flex-direction:column;gap:9px}
+.admin-precos-item h4{margin:0;color:#e7d6ff}
+.admin-precos-item label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#ddd}
+.admin-precos-item input,.admin-precos-item select{box-sizing:border-box;width:100%;padding:9px;border-radius:7px;border:1px solid #555;background:#171421;color:#fff}
+.admin-precos-item label.admin-precos-check{flex-direction:row;align-items:center}
+.admin-precos-item .admin-precos-check input{width:auto}
+.admin-precos-aviso{border-left:3px solid #f39c12;padding:12px;background:rgba(243,156,18,.09);line-height:1.5}
