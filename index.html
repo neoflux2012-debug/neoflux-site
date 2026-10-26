@@ -467,7 +467,7 @@
             </div>
         </div>
         <!-- TELA 10: PAINEL DO SUBSITE -->
-        <section id="tela-subsite" class="tela" style="max-width: 100%;">
+        <section id="tela-subsite" class="tela" style="max-width: 100%;"><div style="text-align:right;margin:8px"><button type="button" id="neo-ajuda-geral" class="botao-principal" style="width:auto">❔ Ajuda Neo</button></div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h1 id="nome-do-subsite" style="color: #00d2ff; margin: 0;">...</h1>
                 <button id="btn-voltar-cliente" class="botao-principal" style="width: auto; background: #333;">Voltar</button>
@@ -668,9 +668,10 @@
                 <!-- MODAL CATÁLOGO -->
         <div id="modal-catalogo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                <h2 style="color: white; margin-top: 0;">Meu Catálogo</h2>
+                <h2 style="color: white; margin-top: 0;">Meu Catálogo</h2><button type="button" id="neo-ajuda-catalogo" class="botao-principal" style="width:auto;margin-bottom:12px">❔ Ajuda Neo — Catálogo</button>
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
                     <input type="text" id="cat-nome" placeholder="Nome do item" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
+                    <input type="number" id="cat-quantidade" min="0" step="1" placeholder="Quantidade inicial em estoque" style="padding:10px;background:#000;border:1px solid #333;color:white;">
                     <input type="text" id="cat-categoria" placeholder="Categoria" style="padding: 10px; background: #000; border: 1px solid #333; color: white;">
                     
                     <div style="display: flex; gap: 10px;">
@@ -683,6 +684,12 @@
                     
                     <button id="btn-add-item" class="botao-principal" style="width: auto; margin-top: 10px;">Adicionar ao Catálogo</button>
                 </div>
+                <div style="border:1px solid #8a2be2;padding:14px;border-radius:12px;margin-bottom:16px;color:white">
+<h3>Controle de estoque</h3><p style="color:#aaa;font-size:.85rem">Selecione uma peça da lista ou leia seu QR Code. Saídas e devoluções avulsas não são vinculadas a festas.</p>
+<label for="neo-modo">Operação</label><select id="neo-modo" style="width:100%;padding:10px;margin:8px 0;background:#080808;color:white"><option value="saida">Saída / dar baixa</option><option value="devolucao">Devolução</option></select>
+<div id="neo-card-movimento" hidden style="background:#21142d;padding:14px;border-radius:10px;margin:10px 0"><strong id="neo-peca-selecionada"></strong><label for="neo-qtd" style="display:block;margin-top:10px">Quantidade</label><input type="number" id="neo-qtd" value="1" min="1" step="1" style="width:100%;padding:10px;background:#111;color:white"><div style="display:flex;gap:8px;margin-top:12px"><button type="button" id="neo-cancelar" class="botao-principal" style="background:#444">Cancelar</button><button type="button" id="neo-confirmar" class="botao-principal">Confirmar peça</button></div></div>
+<div id="neo-qr-bloqueio" hidden style="color:#c8a2ff">🔒 Leitura e geração de QR Code disponíveis a partir do Pro.</div>
+<div id="neo-qr-area" hidden><h4>Neo Flux QR — Pro+</h4><button type="button" id="neo-abrir-camera" class="botao-principal">📷 Abrir leitor QR</button><div id="neo-camera-box" hidden><div id="neo-camera" style="width:100%;margin:10px 0"></div><button type="button" id="neo-parar-camera" class="botao-principal" style="background:#444">Parar câmera</button></div><div id="neo-qr-etiqueta" hidden style="background:white;color:black;padding:12px;margin-top:12px;text-align:center"><strong id="neo-qr-titulo"></strong><div id="neo-qr-imagem" style="display:flex;justify-content:center;margin:10px"></div><small>Imprima a etiqueta usando a opção de impressão do navegador.</small></div></div></div>
                 <ul id="lista-catalogo" style="list-style: none; padding: 0; max-height: 250px; overflow-y: auto;"></ul>
                 <button type="button" id="btn-fechar-modal-catalogo" class="botao-principal" style="background: #333; margin-top: 20px;">Fechar</button>
             </div>
@@ -1219,6 +1226,8 @@
 
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>lucide.createIcons();</script>
     
        <!-- Carrega o cérebro principal do sistema (Festas, FVM, Gráficos) -->
