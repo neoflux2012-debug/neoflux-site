@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, setPersistence, browserLocalPersistence, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -762,7 +762,7 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     } catch (error) { alert("Erro ao salvar: " + error.message); } finally { carregar(false); }
 });
 
-document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => { document.getElementById('modal-catalogo').style.display = 'flex'; carregarCatalogo(); });
+document.getElementById('btn-abrir-catalogo')?.addEventListener('click', () => { document.getElementById('modal-catalogo').style.display = 'flex'; carregarCatalogo(); configurarAcessoQR(); });
 
 document.getElementById('btn-abrir-kits')?.addEventListener('click', async () => {
     const regras = getRecursos(planoAtual);
@@ -2234,3 +2234,154 @@ window.resetarTraducaoFVM = function() {
 
 
 })();
+
+// =====================================================
+// CATÁLOGO: CADASTRO, BAIXA MANUAL E QR (PRO+)
+// Quantidade = estoque disponível. Controle QR/Manual avulso
+// separado das devoluções de festas já existentes.
+// =====================================================
+const neoQRPlanos = new Set(['pro','elite','elite_premium','fvm_pro','fvm_elite','fvm_elite_premium']);
+const neoEl = id => document.getElementById(id);
+const neoInteiro = v => Number.isInteger(Number(v)) ? Number(v) : NaN;
+const neoTexto = v => String(v ?? '').trim();
+const neoSeguro = s => neoTexto(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let neoLeitor = null;
+let neoPecaLida = null;
+let neoLeituraPausada = false;
+let neoOperando = false;
+
+function configurarAcessoQR() {
+    const permitido = neoQRPlanos.has(planoAtual);
+    if (neoEl('neo-qr-area')) neoEl('neo-qr-area').hidden = !permitido;
+    if (neoEl('neo-qr-bloqueio')) neoEl('neo-qr-bloqueio').hidden = permitido;
+}
+
+async function carregarCatalogo() {
+    const lista = neoEl('lista-catalogo');
+    if (!lista || !subsiteAtualId) return;
+    lista.textContent = 'Carregando...';
+    try {
+        const snap = await getDocs(query(collection(db, 'catalogo'), where('idSubsite','==',subsiteAtualId)));
+        lista.replaceChildren();
+        if (snap.empty) lista.textContent = 'Nenhuma peça cadastrada.';
+        snap.forEach(reg => {
+            const p = reg.data();
+            const li = document.createElement('li');
+            li.style.cssText='padding:12px;border:1px solid #333;border-radius:10px;margin:8px 0;background:#191919;';
+            li.innerHTML = `<strong>${neoSeguro(p.nome)}</strong> <small style="color:#aaa">${neoSeguro(p.categoria)}</small><div style="color:#00d2ff;margin:6px 0">Disponíveis: ${neoInteiro(p.quantidade)||0}</div>`;
+            const btn = document.createElement('button');
+            btn.type='button'; btn.textContent='Selecionar para movimentação';
+            btn.className='botao-principal'; btn.style.cssText='width:auto;padding:8px 12px;';
+            btn.addEventListener('click',()=>neoSelecionarPeca(reg.id,p));
+            li.appendChild(btn);
+            if (neoQRPlanos.has(planoAtual)) {
+                const qr = document.createElement('button'); qr.type='button';
+                qr.textContent='Gerar QR do modelo'; qr.style.cssText='margin-left:8px;padding:8px;background:#44216b;color:white;border:0;border-radius:6px;cursor:pointer;';
+                qr.addEventListener('click',()=>neoMostrarQR(reg.id,p.nome));
+                li.appendChild(qr);
+            }
+            lista.appendChild(li);
+        });
+    } catch(e) { console.error(e); lista.textContent='Erro ao carregar catálogo: '+e.message; }
+}
+
+function neoSelecionarPeca(id, p) {
+    neoPecaLida = {id,nome:p.nome};
+    neoEl('neo-peca-selecionada').textContent = `Peça: ${p.nome} | disponíveis: ${neoInteiro(p.quantidade)||0}`;
+    neoEl('neo-qtd').value=1;
+    neoEl('neo-card-movimento').hidden=false;
+}
+
+neoEl('btn-add-item')?.addEventListener('click',async()=>{
+    const nome=neoTexto(neoEl('cat-nome')?.value);
+    const categoria=neoTexto(neoEl('cat-categoria')?.value);
+    const qtd=neoInteiro(neoEl('cat-quantidade')?.value);
+    const loc=Number(neoEl('cat-preco-locacao')?.value||0);
+    const rep=Number(neoEl('cat-preco-reposicao')?.value||0);
+    if(!subsiteAtualId || !nome || !categoria || !Number.isInteger(qtd) || qtd<0 || !Number.isFinite(loc) || loc<0 || !Number.isFinite(rep) || rep<0) return alert('Preencha nome, categoria, quantidade e preços válidos.');
+    if(neoEl('cat-imagem')?.files.length) return alert('O envio de foto ainda precisa de um serviço de armazenamento configurado. Cadastre sem foto por enquanto.');
+    const bot=neoEl('btn-add-item'); bot.disabled=true;
+    try {
+        await addDoc(collection(db,'catalogo'),{idSubsite:subsiteAtualId,nome,categoria,quantidade:qtd,precoLocacao:loc,precoReposicao:rep,saidasControle:0,criadoEm:new Date()});
+        ['cat-nome','cat-categoria','cat-preco-locacao','cat-preco-reposicao','cat-quantidade'].forEach(id=>{if(neoEl(id)) neoEl(id).value='';});
+        await carregarCatalogo(); await carregarPecasNoSelect();
+        alert('Peça cadastrada!');
+    } catch(e){alert('Erro ao cadastrar: '+e.message);} finally {bot.disabled=false;}
+});
+
+neoEl('btn-fechar-modal-catalogo')?.addEventListener('click',async()=>{
+    await neoPararLeitor(); neoEl('modal-catalogo').style.display='none';
+});
+neoEl('neo-cancelar')?.addEventListener('click',()=>{
+    neoEl('neo-card-movimento').hidden=true;
+    neoPecaLida=null;
+    neoLeituraPausada=false;
+    if(neoLeitor) neoLeitor.resume();
+});
+neoEl('neo-confirmar')?.addEventListener('click',async()=>{
+    if(neoOperando || !neoPecaLida) return;
+    const qtd=neoInteiro(neoEl('neo-qtd').value);
+    const modo=neoEl('neo-modo').value;
+    if(!Number.isInteger(qtd)||qtd<1) return alert('Quantidade inválida.');
+    neoOperando=true; neoEl('neo-confirmar').disabled=true;
+    try {
+        const id=neoPecaLida.id;
+        const ref=doc(db,'catalogo',id);
+        await runTransaction(db,async t=>{
+            const s=await t.get(ref);
+            if(!s.exists() || s.data().idSubsite!==subsiteAtualId) throw Error('Peça não pertence a este catálogo.');
+            const atual=neoInteiro(s.data().quantidade)||0;
+            const pendentes=neoInteiro(s.data().saidasControle)||0;
+            if(modo==='saida' && qtd>atual) throw Error('Estoque disponível insuficiente.');
+            if(modo==='devolucao' && qtd>pendentes) throw Error('Devolução maior que as saídas registradas neste controle.');
+            t.update(ref,{quantidade:atual+(modo==='saida'?-qtd:qtd),saidasControle:pendentes+(modo==='saida'?qtd:-qtd)});
+        });
+        neoEl('neo-card-movimento').hidden=true;
+        neoPecaLida=null;
+        await carregarCatalogo();
+        alert('Movimentação confirmada!');
+        neoLeituraPausada=false;
+        if(neoLeitor) neoLeitor.resume();
+    }catch(e){alert('Não foi possível movimentar: '+e.message);}
+    finally {neoOperando=false;neoEl('neo-confirmar').disabled=false;}
+});
+
+function neoMostrarQR(id,nome){
+    if(!neoQRPlanos.has(planoAtual)) return;
+    const payload=`NEOFLUX:${subsiteAtualId}:${id}`;
+    neoEl('neo-qr-titulo').textContent=`QR do modelo: ${nome}`;
+    const alvo=neoEl('neo-qr-imagem'); alvo.replaceChildren();
+    if(typeof QRCode==='undefined') return alert('Biblioteca de QR Code não carregou.');
+    new QRCode(alvo,{text:payload,width:190,height:190,colorDark:'#000000',colorLight:'#ffffff'});
+    neoEl('neo-qr-etiqueta').hidden=false;
+}
+
+async function neoPararLeitor(){
+    if(neoLeitor){try{await neoLeitor.stop();}catch(e){console.warn(e);}try{neoLeitor.clear();}catch(e){} neoLeitor=null;}
+    neoEl('neo-camera-box').hidden=true;
+    neoLeituraPausada=false;
+}
+neoEl('neo-abrir-camera')?.addEventListener('click',async()=>{
+    if(!neoQRPlanos.has(planoAtual)) return alert('Leitor QR disponível no Pro ou superior.');
+    if(typeof Html5Qrcode==='undefined') return alert('Biblioteca de câmera indisponível.');
+    if(neoLeitor) return;
+    neoEl('neo-camera-box').hidden=false;
+    try {
+        neoLeitor=new Html5Qrcode('neo-camera');
+        await neoLeitor.start({facingMode:'environment'},{fps:10,qrbox:{width:230,height:230}},async codigo=>{
+            if(neoLeituraPausada) return;
+            const [marca,sub,id]=codigo.split(':');
+            if(marca!=='NEOFLUX'||sub!==subsiteAtualId||!id) return;
+            neoLeituraPausada=true;
+            try {
+                neoLeitor.pause(true);
+                const s=await getDoc(doc(db,'catalogo',id));
+                if(!s.exists()||s.data().idSubsite!==subsiteAtualId) throw Error('Peça não encontrada.');
+                neoSelecionarPeca(id,s.data());
+            }catch(e){alert(e.message);neoLeituraPausada=false;if(neoLeitor)neoLeitor.resume();}
+        },()=>{});
+    }catch(e){alert('Não foi possível abrir a câmera: '+e.message);await neoPararLeitor();}
+});
+neoEl('neo-parar-camera')?.addEventListener('click',neoPararLeitor);
+neoEl('neo-ajuda-geral')?.addEventListener('click',()=>alert('Ajuda Neo: use Festas para reservas, Catálogo para cadastrar peças e controlar estoque, Kits para conjuntos, e os demais cards para as funções do seu plano. No Catálogo, a baixa manual está disponível em todos os planos; o leitor QR está disponível no Pro ou superior.'));
+neoEl('neo-ajuda-catalogo')?.addEventListener('click',()=>alert('Ajuda Neo — Catálogo: cadastre nome, categoria e quantidade antes de movimentar. Selecione a peça, escolha Saída ou Devolução, informe a quantidade e confirme. No Pro ou superior, gere um QR por modelo, escaneie com a câmera e confirme no mesmo card. Este controle avulso não substitui a devolução vinculada às festas.'));
