@@ -1129,3 +1129,67 @@ main:has(#tela-market-busca.ativa){max-width:1200px!important}
 @media(max-width:600px){
   #market-search-results.market-resultados{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* NEO FLUX MARKETPLACE — VISUAL PREMIUM (somente página de busca) */
+main:has(#tela-market-busca.ativa){max-width:1320px!important}
+#tela-market-busca{background:radial-gradient(ellipse 75% 32% at 50% 12%,rgba(132,62,230,.18),transparent 75%);padding:16px 12px 48px;border-radius:24px}
+#tela-market-busca .market-choice-top{justify-content:space-between;padding:6px 10px}
+#tela-market-busca .market-choice-top button{border:1px solid #38304b;background:#181322;color:#eee;border-radius:999px;padding:10px 18px}
+#tela-market-busca .market-search-hero{padding:54px 12px 38px}
+#tela-market-busca .market-search-hero small{display:block;color:#ba89ff;font-size:.8rem;letter-spacing:.24em;font-weight:700;margin-bottom:12px}
+#tela-market-busca .market-search-hero h1{font-size:clamp(2.2rem,5vw,3.7rem);line-height:1.15;letter-spacing:-.045em;margin:0 0 12px;color:#fff}
+#tela-market-busca .market-search-hero p{color:#aaa4b4;font-size:1rem;margin:0 0 25px}
+#tela-market-busca .market-search-hero input{display:block;width:min(100%,690px);max-width:690px;border:1px solid #50405f;background:#18131f;color:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 10px 35px rgba(0,0,0,.18)}
+#tela-market-busca #market-search-button{margin:14px auto 0;background:linear-gradient(125deg,#8a2be2,#a354ff);border:0;border-radius:11px;padding:13px 32px;font-weight:700;box-shadow:0 8px 24px rgba(138,43,226,.25)}
+#tela-market-busca #market-search-status{margin:0 4px 18px;color:#b9b0c6;font-size:.9rem}
+#market-search-results.market-resultados{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding:0 4px 28px;margin-top:0}
+#market-search-results .market-vitrine-card{display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden;border-radius:19px;border:1px solid #30263d;background:#17121e;box-shadow:0 8px 32px rgba(0,0,0,.25);transition:transform .2s,border-color .2s,box-shadow .2s}
+#market-search-results .market-vitrine-card:hover{transform:translateY(-5px);border-color:#9e61e8;box-shadow:0 15px 40px rgba(103,44,176,.18)}
+#market-search-results .market-card-capa{width:100%;height:174px;flex:none;background:linear-gradient(125deg,#4c2b73,#9e50b8 58%,#332044);background-position:center;background-size:cover}
+#market-search-results .market-card-corpo{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:9px;flex:1;padding:43px 21px 21px;min-width:0}
+#market-search-results .market-card-logo{position:absolute;top:-34px;left:20px;width:68px;height:68px;border-radius:50%;background:#24192e;border:4px solid #17121e;display:grid;place-items:center;overflow:hidden;font-size:1.7rem;box-shadow:0 5px 15px #0005}
+#market-search-results .market-card-logo img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+#market-search-results .market-card-corpo h3{font-size:1.1rem;color:#fff;font-weight:700;margin:0;text-align:left;overflow-wrap:anywhere}
+#market-search-results .market-card-corpo p{font-size:.88rem;color:#bfb2cf;margin:0;text-align:left}
+#market-search-results .market-card-corpo small{font-size:.76rem;color:#9e91aa;min-height:20px}
+#market-search-results .market-card-corpo button{width:100%;margin-top:auto;padding:12px 16px;background:linear-gradient(120deg,#8129d7,#a04bea);color:#fff;font-weight:700;border:0;border-radius:10px;cursor:pointer;align-self:stretch}
+#tela-market-busca .market-sponsored{border:1px solid #342743;background:linear-gradient(135deg,#1b1325,#151019);border-radius:17px;padding:24px;margin-top:24px}
+#tela-market-busca .market-sponsored h3{color:#e3c7ff}
+@media(max-width:900px){#market-search-results.market-resultados{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){#tela-market-busca{padding:8px 4px 30px}#tela-market-busca .market-search-hero{padding:30px 8px}#market-search-results.market-resultados{grid-template-columns:1fr;gap:17px}#market-search-results .market-card-capa{height:165px}}
+
+/* ===== MARKETPLACE — LAYOUT DA REFERÊNCIA (somente tela de busca) ===== */
+main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp(12px,3.4vw,54px);padding-right:clamp(12px,3.4vw,54px)}
+#tela-market-busca{position:relative;isolation:isolate;background:radial-gradient(ellipse at 95% -15%,rgba(134,22,199,.30),transparent 38%),radial-gradient(ellipse at -15% 100%,rgba(107,24,160,.22),transparent 30%),#0c0812;border-radius:26px;padding:22px clamp(10px,1.5vw,22px) 50px;overflow:hidden}
+#tela-market-busca .market-choice-top{position:relative;z-index:1;margin-bottom:12px}
+#tela-market-busca .market-hero-ref{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:center;gap:38px;padding:18px 8px 35px}
+#tela-market-busca .market-eyebrow{display:block;color:#bd75fa;letter-spacing:.20em;font-size:1rem;font-weight:600;margin-bottom:12px}
+#tela-market-busca .market-hero-copy h1{color:#fff;font-size:clamp(2.15rem,3.4vw,3.55rem);font-weight:750;line-height:1.12;letter-spacing:-.045em;margin:0 0 16px;text-align:left}
+#tela-market-busca .market-hero-copy h1 em{font-style:normal;color:#a844f2}
+#tela-market-busca .market-hero-copy p{color:#d7d0e2;font-size:clamp(.88rem,1.2vw,1.1rem);margin:0;text-align:left}
+#tela-market-busca .market-hero-tools{display:flex;flex-direction:column;gap:18px;min-width:0}
+#tela-market-busca .market-search-field{display:flex;align-items:center;gap:8px;border:1px solid #623180;background:#1b1025;border-radius:18px;padding:6px 10px 6px 18px;box-shadow:0 0 28px #8a2be214;min-width:0}
+#tela-market-busca .market-search-field>span{font-size:2rem;color:#c991f7;line-height:1}
+#tela-market-busca #market-search-input{flex:1;min-width:0;width:auto;max-width:none;margin:0;padding:12px 5px;background:transparent;border:0;box-shadow:none;color:white;font-size:.95rem}
+#tela-market-busca #market-search-button{margin:0;background:#7622c6;border:0;border-radius:12px;padding:12px 15px;color:white;font-weight:600;cursor:pointer}
+#tela-market-busca .market-categorias{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#tela-market-busca .market-categorias button,#tela-market-busca .market-categorias select{appearance:none;width:auto;background:#110d1a;border:1px solid #3e2c51;border-radius:999px;color:white;font-size:.84rem;padding:11px 16px;cursor:pointer;white-space:nowrap}
+#tela-market-busca .market-categorias button.ativo{background:linear-gradient(135deg,#8222dc,#a229ec);border-color:transparent}
+#tela-market-busca .market-categorias select{max-width:150px}
+#tela-market-busca #market-search-status{margin:0 9px 13px;color:#b6a7c8}
+#market-search-results.market-resultados{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:0 8px 25px}
+#market-search-results .market-vitrine-card{border:1px solid #51276e;background:#100d17;border-radius:16px;overflow:hidden;box-shadow:0 8px 25px #0006}
+#market-search-results .market-card-capa{height:185px}
+#market-search-results .market-card-corpo{padding:14px 17px 17px 176px;min-height:170px;gap:6px;display:flex;flex-direction:column;justify-content:flex-start;position:relative}
+#market-search-results .market-card-logo{top:-38px;left:18px;width:130px;height:130px;border:5px solid #110c18;background:#eae4f0;box-shadow:0 8px 20px #0006}
+#market-search-results .market-card-topo{min-height:54px;min-width:0}
+#market-search-results .market-card-topo h3{font-size:1.03rem;line-height:1.35;margin:0 0 6px;overflow-wrap:anywhere}
+#market-search-results .market-card-topo p{font-size:.87rem;color:#aaa0b8}
+#market-search-results .market-card-corpo small{color:#b9a9ca;font-size:.75rem;min-height:0}
+#market-search-results .market-card-rodape{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;width:100%}
+#market-search-results .market-card-rodape span{font-size:.78rem;color:#b3a7c6;overflow-wrap:anywhere}
+#market-search-results .market-card-rodape button{width:auto;flex-shrink:0;margin:0;padding:11px 17px;border-radius:999px;box-shadow:0 3px 20px #9229f255;white-space:nowrap}
+@media(max-width:1100px){#tela-market-busca .market-hero-ref{grid-template-columns:1fr;gap:25px}#market-search-results .market-card-corpo{padding-left:115px}#market-search-results .market-card-logo{width:85px;height:85px;top:-25px}#market-search-results .market-card-rodape{flex-wrap:wrap}#market-search-results .market-card-rodape button{width:100%}}
+@media(max-width:900px){#market-search-results.market-resultados{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){#tela-market-busca{padding:12px 4px 28px}#tela-market-busca .market-hero-ref{padding:18px 8px 28px}#tela-market-busca .market-hero-copy h1{font-size:2.2rem}#tela-market-busca .market-search-field{flex-wrap:wrap}#tela-market-busca #market-search-button{padding:10px}#market-search-results.market-resultados{grid-template-columns:1fr;gap:18px}#market-search-results .market-card-corpo{padding:18px 16px 16px 124px;min-height:155px}#market-search-results .market-card-logo{width:94px;height:94px;top:-32px;left:15px}#market-search-results .market-card-rodape{margin-left:-108px;width:calc(100% + 108px);flex-wrap:nowrap}#market-search-results .market-card-rodape button{width:auto}}
