@@ -272,7 +272,12 @@ async function carregarEstadoAutopilot() {
     try {
         const snap = await getDoc(doc(db, "config_admin", "autopilot"));
         if (snap.exists()) { modoAusenteAtivo = snap.data().ativo || false; atualizarBotaoAusente(); }
-    } catch (e) { console.warn("Config autopilot não encontrada."); }
+   } catch (e) {
+    console.error(
+        "Erro ao carregar o Neo Wave Autopilot:",
+        e.code,
+        e.message
+    );
 }
 
 function atualizarBotaoAusente() {
