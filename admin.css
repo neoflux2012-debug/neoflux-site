@@ -673,3 +673,24 @@ input:focus, select:focus {
         margin: 4px 2px;
     }
 }
+
+/* MARKETPLACE - ADMIN */
+.admin-marketplace{margin:30px 0 50px;padding:26px;background:#101018;border:1px solid #37304a;border-radius:18px}
+.admin-marketplace-title{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.admin-marketplace-title h2{display:flex;align-items:center;gap:10px;text-align:left;margin:0 0 8px;font-size:1.45rem}
+.admin-marketplace-title p{text-align:left;margin:0}
+.admin-market-btn,.admin-market-list button{padding:10px 16px;background:#25153a;color:white;border:1px solid #8a2be2;border-radius:9px;cursor:pointer;margin:6px 8px 0 0}
+.admin-market-list button:hover,.admin-market-btn:hover{background:#452269}
+.admin-market-list button:disabled{opacity:.5;cursor:wait}
+#market-admin-status{text-align:left;margin:16px 0;color:#b9a5e8}
+.admin-market-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:20px 0}
+.admin-market-stats>div{background:#181320;border:1px solid #37304a;padding:18px;border-radius:12px}
+.admin-market-stats small{display:block;color:#aaa;margin-bottom:10px}
+.admin-market-stats strong{font-size:1.9rem;color:#d2adff}
+.admin-market-section{margin-top:26px}
+.admin-market-section h3{margin-bottom:14px}
+.admin-market-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
+.admin-market-list article{padding:18px;background:#17141e;border:1px solid #36303e;border-radius:12px;overflow-wrap:anywhere}
+.admin-market-list article strong{display:block;margin-bottom:10px}
+.admin-market-list article p{text-align:left;margin:0 0 12px;font-size:.85rem}
+@media(max-width:650px){.admin-marketplace{padding:16px}.admin-market-stats{grid-template-columns:1fr}}
