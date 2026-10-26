@@ -1,165 +1,275 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin | Neo Flux</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./admin.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body>
-
-    <header>
-        <img src="./logo.png" alt="Logo Neo Flux" class="logo">
-    </header>
-
-    <main>
-        <!-- TELA DE LOGIN DO ADMIN -->
-        <section id="tela-admin-login" class="tela ativa" style="max-width: 400px; margin: 0 auto;">
-            <h2 style="text-align: center;">Acesso Restrito</h2>
-            <form id="form-admin-login">
-                <label for="admin-email">E-mail Admin:</label>
-                <input type="email" id="admin-email" required>
-
-                <label for="admin-senha">Senha:</label>
-                <input type="password" id="admin-senha" required>
-
-                <button type="submit" class="botao-principal">Entrar no Painel</button>
-            </form>
-        </section>
-
-        <!-- TELA DO PAINEL -->
-        <section id="tela-admin-painel" class="tela">
-            <div class="admin-header">
-                <h1 class="admin-titulo">
-                    <i data-lucide="shield-check"></i> Painel do Administrador
-                </h1>
-                <button id="btn-admin-sair" class="botao-principal botao-admin-sair">Sair</button>
-            </div>
-
-            <!-- NEO WAVE MONITOR -->
-            <div class="admin-card-monitor">
-                <div class="admin-card-monitor-header">
-                    <h3 class="admin-card-monitor-titulo">
-                        <i data-lucide="bot"></i> Neo Wave Monitor
-                    </h3>
-                    <p class="admin-card-monitor-subtitulo">Seu assistente de cobranças e renovações.</p>
-                </div>
-                <div class="admin-monitor-grid">
-                    <div class="admin-monitor-stat">
-                        <p class="admin-monitor-stat-label">Vencem Hoje</p>
-                        <h3 class="admin-monitor-stat-valor admin-stat-laranja" id="monitor-vencem-hoje">0</h3>
-                    </div>
-                    <div class="admin-monitor-stat">
-                        <p class="admin-monitor-stat-label">Vencem em 7 dias</p>
-                        <h3 class="admin-monitor-stat-valor admin-stat-azul" id="monitor-vencem-7">0</h3>
-                    </div>
-                    <div class="admin-monitor-stat">
-                        <p class="admin-monitor-stat-label">Atrasados</p>
-                        <h3 class="admin-monitor-stat-valor admin-stat-vermelho" id="monitor-atrasados">0</h3>
-                    </div>
-                </div>
-                <button id="btn-monitor-whatsapp" class="botao-principal botao-admin-whatsapp">
-                    <i data-lucide="message-circle" style="width: 16px; vertical-align: middle;"></i> Copiar Lista de Cobrança (WhatsApp)
-                </button>
-            </div>
-
-            <!-- NEO WAVE AUTOPILOT -->
-            <div class="admin-card-autopilot">
-                <div class="admin-autopilot-header">
-                    <div>
-                        <h4 class="admin-autopilot-titulo">
-                            <i data-lucide="zap"></i> Neo Wave Autopilot
-                        </h4>
-                        <p class="admin-autopilot-subtitulo">Deixe o Neo Wave cuidar das cobranças enquanto você está fora.</p>
-                    </div>
-                    <button id="btn-toggle-ausente" class="admin-btn-ausente">
-                        <i data-lucide="power" style="width: 16px; vertical-align: middle;"></i> Ativar Modo Ausente
-                    </button>
-                </div>
-
-                <div id="painel-despacho" class="admin-painel-despacho">
-                    <h5 class="admin-despacho-titulo">⚡ Ações Sugeridas pelo Neo Wave:</h5>
-                    <div id="lista-despacho" class="admin-lista-despacho">
-                        <!-- Preenchido via JS -->
-                    </div>
-                    
-                    <!-- TABELA DE VENCIMENTOS -->
-                    <h5 class="admin-tabela-titulo">
-                        <i data-lucide="calendar-clock"></i> 
-                        Tabela de Vencimentos (Visão Geral)
-                    </h5>
-                    <div class="admin-tabela-wrapper">
-                        <table class="tabela-admin tabela-vencimentos">
-                            <thead>
-                                <tr>
-                                    <th>Cliente</th>
-                                    <th>Plano</th>
-                                    <th>Vencimento</th>
-                                    <th class="texto-direita">Situação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-vencimentos-corpo">
-                                <!-- Preenchido via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TABELA DE CLIENTES -->
-            <div class="caixa-termos admin-caixa-clientes">
-                <h3 class="admin-clientes-titulo">
-                    <i data-lucide="users"></i> Gerenciar Clientes
-                </h3>
-                
-                <div class="admin-filtros">
-                    <input type="text" id="admin-busca-cliente" placeholder="🔍 Buscar por nome ou e-mail..." class="admin-input-busca">
-                </div>
-
-                <div class="admin-tabela-wrapper">
-                    <table class="tabela-admin tabela-clientes">
-                        <thead>
-                            <tr>
-                                <th>Cliente</th>
-                                <th>Plano</th>
-                                <th>Vencimento</th>
-                                <th>Status</th>
-                                <th class="texto-centro">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-admin-clientes">
-                            <tr><td colspan="5" class="admin-tabela-vazia">Carregando clientes...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- TABELA DE UPGRADES -->
-            <div class="caixa-termos admin-caixa-clientes" style="margin-top: 25px;">
-                <h3 class="admin-clientes-titulo">
-                    <i data-lucide="trending-up"></i> Solicitações de Upgrade
-                </h3>
-                <div class="admin-tabela-wrapper">
-                    <table class="tabela-admin tabela-vencimentos">
-                        <thead>
-                            <tr>
-                                <th>Cliente</th>
-                                <th>Plano Solicitado</th>
-                                <th class="texto-centro">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-upgrades"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script>lucide.createIcons();</script>
-    <script type="module" src="./admin.js"></script>
-</body>
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Painel Admin | Neo Flux
+  </title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="./admin.css" rel="stylesheet"/>
+  <script src="https://unpkg.com/lucide@latest">
+  </script>
+ </head>
+ <body>
+  <header>
+   <img alt="Neo Flux" class="logo" src="./logo.png"/>
+  </header>
+  <main>
+   <section class="tela ativa" id="tela-admin-login" style="max-width:400px;margin:0 auto">
+    <h2>
+     Acesso Restrito
+    </h2>
+    <form id="form-admin-login">
+     <label for="admin-email">
+      E-mail Admin:
+     </label>
+     <input id="admin-email" required="" type="email"/>
+     <label for="admin-senha">
+      Senha:
+     </label>
+     <input id="admin-senha" required="" type="password"/>
+     <button class="botao-principal" type="submit">
+      Entrar no Painel
+     </button>
+    </form>
+   </section>
+   <section class="tela" id="tela-admin-painel">
+    <div class="admin-header">
+     <h1 class="admin-titulo">
+      <i data-lucide="shield-check">
+      </i>
+      Painel do Administrador
+     </h1>
+     <button class="botao-principal botao-admin-sair" id="btn-admin-sair">
+      Sair
+     </button>
+    </div>
+    <div class="admin-card-monitor">
+     <div class="admin-card-monitor-header">
+      <h3 class="admin-card-monitor-titulo">
+       <i data-lucide="bot">
+       </i>
+       Neo Wave Monitor
+      </h3>
+      <p class="admin-card-monitor-subtitulo">
+       Seu assistente de cobranças e renovações.
+      </p>
+     </div>
+     <div class="admin-monitor-grid">
+      <div class="admin-monitor-stat">
+       <p class="admin-monitor-stat-label">
+        Vencem Hoje
+       </p>
+       <h3 class="admin-monitor-stat-valor admin-stat-laranja" id="monitor-vencem-hoje">
+        0
+       </h3>
+      </div>
+      <div class="admin-monitor-stat">
+       <p class="admin-monitor-stat-label">
+        Vencem em 7 dias
+       </p>
+       <h3 class="admin-monitor-stat-valor admin-stat-azul" id="monitor-vencem-7">
+        0
+       </h3>
+      </div>
+      <div class="admin-monitor-stat">
+       <p class="admin-monitor-stat-label">
+        Atrasados
+       </p>
+       <h3 class="admin-monitor-stat-valor admin-stat-vermelho" id="monitor-atrasados">
+        0
+       </h3>
+      </div>
+     </div>
+     <button class="botao-principal botao-admin-whatsapp" id="btn-monitor-whatsapp">
+      Copiar Lista de Cobrança (WhatsApp)
+     </button>
+    </div>
+    <div class="admin-card-autopilot">
+     <div class="admin-autopilot-header">
+      <div>
+       <h4 class="admin-autopilot-titulo">
+        <i data-lucide="zap">
+        </i>
+        Neo Wave Autopilot
+       </h4>
+       <p class="admin-autopilot-subtitulo">
+        Ações sugeridas para cobranças.
+       </p>
+      </div>
+      <button class="admin-btn-ausente" id="btn-toggle-ausente">
+       Ativar Modo Ausente
+      </button>
+     </div>
+     <div class="admin-painel-despacho" id="painel-despacho">
+      <h5 class="admin-despacho-titulo">
+       Ações Sugeridas pelo Neo Wave
+      </h5>
+      <div class="admin-lista-despacho" id="lista-despacho">
+      </div>
+      <h5 class="admin-tabela-titulo">
+       Tabela de Vencimentos
+      </h5>
+      <div class="admin-tabela-wrapper">
+       <table class="tabela-admin">
+        <thead>
+         <tr>
+          <th>
+           Cliente
+          </th>
+          <th>
+           Plano
+          </th>
+          <th>
+           Vencimento
+          </th>
+          <th>
+           Situação
+          </th>
+         </tr>
+        </thead>
+        <tbody id="tabela-vencimentos-corpo">
+        </tbody>
+       </table>
+      </div>
+     </div>
+    </div>
+    <div class="caixa-termos admin-caixa-clientes">
+     <h3 class="admin-clientes-titulo">
+      <i data-lucide="users">
+      </i>
+      Gerenciar Clientes
+     </h3>
+     <div class="admin-filtros">
+      <input class="admin-input-busca" id="admin-busca-cliente" placeholder="Buscar por nome ou e-mail..."/>
+     </div>
+     <div class="admin-tabela-wrapper">
+      <table class="tabela-admin">
+       <thead>
+        <tr>
+         <th>
+          Cliente
+         </th>
+         <th>
+          Plano
+         </th>
+         <th>
+          Vencimento
+         </th>
+         <th>
+          Status
+         </th>
+         <th>
+          Ações
+         </th>
+        </tr>
+       </thead>
+       <tbody id="lista-admin-clientes">
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="caixa-termos admin-caixa-clientes">
+     <h3 class="admin-clientes-titulo">
+      <i data-lucide="trending-up">
+      </i>
+      Solicitações de Upgrade
+     </h3>
+     <div class="admin-tabela-wrapper">
+      <table class="tabela-admin">
+       <thead>
+        <tr>
+         <th>
+          Cliente
+         </th>
+         <th>
+          Plano Solicitado
+         </th>
+         <th>
+          Ação
+         </th>
+        </tr>
+       </thead>
+       <tbody id="lista-upgrades">
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <section class="admin-marketplace">
+     <div class="admin-marketplace-title">
+      <div>
+       <h2>
+        <i data-lucide="store">
+        </i>
+        Administração do Marketplace
+       </h2>
+       <p>
+        Booster, denúncias e vitrines suspensas
+       </p>
+      </div>
+      <button class="admin-market-btn" id="market-admin-atualizar" type="button">
+       Atualizar
+      </button>
+     </div>
+     <p id="market-admin-status" role="status">
+     </p>
+     <div class="admin-market-stats">
+      <div>
+       <small>
+        Booster pendente
+       </small>
+       <strong id="market-total-pedidos">
+        0
+       </strong>
+      </div>
+      <div>
+       <small>
+        Denúncias pendentes
+       </small>
+       <strong id="market-total-denuncias">
+        0
+       </strong>
+      </div>
+      <div>
+       <small>
+        Vitrines suspensas
+       </small>
+       <strong id="market-total-suspensoes">
+        0
+       </strong>
+      </div>
+     </div>
+     <div class="admin-market-section">
+      <h3>
+       🚀 Solicitações de Booster
+      </h3>
+      <div class="admin-market-list" id="market-admin-pedidos">
+      </div>
+     </div>
+     <div class="admin-market-section">
+      <h3>
+       🛡️ Denúncias
+      </h3>
+      <div class="admin-market-list" id="market-admin-denuncias">
+      </div>
+     </div>
+     <div class="admin-market-section">
+      <h3>
+       🔒 Vitrines suspensas
+      </h3>
+      <div class="admin-market-list" id="market-admin-suspensoes">
+      </div>
+     </div>
+    </section>
+   </section>
+  </main>
+  <script>
+   lucide.createIcons()
+  </script>
+  <script src="./admin.js" type="module">
+  </script>
+ </body>
 </html>
