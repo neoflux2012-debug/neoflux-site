@@ -1871,17 +1871,140 @@ window.resetarTraducaoFVM = function() {
  async function abrirEditor(){const id=subsiteAtualId;if(!id)return alert('Abra primeiro um subsite.');retorno='tela-subsite';mostrarTela('tela-marketplace');aplicar({...padrao,nome:$('nome-do-subsite').textContent});msg('Carregando...');try{await validarDono(id);const s=await getDoc(doc(db,'marketplaceRascunhos',id));if(id!==subsiteAtualId)return;if(s.exists())aplicar({...padrao,...s.data()});msg(s.exists()?'Dados carregados.':'Nova vitrine.');}catch(e){msg('Erro: '+e.message)}}
  async function salvar(publicar=false){const id=subsiteAtualId,d=formulario();if(!d.nome)return alert('Informe o nome da empresa.');if(d.whatsapp&&(d.whatsapp.length<10||d.whatsapp.length>15))return alert('Confira o WhatsApp.');if(d.itens.length>60)return alert('Limite técnico de 60 itens por vitrine nesta versão.');if([d.logoUrl,d.capaUrl,...d.itens.map(x=>x.foto)].some(u=>u&&!safeUrl(u)))return alert('Use URLs HTTPS válidas nas imagens.');const b=publicar?$('market-publicar'):$('btn-market-salvar');b.disabled=true;msg(publicar?'Publicando...':'Salvando...');try{await validarDono(id);const base={...d,idSubsite:id,idDono:auth.currentUser.uid,atualizadoEm:new Date()};await setDoc(doc(db,'marketplaceRascunhos',id),base,{merge:true});if(publicar){await setDoc(doc(db,'marketplacePublicos',id),{...base,publicado:true},{merge:true});msg('Vitrine publicada! Ela já pode aparecer na pesquisa.')}else msg('Rascunho salvo. Se a vitrine já estiver publicada, use Publicar para atualizar o conteúdo público.')}catch(e){msg('Erro: '+e.message)}finally{b.disabled=false}}
  async function despublicar(){if(!confirm('Retirar sua vitrine da pesquisa pública?'))return;try{await validarDono(subsiteAtualId);await deleteDoc(doc(db,'marketplacePublicos',subsiteAtualId));msg('Vitrine retirada do ar. Rascunho preservado.')}catch(e){msg('Erro: '+e.message)}}
- async function buscar(){mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';try{const s=await getDocs(query(collection(db,'marketplacePublicos'),where('segmento','==',ambiente)));const termo=$('market-search-input').value.toLocaleLowerCase('pt-BR').trim();let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));
-  // 🔹 ORDENAÇÃO BOOSTER: patrocinados primeiro, expira sem rotina de limpeza
-  const agora=Date.now();
-  lista.sort((a,b)=>{
-    const aBoost=(a.boosterAte?.toMillis?.()||0)>agora?1:0;
-    const bBoost=(b.boosterAte?.toMillis?.()||0)>agora?1:0;
-    if(aBoost!==bBoost)return bBoost-aBoost;
-    return (b.boosterAte?.toMillis?.()||0)-(a.boosterAte?.toMillis?.()||0);
-  });
-  lista=lista.slice(0,80);$('market-search-status').textContent=`${lista.length} vitrine(s) encontrada(s).`;lista.forEach(x=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt='';c.append(img)}const info=document.createElement('div');info.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'),texto('small',(x.boosterAte?.toMillis?.()>Date.now()?'🚀 Patrocinado · ':'')+'Nova empresa · Sem avaliações'));c.append(info);const b=texto('button','Ver vitrine');b.onclick=()=>abrirPerfil(x);c.append(b);$('market-search-results').append(c)})}catch(e){$('market-search-status').textContent='Não foi possível pesquisar: '+e.message}}
-  function abrirPerfil(x){perfilAberto=x;mostrarTela('tela-market-perfil');const a=$('market-perfil-conteudo');a.replaceChildren();const capa=document.createElement('div');capa.className='market-perfil-capa';capa.style.background=safeUrl(x.capaUrl)?`url("${safeUrl(x.capaUrl)}") center/cover`:`linear-gradient(125deg,#00d2ff,${x.cor||'#8a2be2'})`;a.append(capa);a.append(texto('h1',x.nome||'Empresa'),texto('p',x.categoria||''),texto('p',x.descricao||''),texto('p','Nova empresa · Sem avaliações'));if(x.whatsapp){const w=texto('a','Falar pelo WhatsApp');w.href=`https://wa.me/${String(x.whatsapp).replace(/\D/g,'')}`;w.target='_blank';w.rel='noopener noreferrer';a.append(w)}a.append(texto('h2','Portfólio e anúncios'));const grid=document.createElement('div');grid.className='market-resultados';(x.itens||[]).forEach(it=>{const c=document.createElement('article');c.className='market-resultado';if(safeUrl(it.foto)){const img=document.createElement('img');img.src=safeUrl(it.foto);img.alt='';c.append(img)}const content=document.createElement('div');content.append(texto('h3',it.nome),texto('p',it.tipo==='portfolio'?'Portfólio':'Produto / Serviço'));if(it.preco!==null&&it.preco!==undefined)content.append(texto('strong',`R$ ${Number(it.preco).toFixed(2)}`));c.append(content);grid.append(c)});a.append(grid)}
+ 
+ async function buscar(){
+   mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';
+   try{
+     const s=await getDocs(query(collection(db,'marketplacePublicos'),where('segmento','==',ambiente)));
+     const termo=$('market-search-input').value.toLocaleLowerCase('pt-BR').trim();
+     let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));
+     
+     // 🔹 ORDENAÇÃO BOOSTER: patrocinados primeiro, expira sem rotina de limpeza
+     const agora=Date.now();
+     lista.sort((a,b)=>{
+       const aBoost=(a.boosterAte?.toMillis?.()||0)>agora?1:0;
+       const bBoost=(b.boosterAte?.toMillis?.()||0)>agora?1:0;
+       if(aBoost!==bBoost)return bBoost-aBoost;
+       return (b.boosterAte?.toMillis?.()||0)-(a.boosterAte?.toMillis?.()||0);
+     });
+     
+     lista=lista.slice(0,80);
+     $('market-search-status').textContent=`${lista.length} vitrine(s) encontrada(s).`;
+     lista.forEach(x=>{
+       const c=document.createElement('article');c.className='market-resultado';
+       if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt='';c.append(img)}
+       const info=document.createElement('div');
+       info.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'),texto('small',(x.boosterAte?.toMillis?.()>Date.now()?'🚀 Patrocinado · ':'')+'Nova empresa · Sem avaliações'));
+       c.append(info);
+       const b=texto('button','Ver vitrine');b.onclick=()=>abrirPerfil(x);c.append(b);
+       $('market-search-results').append(c);
+     });
+   }catch(e){$('market-search-status').textContent='Não foi possível pesquisar: '+e.message}
+ }
+
+ // 🔹 FUNÇÃO ABRIR PERFIL (CORRIGIDA E BONITA)
+ function abrirPerfil(x){
+   perfilAberto=x;
+   mostrarTela('tela-market-perfil');
+   const a=$('market-perfil-conteudo');
+   a.replaceChildren(); // Limpa
+
+   // 1. Capa (Banner)
+   const capa=document.createElement('div');
+   capa.className='market-perfil-capa';
+   capa.style.background = safeUrl(x.capaUrl) ? `url("${safeUrl(x.capaUrl)}") center/cover` : `linear-gradient(125deg,#00d2ff,${x.cor||'#8a2be2'})`;
+   a.append(capa);
+
+   // 2. Logo da Empresa (Sobreposto)
+   const logo=document.createElement('div');
+   logo.className='market-perfil-logo';
+   if(safeUrl(x.logoUrl)){
+       const img=document.createElement('img');
+       img.src=safeUrl(x.logoUrl);
+       img.alt='Logo';
+       logo.append(img);
+   } else {
+       const span=document.createElement('span');
+       span.textContent='🏬';
+       logo.append(span);
+   }
+   a.append(logo);
+
+   // 3. Nome e Categoria
+   a.append(texto('h1',x.nome||'Empresa'));
+   
+   const cat = texto('p', x.categoria || 'Categoria não informada');
+   cat.style.color = '#00d2ff';
+   cat.style.fontWeight = 'bold';
+   a.append(cat);
+
+   // 4. Descrição
+   a.append(texto('p',x.descricao||'Sem descrição.'));
+
+   // 5. Avaliações (Placeholder)
+   a.append(texto('p','Nova empresa · Sem avaliações'));
+
+   // 6. WhatsApp
+   if(x.whatsapp){
+       const w=texto('a','Falar pelo WhatsApp');
+       w.href=`https://wa.me/${String(x.whatsapp).replace(/\D/g,'')}`;
+       w.target='_blank';
+       w.rel='noopener noreferrer';
+       a.append(w);
+   }
+
+   // 7. Título do Portfólio
+   a.append(texto('h2','Portfólio e anúncios'));
+
+   // 8. Grid de Itens
+   const grid=document.createElement('div');
+   grid.className='market-resultados';
+   
+   if(!x.itens || x.itens.length === 0) {
+       const p = texto('p', 'Nenhum item publicado ainda.');
+       p.style.padding = '20px';
+       p.style.color = '#888';
+       grid.append(p);
+   } else {
+       x.itens.forEach(it=>{
+           const c=document.createElement('article');
+           c.className='market-resultado';
+           if(safeUrl(it.foto)){
+               const img=document.createElement('img');
+               img.src=safeUrl(it.foto);
+               img.alt='';
+               c.append(img);
+           }
+           const content=document.createElement('div');
+           content.style.display = 'flex';
+           content.style.flexDirection = 'column';
+           content.style.gap = '5px';
+           content.style.height = '100%';
+           
+           content.append(texto('h3',it.nome));
+           content.append(texto('p',it.tipo==='portfolio'?'Portfólio':'Produto / Serviço'));
+           
+           if(it.preco!==null && it.preco!==undefined) {
+               content.append(texto('strong',`R$ ${Number(it.preco).toFixed(2).replace('.', ',')}`));
+           }
+           
+           c.append(content);
+           grid.append(c);
+       });
+   }
+   a.append(grid);
+
+   // 9. Mostrar botão de Impulsionar apenas para o dono
+   const btnBooster = document.getElementById('market-solicitar-booster');
+   if(btnBooster) {
+       if(auth.currentUser && auth.currentUser.uid === x.idDono) {
+           btnBooster.style.display = 'inline-block';
+       } else {
+           btnBooster.style.display = 'none';
+       }
+   }
+ }
+
  $('btn-abrir-marketplace')?.addEventListener('click',abrirEditor);
  $('btn-market-explorar')?.addEventListener('click',()=>{retorno='tela-subsite';escolha('neo');buscar()});
  $('btn-market-publico')?.addEventListener('click',()=>{retorno='tela-boas-vindas';escolha('neo');buscar()});
@@ -1898,6 +2021,7 @@ window.resetarTraducaoFVM = function() {
  Object.values(campos).forEach(id=>$(id)?.addEventListener('input',()=>{preview();msg('Alterações não salvas.')}));
  $('market-denunciar')?.addEventListener('click',async()=>{if(!perfilAberto)return;if(!auth.currentUser)return alert('Entre na sua conta para enviar uma denúncia.');const motivo=prompt('Descreva o motivo da denúncia (mínimo 10 caracteres):');if(!motivo)return;if(motivo.trim().length<10)return alert('Descreva melhor a denúncia.');try{await addDoc(collection(db,'marketplaceDenuncias'),{idVitrine:perfilAberto.id,motivo:motivo.trim().slice(0,1000),idAutor:auth.currentUser?.uid||null,criadoEm:new Date(),status:'pendente'});alert('Denúncia enviada para análise.')}catch(e){alert('Erro ao denunciar: '+e.message)}});
 })();
+
 // NEO FLUX BOOSTER + MODERAÇÃO (Pix via QR existente ./qrcode.png, 14 dias)
 (function iniciarBoosterModeracao(){
  const $=id=>document.getElementById(id);
