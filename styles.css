@@ -1106,3 +1106,26 @@ main:has(#tela-market-busca.ativa),main:has(#tela-market-perfil.ativa),main:has(
     color: #00c853;
     margin-top: auto; /* Empurra o preço pro fundo do card */
 }
+
+/* Marketplace: vitrines organizadas, mantendo os cartões existentes */
+main:has(#tela-market-busca.ativa){max-width:1200px!important}
+#market-search-results.market-resultados{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:20px;
+  padding:0 0 30px;
+}
+#market-search-results .market-resultado{width:100%;min-width:0}
+#market-search-results .market-resultado img{width:100%;height:170px;object-fit:cover}
+#market-search-results .market-resultado button{align-self:center}
+.market-editor input[type="file"]{cursor:pointer}
+.market-editor input[type="file"]::file-selector-button{
+  background:#8a2be2;color:#fff;border:0;border-radius:7px;
+  padding:10px 14px;margin-right:12px;cursor:pointer
+}
+@media(max-width:900px){
+  #market-search-results.market-resultados{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  #market-search-results.market-resultados{grid-template-columns:minmax(0,1fr)}
+}
