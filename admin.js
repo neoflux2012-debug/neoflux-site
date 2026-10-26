@@ -833,6 +833,94 @@ async function carregarMarketplaceAdmin() {
 document.getElementById("market-admin-atualizar")
     ?.addEventListener("click", carregarMarketplaceAdmin);
 
+
+// CONFIGURACOES DE PRECOS E PROMOCOES (somente admin)
+const PRECOS_PLANOS = [
+  ['start','Start',49.99],['pro','Pro',79.99],['elite','Elite',99.99],
+  ['elite_premium','Elite Premium',149.99],['fvm_start','FVM Start',49.99],
+  ['fvm_pro','FVM Pro',79.99],['fvm_elite','FVM Elite',99.99],
+  ['fvm_elite_premium','FVM Elite Premium',149.99]
+];
+const PRECOS_DOC = doc(db, 'config_admin', 'precos_promocoes');
+const precosAutorizado = () => auth.currentUser?.email === emailAdmin && auth.currentUser?.emailVerified === true;
+function campoPreco(rotulo, nome, valor, tipo='number', extra='') {
+  const label=document.createElement('label'); label.textContent=rotulo;
+  const input=document.createElement('input'); input.name=nome; input.type=tipo;
+  if(tipo==='number'){input.min='0';input.step=nome==='dias'?'1':'0.01';}
+  if(extra) input.placeholder=extra;
+  input.value=valor ?? '';
+  label.append(input);return label;
+}
+function campoSelect(rotulo,nome,opcoes,valor){
+  const label=document.createElement('label');label.textContent=rotulo;
+  const select=document.createElement('select');select.name=nome;
+  for(const [id,txt] of opcoes){const o=document.createElement('option');o.value=id;o.textContent=txt;select.append(o);}
+  select.value=valor||opcoes[0][0];label.append(select);return label;
+}
+function montarCardPreco(id,titulo,dados,precoPadrao,booster=false){
+  const card=document.createElement('div');card.className='admin-precos-item';card.dataset.id=id;
+  const h=document.createElement('h4');h.textContent=titulo;card.append(h);
+  card.append(campoPreco('Preço normal (R$)','normal',dados.normal ?? precoPadrao));
+  card.append(campoPreco('Preço promocional (R$)','promocional',dados.promocional ?? ''));
+  const label=document.createElement('label');label.className='admin-precos-check';
+  const check=document.createElement('input');check.type='checkbox';check.name='ativo';check.checked=dados.ativo===true;
+  label.append(check,document.createTextNode('Ativar promoção'));card.append(label);
+  card.append(campoPreco('Início da promoção','inicio',dados.inicio||'','date'));
+  card.append(campoPreco('Fim da promoção','fim',dados.fim||'','date'));
+  if(booster){card.append(campoPreco('Duração do anúncio (dias)','dias',dados.dias ?? 14));}
+  else card.append(campoSelect('Condição da oferta','aplicacao',[
+    ['primeira_mensalidade','Somente primeira mensalidade'],
+    ['recorrente','Preço recorrente para novos contratos']
+  ],dados.aplicacao));
+  return card;
+}
+async function carregarPrecosAdmin(){
+  const status=document.getElementById('precos-status');
+  if(!precosAutorizado()){if(status)status.textContent='Acesso requer administrador com e-mail verificado.';return;}
+  try{
+    const snap=await getDoc(PRECOS_DOC),config=snap.exists()?snap.data():{};
+    const grid=document.getElementById('precos-planos-grid');
+    const boost=document.getElementById('precos-booster-grid');
+    grid.replaceChildren();boost.replaceChildren();
+    for(const [id,nome,preco] of PRECOS_PLANOS)grid.append(montarCardPreco(id,nome,config.planos?.[id]||{},preco));
+    boost.append(montarCardPreco('booster','Booster Marketplace',config.booster||{},10,true));
+    if(status)status.textContent='Configurações carregadas. Valores públicos ainda não estão integrados.';
+  }catch(e){console.error(e);if(status)status.textContent='Erro ao carregar: '+e.message;}
+}
+function lerCardPreco(card){
+  const pegar=n=>card.querySelector(`[name="${n}"]`);
+  const normal=Number(pegar('normal').value);
+  const strPromo=pegar('promocional').value;
+  const promocional=strPromo===''?null:Number(strPromo);
+  const ativo=pegar('ativo').checked;
+  const inicio=pegar('inicio').value,fim=pegar('fim').value;
+  if(!Number.isFinite(normal)||normal<0||normal>100000)throw Error('Preço normal inválido em '+card.dataset.id);
+  if(promocional!==null&&(!Number.isFinite(promocional)||promocional<0||promocional>=normal))throw Error('Preço promocional deve ser menor que o normal em '+card.dataset.id);
+  if(ativo&&(!inicio||!fim||promocional===null))throw Error('Preencha preço e datas da promoção em '+card.dataset.id);
+  if(inicio&&fim&&fim<inicio)throw Error('Data final anterior à inicial em '+card.dataset.id);
+  const out={normal,promocional,ativo,inicio,fim};
+  if(card.dataset.id==='booster'){
+    const dias=Number(pegar('dias').value);
+    if(!Number.isInteger(dias)||dias<1||dias>365)throw Error('Duração do Booster deve ser de 1 a 365 dias');
+    out.dias=dias;
+  }else out.aplicacao=pegar('aplicacao').value;
+  return out;
+}
+document.getElementById('btn-salvar-precos')?.addEventListener('click',async()=>{
+  const status=document.getElementById('precos-status'),btn=document.getElementById('btn-salvar-precos');
+  if(!precosAutorizado()){alert('Administrador não autorizado ou e-mail não verificado.');return;}
+  try{
+    const planos={};
+    for(const card of document.querySelectorAll('#precos-planos-grid .admin-precos-item'))planos[card.dataset.id]=lerCardPreco(card);
+    const booster=lerCardPreco(document.querySelector('#precos-booster-grid .admin-precos-item'));
+    if(!confirm('Salvar configurações no Firebase? Isso ainda não muda os preços mostrados aos clientes.'))return;
+    btn.disabled=true;
+    await setDoc(PRECOS_DOC,{planos,booster,atualizadoEm:new Date(),atualizadoPor:auth.currentUser.uid});
+    status.textContent='Configurações salvas no Firebase. Integração pública pendente.';
+  }catch(e){console.error(e);alert('Erro ao salvar: '+e.message);}
+  finally{btn.disabled=false;}
+});
+
 // OBSERVADOR DE LOGIN
 
 onAuthStateChanged(auth, user => {
@@ -840,6 +928,7 @@ onAuthStateChanged(auth, user => {
         mostrarTela("tela-admin-painel");
         carregarClientes();
         carregarMarketplaceAdmin();
+        carregarPrecosAdmin();
 
     } else if (user) {
         mostrarTela("tela-admin-login");
