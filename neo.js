@@ -1967,13 +1967,26 @@ window.resetarTraducaoFVM = function() {
    finally{b.disabled=false;$('market-publicar').disabled=false;$('btn-market-salvar').disabled=false}
  }async function despublicar(){if(!confirm('Retirar sua vitrine da pesquisa pública?'))return;try{await validarDono(subsiteAtualId);await deleteDoc(doc(db,'marketplacePublicos',subsiteAtualId));msg('Vitrine retirada do ar. Rascunho preservado.')}catch(e){msg('Erro: '+e.message)}}
  
+ let categoriaMarketAtiva='Todos';
+ document.querySelectorAll('[data-market-categoria]').forEach(botao=>botao.addEventListener('click',()=>{
+   categoriaMarketAtiva=botao.dataset.marketCategoria;
+   document.querySelectorAll('[data-market-categoria]').forEach(b=>b.classList.toggle('ativo',b===botao));
+   const mais=document.getElementById('market-categoria-mais');if(mais)mais.value='';buscar();
+ }));
+ document.getElementById('market-categoria-mais')?.addEventListener('change',e=>{
+   if(!e.target.value)return;
+   categoriaMarketAtiva=e.target.value;
+   document.querySelectorAll('[data-market-categoria]').forEach(b=>b.classList.remove('ativo'));buscar();
+ });
  async function buscar(){
    mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';
    try{
      const s=await getDocs(query(collection(db,'marketplacePublicos'),where('segmento','==',ambiente)));
      const termo=$('market-search-input').value.toLocaleLowerCase('pt-BR').trim();
-     let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));
+     let lista=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>[x.nome,x.categoria,x.cidade,x.bairro,x.descricao,...(x.itens||[]).map(i=>i.nome)].join(' ').toLocaleLowerCase('pt-BR').includes(termo));
      
+     if(categoriaMarketAtiva!=='Todos')lista=lista.filter(x=>(x.categoria||'').toLocaleLowerCase('pt-BR').includes(categoriaMarketAtiva.toLocaleLowerCase('pt-BR')));
+
      // 🔹 ORDENAÇÃO BOOSTER: patrocinados primeiro, expira sem rotina de limpeza
      const agora=Date.now();
      lista.sort((a,b)=>{
@@ -1995,10 +2008,14 @@ window.resetarTraducaoFVM = function() {
        if(safeUrl(x.logoUrl)){const img=document.createElement('img');img.src=safeUrl(x.logoUrl);img.alt=`Logo de ${x.nome||'empresa'}`;logo.append(img)}
        else logo.textContent='🏬';
        corpo.append(logo);
-       corpo.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'));
+       const topo=document.createElement('div');topo.className='market-card-topo';
+       topo.append(texto('h3',x.nome||'Empresa'),texto('p',x.categoria||'Empresa'));
+       corpo.append(topo);
        const detalhes=texto('small',(x.boosterAte?.toMillis?.()>Date.now()?'🚀 Patrocinado · ':'')+'Sem avaliações');
        corpo.append(detalhes);
-       const b=texto('button','Ver vitrine');b.type='button';b.onclick=()=>abrirPerfil(x);corpo.append(b);
+       const rodape=document.createElement('div');rodape.className='market-card-rodape';
+       rodape.append(texto('span',x.cidade?[`♧ ${x.cidade}`,x.uf||x.estado].filter(Boolean).join(' - '):'Localização não informada'));
+       const b=texto('button','Ver vitrine →');b.type='button';b.onclick=()=>abrirPerfil(x);rodape.append(b);corpo.append(rodape);
        c.append(corpo);
        $('market-search-results').append(c);
      });
