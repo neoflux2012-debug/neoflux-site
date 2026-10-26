@@ -2132,11 +2132,6 @@ window.resetarTraducaoFVM = function() {
 // NEO FLUX BOOSTER + MODERAÇÃO (Pix via QR existente ./qrcode.png, 14 dias)
 (function iniciarBoosterModeracao(){
  const $=id=>document.getElementById(id);
- const ADMIN_EMAIL='neoflux2012@gmail.com';
- const admin=()=>auth.currentUser?.email===ADMIN_EMAIL && auth.currentUser?.emailVerified===true;
- const el=(tag,txt)=>{const e=document.createElement(tag);e.textContent=txt;return e};
- const status=t=>{if($('market-admin-status'))$('market-admin-status').textContent=t};
- const config=doc(db,'marketplaceConfig','booster');
 
  // 🔹 Abre o modal com o QR Code existente (./qrcode.png) — NÃO cria outro QR.
  async function abrirModalBooster(){
@@ -2205,78 +2200,6 @@ window.resetarTraducaoFVM = function() {
  window.abrirModalBooster = abrirModalBooster;
  window.registrarPagamentoBooster = registrarPagamentoBooster;
 
- async function abrirAdmin(){
-   if(!admin())return alert('Acesso exclusivo do administrador verificado.');
-   mostrarTela('tela-market-admin');status('Carregando...');
-   try{
-     const cfg=await getDoc(config);$('market-admin-pix').value=cfg.exists()?cfg.data().chavePix||'':'';
-
-     const [ped,den]=await Promise.all([
-       getDocs(collection(db,'marketplaceBoosterPedidos')),
-       getDocs(collection(db,'marketplaceDenuncias'))
-     ]);
-
-     const p=$('market-admin-pedidos');p.replaceChildren();
-     ped.docs.sort((a,b)=>(b.data().criadoEm?.toMillis?.()||0)-(a.data().criadoEm?.toMillis?.()||0)).forEach(s=>{
-       const d=s.data();
-       const dataStr=d.criadoEm?.toDate?d.criadoEm.toDate().toLocaleString('pt-BR'):'—';
-       const r=el('article',`👤 ${d.nomeCliente||'—'} · 🏬 ${d.nomeVitrine||d.idSubsite} | ${d.status} | R$ ${((d.valorCentavos||1000)/100).toFixed(2)} | ${d.dias||14} dias | ${dataStr}`);
-       if(d.status==='pendente'){
-         const b=el('button','Confirmar Pix recebido e ativar');
-         b.onclick=async()=>{
-           if(!confirm('Você conferiu o crédito de R$ 10 no seu banco? Esta ação ativa o destaque por 14 dias.'))return;
-           b.disabled=true;
-           try{
-             const vit=doc(db,'marketplacePublicos',d.idSubsite);
-             const snap=await getDoc(vit);if(!snap.exists())throw Error('Vitrine não publicada.');
-             const inicio=new Date(),fim=new Date(inicio.getTime()+14*86400000);
-             const lote=writeBatch(db);
-             lote.update(vit,{boosterAte:fim});
-             lote.update(s.ref,{status:'aprovado',aprovadoEm:inicio,expiraEm:fim});
-             await lote.commit();
-             await abrirAdmin();
-           }catch(e){alert('Falha ao aprovar: '+e.message);b.disabled=false}
-         };
-         r.append(b);
-         const negar=el('button','Recusar pedido');
-         negar.onclick=async()=>{
-           if(!confirm('Recusar solicitação?'))return;
-           try{await updateDoc(s.ref,{status:'recusado'});await abrirAdmin()}catch(e){alert(e.message)}
-         };
-         r.append(negar);
-       }
-       p.append(r);
-     });
-     if(p.childElementCount===0)p.append(el('p','Nenhuma solicitação.'));
-
-     const n=$('market-admin-denuncias');n.replaceChildren();
-     den.docs.forEach(s=>{
-       const d=s.data(),r=el('article',`Vitrine: ${d.idVitrine} | ${d.status} | Motivo: ${d.motivo}`);
-       if(d.status==='pendente'){
-         const resolver=async(acao)=>{
-           if(!confirm(acao==='suspensa'?'Suspender esta vitrine pública?':'Encerrar denúncia sem suspensão?'))return;
-           try{
-             const lote=writeBatch(db);
-             if(acao==='suspensa'){
-               lote.set(doc(db,'marketplaceSuspensoes',d.idVitrine),{ativo:true,motivo:d.motivo,criadoEm:new Date()});
-               lote.delete(doc(db,'marketplacePublicos',d.idVitrine));
-             }
-             lote.update(s.ref,{status:acao,analisadoEm:new Date()});
-             await lote.commit();
-             await abrirAdmin();
-           }catch(e){alert('Erro na moderação: '+e.message)}
-         };
-         const susp=el('button','Suspender vitrine');susp.onclick=()=>resolver('suspensa');r.append(susp);
-         const desc=el('button','Rejeitar denúncia');desc.onclick=()=>resolver('rejeitada');r.append(desc);
-       }
-       n.append(r)
-     });
-     if(n.childElementCount===0)n.append(el('p','Nenhuma denúncia.'));
-
-     status('Dados atualizados. Confira os pagamentos diretamente no banco antes de aprovar.');
-   }catch(e){status('Erro: '+e.message)}
- }
-
  // 🔹 Handlers — inclui o novo botão do card do subsite
  $('market-solicitar-booster')?.addEventListener('click',abrirModalBooster);
  $('btn-solicitar-booster-card')?.addEventListener('click',abrirModalBooster);
@@ -2284,13 +2207,5 @@ window.resetarTraducaoFVM = function() {
  document.getElementById('btn-fechar-modal-booster')?.addEventListener('click',()=>{document.getElementById('modal-booster-pix').style.display='none';});
  document.getElementById('btn-fechar-modal-booster-footer')?.addEventListener('click',()=>{document.getElementById('modal-booster-pix').style.display='none';});
 
- $('btn-market-admin')?.addEventListener('click',abrirAdmin);
- $('market-admin-voltar')?.addEventListener('click',()=>mostrarTela('tela-escolha-admin'));
 
- $('market-admin-salvar-pix')?.addEventListener('click',async()=>{
-   if(!admin())return;
-   const chave=$('market-admin-pix').value.trim();
-   if(chave.length<5||chave.length>150)return alert('Confira a chave Pix.');
-   try{await setDoc(config,{chavePix:chave,atualizadoEm:new Date()});status('Chave Pix salva.')}catch(e){status('Erro: '+e.message)}
- });
 })();
