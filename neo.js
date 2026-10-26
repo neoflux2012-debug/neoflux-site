@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { getAuth, setPersistence, browserLocalPersistence, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -14,6 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 console.log("Firebase conectado com sucesso! O erro do projectId sumiu!");
 
@@ -1859,18 +1861,81 @@ window.resetarTraducaoFVM = function() {
  const campos={nome:'market-nome',descricao:'market-descricao',whatsapp:'market-whatsapp',cor:'market-cor',categoria:'market-categoria',logoUrl:'market-logo-url',capaUrl:'market-capa-url',segmento:'market-segmento'};
  const padrao={nome:'',descricao:'',whatsapp:'',cor:'#8a2be2',categoria:'',logoUrl:'',capaUrl:'',segmento:'neo',itens:[]};
  let itens=[],ambiente='neo',retorno='tela-subsite',perfilAberto=null;
+ const fotosPendentes={logo:null,capa:null};
+ const previewsLocais={logo:null,capa:null};
+ const tiposImagem=['image/jpeg','image/png','image/webp'];
+ function validarImagem(file){
+   if(!file)return;
+   if(!tiposImagem.includes(file.type))throw Error('Use uma imagem JPG, PNG ou WebP.');
+   if(file.size>5*1024*1024)throw Error('A imagem deve ter no máximo 5 MB.');
+ }
+ async function enviarImagem(file,id,tipo){
+   validarImagem(file);
+   if(!auth.currentUser)throw Error('Faça login para enviar imagens.');
+   await validarDono(id);
+   const extensoes={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+   const nome=crypto.randomUUID()+'.'+extensoes[file.type];
+   const destino=storageRef(storage,`marketplace/${auth.currentUser.uid}/${id}/${tipo}/${nome}`);
+   await uploadBytes(destino,file,{contentType:file.type});
+   return await getDownloadURL(destino);
+ }
+ function limparPreviews(){
+   for(const k of ['logo','capa']){
+     if(previewsLocais[k])URL.revokeObjectURL(previewsLocais[k]);
+     previewsLocais[k]=null;fotosPendentes[k]=null;
+     const campo=$(`market-${k}-file`);if(campo)campo.value='';
+   }
+ }
+ for(const k of ['logo','capa']){
+   $(`market-${k}-file`)?.addEventListener('change',e=>{
+     try{
+       const file=e.target.files[0];if(!file)return;
+       validarImagem(file);
+       if(previewsLocais[k])URL.revokeObjectURL(previewsLocais[k]);
+       fotosPendentes[k]=file;
+       previewsLocais[k]=URL.createObjectURL(file);
+       $(`market-${k}-info`).textContent=`Selecionada: ${file.name} (será enviada ao salvar/publicar).`;
+       preview();
+     }catch(err){e.target.value='';alert(err.message)}
+   });
+ }
  const safeUrl=u=>{try{const v=new URL(u);return v.protocol==='https:'?v.href:''}catch{return ''}};
  const msg=t=>{if($('market-status'))$('market-status').textContent=t};
  const texto=(tag,valor)=>{const el=document.createElement(tag);el.textContent=valor;return el};
  const escolha=(seg)=>{ambiente=seg==='fvm'?'fvm':'neo';$('market-choice-atual').textContent=ambiente==='fvm'?'FVM Marketplace':'Neo Flux Marketplace';$('market-search-title').textContent=ambiente==='fvm'?'FVM Marketplace':'Neo Flux Marketplace';document.querySelectorAll('.market-wave').forEach(e=>e.hidden=true);};
  const formulario=()=>{const d={};Object.entries(campos).forEach(([k,id])=>d[k]=$(id).value.trim());d.whatsapp=d.whatsapp.replace(/\D/g,'');d.itens=itens.map(x=>({...x}));return d};
- const aplicar=d=>{Object.entries(campos).forEach(([k,id])=>$(id).value=d[k]||padrao[k]);itens=Array.isArray(d.itens)?d.itens.slice(0,60):[];desenharItens();preview()};
+ const aplicar=d=>{limparPreviews();Object.entries(campos).forEach(([k,id])=>$(id).value=d[k]||padrao[k]);itens=Array.isArray(d.itens)?d.itens.slice(0,60):[];desenharItens();preview()};
  function desenharItens(){const area=$('market-itens-editor');area.replaceChildren();itens.forEach((it,i)=>{const r=document.createElement('div');r.className='market-item-linha';r.append(texto('span',`${it.tipo==='portfolio'?'Portfólio':'Anúncio'}: ${it.nome}`));const b=texto('button','Excluir');b.type='button';b.onclick=()=>{itens.splice(i,1);desenharItens();preview();msg('Alterações não salvas.')};r.append(b);area.append(r)})}
- function preview(){const d=formulario();$('market-preview-nome').textContent=d.nome||'Minha empresa';$('market-preview-descricao').textContent=d.descricao||'Seu portfólio e seus produtos aparecerão aqui.';const capa=$('.market-preview-capa');capa.style.backgroundImage=d.capaUrl&&safeUrl(d.capaUrl)?`url("${safeUrl(d.capaUrl)}")`:`linear-gradient(125deg,#00d2ff,${d.cor})`;capa.style.backgroundSize='cover';const logo=$('market-preview-logo');logo.replaceChildren();if(safeUrl(d.logoUrl)){const img=document.createElement('img');img.src=safeUrl(d.logoUrl);img.alt='Logo';logo.append(img)}else logo.append(texto('span','🏬'));$('market-preview-contato').textContent=d.whatsapp?'WhatsApp configurado (prévia)':'WhatsApp (prévia)';const a=$('market-preview-itens');a.replaceChildren();itens.forEach(it=>{const c=document.createElement('div');c.className='market-mini-item';if(safeUrl(it.foto)){const im=document.createElement('img');im.src=safeUrl(it.foto);im.alt='';c.append(im)}c.append(texto('strong',it.nome));if(it.preco!==null)c.append(texto('small',`R$ ${Number(it.preco).toFixed(2)}`));a.append(c)});if(!itens.length)a.append(texto('p','Adicione seus produtos e trabalhos.'))}
+ function preview(){const d=formulario();$('market-preview-nome').textContent=d.nome||'Minha empresa';$('market-preview-descricao').textContent=d.descricao||'Seu portfólio e seus produtos aparecerão aqui.';const capa=$('.market-preview-capa');capa.style.backgroundImage=(previewsLocais.capa||safeUrl(d.capaUrl))?`url("${previewsLocais.capa||safeUrl(d.capaUrl)}")`:`linear-gradient(125deg,#00d2ff,${d.cor})`;capa.style.backgroundSize='cover';const logo=$('market-preview-logo');logo.replaceChildren();if(previewsLocais.logo||safeUrl(d.logoUrl)){const img=document.createElement('img');img.src=previewsLocais.logo||safeUrl(d.logoUrl);img.alt='Logo';logo.append(img)}else logo.append(texto('span','🏬'));$('market-preview-contato').textContent=d.whatsapp?'WhatsApp configurado (prévia)':'WhatsApp (prévia)';const a=$('market-preview-itens');a.replaceChildren();itens.forEach(it=>{const c=document.createElement('div');c.className='market-mini-item';if(safeUrl(it.foto)){const im=document.createElement('img');im.src=safeUrl(it.foto);im.alt='';c.append(im)}c.append(texto('strong',it.nome));if(it.preco!==null)c.append(texto('small',`R$ ${Number(it.preco).toFixed(2)}`));a.append(c)});if(!itens.length)a.append(texto('p','Adicione seus produtos e trabalhos.'))}
  async function validarDono(id){if(!auth.currentUser||!id)throw Error('Entre na sua conta e abra um subsite.');const s=await getDoc(doc(db,'subsites',id));if(!s.exists()||s.data().idDono!==auth.currentUser.uid)throw Error('Subsite não pertence à sua conta.')}
  async function abrirEditor(){const id=subsiteAtualId;if(!id)return alert('Abra primeiro um subsite.');retorno='tela-subsite';mostrarTela('tela-marketplace');aplicar({...padrao,nome:$('nome-do-subsite').textContent});msg('Carregando...');try{await validarDono(id);const s=await getDoc(doc(db,'marketplaceRascunhos',id));if(id!==subsiteAtualId)return;if(s.exists())aplicar({...padrao,...s.data()});msg(s.exists()?'Dados carregados.':'Nova vitrine.');}catch(e){msg('Erro: '+e.message)}}
- async function salvar(publicar=false){const id=subsiteAtualId,d=formulario();if(!d.nome)return alert('Informe o nome da empresa.');if(d.whatsapp&&(d.whatsapp.length<10||d.whatsapp.length>15))return alert('Confira o WhatsApp.');if(d.itens.length>60)return alert('Limite técnico de 60 itens por vitrine nesta versão.');if([d.logoUrl,d.capaUrl,...d.itens.map(x=>x.foto)].some(u=>u&&!safeUrl(u)))return alert('Use URLs HTTPS válidas nas imagens.');const b=publicar?$('market-publicar'):$('btn-market-salvar');b.disabled=true;msg(publicar?'Publicando...':'Salvando...');try{await validarDono(id);const base={...d,idSubsite:id,idDono:auth.currentUser.uid,atualizadoEm:new Date()};await setDoc(doc(db,'marketplaceRascunhos',id),base,{merge:true});if(publicar){await setDoc(doc(db,'marketplacePublicos',id),{...base,publicado:true},{merge:true});msg('Vitrine publicada! Ela já pode aparecer na pesquisa.')}else msg('Rascunho salvo. Se a vitrine já estiver publicada, use Publicar para atualizar o conteúdo público.')}catch(e){msg('Erro: '+e.message)}finally{b.disabled=false}}
- async function despublicar(){if(!confirm('Retirar sua vitrine da pesquisa pública?'))return;try{await validarDono(subsiteAtualId);await deleteDoc(doc(db,'marketplacePublicos',subsiteAtualId));msg('Vitrine retirada do ar. Rascunho preservado.')}catch(e){msg('Erro: '+e.message)}}
+ async function salvar(publicar=false){
+   const id=subsiteAtualId,d=formulario();
+   if(!d.nome)return alert('Informe o nome da empresa.');
+   if(d.whatsapp&&(d.whatsapp.length<10||d.whatsapp.length>15))return alert('Confira o WhatsApp.');
+   if(d.itens.length>60)return alert('Limite técnico de 60 itens por vitrine.');
+   if([d.logoUrl,d.capaUrl,...d.itens.map(x=>x.foto)].some(u=>u&&!safeUrl(u)))return alert('Há uma imagem com endereço inválido.');
+   const b=publicar?$('market-publicar'):$('btn-market-salvar');
+   b.disabled=true;$('market-publicar').disabled=true;$('btn-market-salvar').disabled=true;
+   msg('Salvando imagens e dados...');
+   try{
+     await validarDono(id);
+     for(const [tipo,chave] of [['logo','logoUrl'],['capa','capaUrl']]){
+       if(fotosPendentes[tipo]){
+         d[chave]=await enviarImagem(fotosPendentes[tipo],id,tipo);
+         $(campos[chave]).value=d[chave];
+       }
+     }
+     const base={...d,idSubsite:id,idDono:auth.currentUser.uid,atualizadoEm:new Date()};
+     await setDoc(doc(db,'marketplaceRascunhos',id),base,{merge:true});
+     if(publicar){
+       await setDoc(doc(db,'marketplacePublicos',id),{...base,publicado:true},{merge:false});
+       msg('Vitrine publicada! Ela já pode aparecer na pesquisa.');
+     }else msg('Rascunho salvo. Para atualizar a vitrine pública, clique em Publicar.');
+     limparPreviews();preview();
+   }catch(e){console.error(e);msg('Erro ao salvar: '+e.message)}
+   finally{b.disabled=false;$('market-publicar').disabled=false;$('btn-market-salvar').disabled=false}
+ }async function despublicar(){if(!confirm('Retirar sua vitrine da pesquisa pública?'))return;try{await validarDono(subsiteAtualId);await deleteDoc(doc(db,'marketplacePublicos',subsiteAtualId));msg('Vitrine retirada do ar. Rascunho preservado.')}catch(e){msg('Erro: '+e.message)}}
  
  async function buscar(){
    mostrarTela('tela-market-busca');$('market-search-results').replaceChildren();$('market-search-status').textContent='Buscando vitrines...';
@@ -2016,8 +2081,20 @@ window.resetarTraducaoFVM = function() {
  document.querySelectorAll('[data-market-choice]').forEach(b=>b.addEventListener('click',()=>{escolha(b.dataset.marketChoice);if($('tela-market-busca').classList.contains('ativa'))buscar();else $('market-segmento').value=ambiente}));
  $('market-search-button')?.addEventListener('click',buscar);
  $('market-search-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')buscar()});
- $('market-item-add')?.addEventListener('click',()=>{const nome=$('market-item-nome').value.trim(),foto=$('market-item-foto').value.trim(),preco=$('market-item-preco').value;if(!nome)return alert('Digite o título do item.');if(foto&&!safeUrl(foto))return alert('A foto precisa ter URL HTTPS.');if(itens.length>=60)return alert('Limite técnico atingido.');itens.push({tipo:$('market-item-tipo').value,nome,foto,preco:preco===''?null:Number(preco)});['market-item-nome','market-item-foto','market-item-preco'].forEach(id=>$(id).value='');desenharItens();preview();msg('Item adicionado. Salve ou publique para confirmar.')});
- $('btn-market-salvar')?.addEventListener('click',()=>salvar(false));$('market-publicar')?.addEventListener('click',()=>salvar(true));$('market-despublicar')?.addEventListener('click',despublicar);
+ $('market-item-add')?.addEventListener('click',async()=>{
+   const nome=$('market-item-nome').value.trim(),file=$('market-item-foto').files[0],preco=$('market-item-preco').value;
+   if(!nome)return alert('Digite o título do item.');
+   if(itens.length>=60)return alert('Limite técnico atingido.');
+   const botao=$('market-item-add');botao.disabled=true;
+   try{
+     let foto='';
+     if(file){msg('Enviando foto do item...');foto=await enviarImagem(file,subsiteAtualId,'itens')}
+     itens.push({tipo:$('market-item-tipo').value,nome,foto,preco:preco===''?null:Number(preco)});
+     $('market-item-nome').value='';$('market-item-foto').value='';$('market-item-preco').value='';
+     desenharItens();preview();msg('Item adicionado. Salve ou publique para confirmar.');
+   }catch(e){console.error(e);msg('Erro ao enviar foto: '+e.message)}
+   finally{botao.disabled=false}
+ });$('btn-market-salvar')?.addEventListener('click',()=>salvar(false));$('market-publicar')?.addEventListener('click',()=>salvar(true));$('market-despublicar')?.addEventListener('click',despublicar);
  Object.values(campos).forEach(id=>$(id)?.addEventListener('input',()=>{preview();msg('Alterações não salvas.')}));
  $('market-denunciar')?.addEventListener('click',async()=>{if(!perfilAberto)return;if(!auth.currentUser)return alert('Entre na sua conta para enviar uma denúncia.');const motivo=prompt('Descreva o motivo da denúncia (mínimo 10 caracteres):');if(!motivo)return;if(motivo.trim().length<10)return alert('Descreva melhor a denúncia.');try{await addDoc(collection(db,'marketplaceDenuncias'),{idVitrine:perfilAberto.id,motivo:motivo.trim().slice(0,1000),idAutor:auth.currentUser?.uid||null,criadoEm:new Date(),status:'pendente'});alert('Denúncia enviada para análise.')}catch(e){alert('Erro ao denunciar: '+e.message)}});
 })();
