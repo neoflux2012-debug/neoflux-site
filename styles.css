@@ -961,3 +961,148 @@ main:has(#tela-market-busca.ativa),main:has(#tela-market-perfil.ativa),main:has(
 #tela-market-admin article{padding:14px;margin:10px 0;background:#121212;border:1px solid #333;border-radius:10px;overflow-wrap:anywhere}
 #tela-market-admin article button,#market-solicitar-booster{padding:10px;margin:8px 8px 4px 0;border:1px solid #8a2be2;border-radius:8px;background:#221335;color:white;cursor:pointer}
 #tela-market-admin h3{margin-top:24px}
+/* =========================================
+   PERFIL PÚBLICO DA VITRINE (MARKETPLACE)
+   ========================================= */
+
+/* Container geral do perfil para centralizar e dar espaçamento */
+#market-perfil-conteudo {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 30px;
+    margin-top: 20px;
+    position: relative;
+}
+
+/* O Banner (Capa) */
+.market-perfil-capa {
+    width: 100%;
+    height: 220px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: -40px; /* Faz o logo subir metade pra cima da capa */
+    position: relative;
+    border: 1px solid #222;
+}
+
+/* O Logo da empresa (sobreposto à capa) */
+#market-perfil-conteudo .market-perfil-logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #121212;
+    border: 4px solid #0a0a0a;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 30px; /* Afasta da borda esquerda */
+    overflow: hidden;
+}
+
+#market-perfil-conteudo .market-perfil-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#market-perfil-conteudo .market-perfil-logo span {
+    font-size: 2rem;
+}
+
+/* Título e Categoria da Empresa */
+#market-perfil-conteudo h1 {
+    margin: 15px 0 5px 30px;
+    font-size: 2rem;
+    color: white;
+    text-align: left;
+}
+
+#market-perfil-conteudo p {
+    margin: 5px 30px;
+    font-size: 1rem;
+    text-align: left;
+}
+
+/* Botão de WhatsApp */
+#market-perfil-conteudo a[href^="https://wa.me"] {
+    margin: 20px 30px;
+    background: #25D366;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    display: inline-block;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+#market-perfil-conteudo a[href^="https://wa.me"]:hover {
+    background: #1eb85a;
+    transform: translateY(-2px);
+}
+
+/* Título "Portfólio e anúncios" */
+#market-perfil-conteudo h2 {
+    margin: 40px 0 20px 30px;
+    font-size: 1.5rem;
+    color: var(--cor-azul, #00d2ff);
+    text-align: left;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    width: calc(100% - 60px); /* Desconta as margens */
+}
+
+/* Grid de produtos/trabalhos */
+.market-resultados {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 0 30px 30px 30px;
+}
+
+/* Card de cada item do portfólio */
+.market-resultado {
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: 0.3s;
+}
+
+.market-resultado:hover {
+    border-color: #8a2be2;
+    box-shadow: 0 4px 15px rgba(138,43,226,0.15);
+}
+
+.market-resultado img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.market-resultado h3 {
+    font-size: 1rem;
+    color: white;
+    margin: 0;
+    text-align: left;
+}
+
+.market-resultado p {
+    font-size: 0.8rem;
+    color: #888;
+    margin: 0;
+}
+
+.market-resultado strong {
+    font-size: 1.1rem;
+    color: #00c853;
+    margin-top: auto; /* Empurra o preço pro fundo do card */
+}
