@@ -1,481 +1,852 @@
-// ==========================================
-// 1. IMPORTAÇÕES
-// ==========================================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+    getAuth,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    doc,
+    updateDoc,
+    setDoc,
+    getDoc,
+    deleteDoc,
+    writeBatch
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
-  authDomain: "neo-flux-c91c8.firebaseapp.com",
-  projectId: "neo-flux-c91c8",
-  storageBucket: "neo-flux-c91c8.firebasestorage.app",
-  messagingSenderId: "6686219198",
-  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
+    apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
+    authDomain: "neo-flux-c91c8.firebaseapp.com",
+    projectId: "neo-flux-c91c8",
+    storageBucket: "neo-flux-c91c8.firebasestorage.app",
+    messagingSenderId: "6686219198",
+    appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const todasAsTelas = document.querySelectorAll('.tela');
+const todasAsTelas = document.querySelectorAll(".tela");
+const emailAdmin = "neoflux2012@gmail.com";
+
 let clientesAdminGlobais = [];
 let modoAusenteAtivo = false;
 
 function mostrarTela(id) {
-    todasAsTelas.forEach(t => t.classList.remove('ativa'));
-    const tela = document.getElementById(id);
-    if (tela) tela.classList.add('ativa');
+    todasAsTelas.forEach(t => t.classList.remove("ativa"));
+    document.getElementById(id)?.classList.add("ativa");
 }
 
-// ==========================================
-// 2. LOGIN E LOGOUT
-// ==========================================
-document.getElementById('form-admin-login')?.addEventListener('submit', async (e) => {
+// LOGIN E LOGOUT
+
+document.getElementById("form-admin-login")?.addEventListener("submit", async e => {
     e.preventDefault();
+
     try {
-        await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-senha').value);
-    } catch (error) {
-        alert("Erro ao logar. Verifique o e-mail e senha.");
+        await signInWithEmailAndPassword(
+            auth,
+            document.getElementById("admin-email").value,
+            document.getElementById("admin-senha").value
+        );
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao entrar. Verifique o e-mail e a senha.");
     }
 });
 
-document.getElementById('btn-admin-sair')?.addEventListener('click', async () => {
+document.getElementById("btn-admin-sair")?.addEventListener("click", async () => {
     await signOut(auth);
 });
 
-// ==========================================
-// 3. CARREGAR DADOS
-// ==========================================
-async function carregarClientes() {
-    const tabela = document.getElementById('lista-admin-clientes');
-    const tabelaUpgrades = document.getElementById('lista-upgrades');
-    if(!tabela || !tabelaUpgrades) return;
+// CLIENTES
 
-    tabela.innerHTML = '<tr><td colspan="5" class="admin-tabela-vazia">Buscando clientes...</td></tr>';
-    tabelaUpgrades.innerHTML = '<tr><td colspan="3" class="admin-tabela-vazia">Buscando pedidos...</td></tr>';
+async function carregarClientes() {
+    const tabela = document.getElementById("lista-admin-clientes");
+    const upgrades = document.getElementById("lista-upgrades");
+
+    if (!tabela || !upgrades) return;
+
+    tabela.innerHTML = '<tr><td colspan="5">Buscando clientes...</td></tr>';
+    upgrades.innerHTML = '<tr><td colspan="3">Buscando pedidos...</td></tr>';
 
     try {
-        const querySnapshot = await getDocs(collection(db, "usuarios"));
-        clientesAdminGlobais = [];
-        
-        tabela.innerHTML = ""; 
-        tabelaUpgrades.innerHTML = "";
-        let temUpgrade = false;
+        const snapshot = await getDocs(collection(db, "usuarios"));
 
-        if (querySnapshot.empty) {
-            tabela.innerHTML = '<tr><td colspan="5" class="admin-tabela-vazia">Nenhum cliente.</td></tr>';
-            return;
-        }
-
-        querySnapshot.forEach((docSnap) => {
-            const cliente = docSnap.data();
-            cliente.id = docSnap.id;
-            clientesAdminGlobais.push(cliente);
-        });
+        clientesAdminGlobais = snapshot.docs.map(s => ({
+            ...s.data(),
+            id: s.id
+        }));
 
         renderizarTabelaAdmin();
-        
-        clientesAdminGlobais.forEach(cliente => {
-            if (cliente.statusPagamento === "upgrade_pendente") {
-                temUpgrade = true;
-                const trUp = document.createElement('tr');
-                trUp.innerHTML = `
-                    <td data-label="Cliente">
-                        <span class="cliente-nome">${cliente.nome}</span>
-                        <span class="cliente-email">${cliente.email}</span>
-                    </td>
-                    <td data-label="Plano Solicitado">
-                        <span class="cliente-plano">ELITE PREMIUM</span>
-                    </td>
-                    <td data-label="Ação" class="texto-centro">
-                        <button class="btn-acao btn-pago btn-aprovar-upgrade" data-id="${cliente.id}">✅ Aprovar</button>
-                    </td>
-                `;
-                tabelaUpgrades.appendChild(trUp);
-            }
-        });
 
-        if (!temUpgrade) {
-            tabelaUpgrades.innerHTML = '<tr><td colspan="3" class="admin-tabela-vazia">Nenhum pedido de upgrade no momento.</td></tr>';
-        }
+        upgrades.replaceChildren();
 
-        document.querySelectorAll('.btn-aprovar-upgrade').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.getAttribute('data-id');
-                if (confirm("Confirmar upgrade para Elite Premium?")) {
-                    await updateDoc(doc(db, "usuarios", id), { statusPagamento: "ativo", planoPreferido: "elite_premium" });
+        const pendentes = clientesAdminGlobais.filter(
+            c => c.statusPagamento === "upgrade_pendente"
+        );
+
+        for (const cliente of pendentes) {
+            const tr = document.createElement("tr");
+
+            const tdCliente = document.createElement("td");
+            tdCliente.textContent = `${cliente.nome || "Cliente"} — ${cliente.email || ""}`;
+
+            const tdPlano = document.createElement("td");
+            tdPlano.textContent = "ELITE PREMIUM";
+
+            const tdAcao = document.createElement("td");
+            const btn = document.createElement("button");
+
+            btn.className = "btn-acao btn-pago";
+            btn.textContent = "Aprovar";
+
+            btn.addEventListener("click", async () => {
+                if (!confirm("Confirmar upgrade para Elite Premium?")) return;
+
+                try {
+                    await updateDoc(doc(db, "usuarios", cliente.id), {
+                        statusPagamento: "ativo",
+                        planoPreferido: "elite_premium"
+                    });
+
                     alert("Upgrade aprovado!");
-                    carregarClientes();
+                    await carregarClientes();
+                } catch (e) {
+                    alert("Erro: " + e.message);
                 }
             });
-        });
+
+            tdAcao.append(btn);
+            tr.append(tdCliente, tdPlano, tdAcao);
+            upgrades.append(tr);
+        }
+
+        if (!pendentes.length) {
+            upgrades.innerHTML = '<tr><td colspan="3">Nenhum pedido de upgrade.</td></tr>';
+        }
 
         atualizarMonitorAdmin();
         await carregarEstadoAutopilot();
 
-    } catch (error) {
-        console.error(error);
-        tabela.innerHTML = '<tr><td colspan="5" class="admin-tabela-vazia" style="color:red;">Erro ao carregar.</td></tr>';
+    } catch (e) {
+        console.error("Erro ao carregar clientes:", e);
+        tabela.innerHTML = '<tr><td colspan="5">Erro ao carregar clientes.</td></tr>';
     }
 }
 
-// ==========================================
-// 4. RENDERIZAR TABELA PRINCIPAL E AÇÕES
-// ==========================================
+function escaparHTML(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[c]);
+}
+
 function renderizarTabelaAdmin() {
-    const tbody = document.getElementById('lista-admin-clientes');
+    const tbody = document.getElementById("lista-admin-clientes");
     if (!tbody) return;
 
-    const busca = document.getElementById('admin-busca-cliente')?.value.toLowerCase() || "";
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const busca = document.getElementById("admin-busca-cliente")
+        ?.value.toLowerCase() || "";
 
-    tbody.innerHTML = "";
-    let filtrados = clientesAdminGlobais.filter(c => {
-        const nome = (c.nome || '').toLowerCase();
-        const email = (c.email || '').toLowerCase();
-        return nome.includes(busca) || email.includes(busca);
-    });
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
 
-    if (filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="admin-tabela-vazia">Nenhum cliente encontrado.</td></tr>';
+    tbody.replaceChildren();
+
+    const filtrados = clientesAdminGlobais.filter(c =>
+        (c.nome || "").toLowerCase().includes(busca) ||
+        (c.email || "").toLowerCase().includes(busca)
+    );
+
+    if (!filtrados.length) {
+        tbody.innerHTML = '<tr><td colspan="5">Nenhum cliente encontrado.</td></tr>';
         return;
     }
 
-    filtrados.forEach(c => {
-        const tr = document.createElement('tr');
-        
-        let vencStr = "—"; 
+    for (const c of filtrados) {
+        let vencimento = "—";
         let badgeClass = "badge-pendente";
         let badgeText = "Pendente";
-        
+
         if (c.vencimento) {
-            vencStr = c.vencimento.split('-').reverse().join('/');
-            const v = new Date(c.vencimento + 'T00:00:00');
-            const diffDias = Math.ceil((v - hoje) / (1000 * 60 * 60 * 24));
-            
-            if (c.statusPagamento === 'suspenso') {
-                badgeClass = "badge-suspenso"; badgeText = "Suspenso";
-            } else if (diffDias < 0) {
-                badgeClass = "badge-vencido"; badgeText = "Vencido";
-            } else if (c.statusPagamento === 'ativo') {
-                badgeClass = "badge-ativo"; badgeText = "Ativo";
+            vencimento = c.vencimento.split("-").reverse().join("/");
+
+            const data = new Date(c.vencimento + "T00:00:00");
+            const dias = Math.ceil((data - hoje) / 86400000);
+
+            if (c.statusPagamento === "suspenso") {
+                badgeClass = "badge-suspenso";
+                badgeText = "Suspenso";
+            } else if (dias < 0) {
+                badgeClass = "badge-vencido";
+                badgeText = "Vencido";
+            } else if (c.statusPagamento === "ativo") {
+                badgeClass = "badge-ativo";
+                badgeText = "Ativo";
             }
-        } else if (c.statusPagamento === 'suspenso') {
-            badgeClass = "badge-suspenso"; badgeText = "Suspenso";
+        } else if (c.statusPagamento === "suspenso") {
+            badgeClass = "badge-suspenso";
+            badgeText = "Suspenso";
         }
+
+        const tr = document.createElement("tr");
 
         tr.innerHTML = `
             <td data-label="Cliente">
-                <span class="cliente-nome">${c.nome || 'Sem nome'}</span>
-                <span class="cliente-email">${c.email}</span>
+                <span class="cliente-nome">${escaparHTML(c.nome || "Sem nome")}</span>
+                <span class="cliente-email">${escaparHTML(c.email || "")}</span>
             </td>
             <td data-label="Plano">
-                <span class="cliente-plano">${(c.planoPreferido || '').toUpperCase()}</span>
+                <span class="cliente-plano">${escaparHTML((c.planoPreferido || "").toUpperCase())}</span>
             </td>
-            <td data-label="Vencimento">
-                ${vencStr}
-            </td>
+            <td data-label="Vencimento">${escaparHTML(vencimento)}</td>
             <td data-label="Status">
                 <span class="badge-status ${badgeClass}">${badgeText}</span>
             </td>
-            <td data-label="Ações" class="texto-centro">
-                <button onclick="window.adminConfirmarPagamento('${c.id}')" class="btn-acao btn-pago">✅ Pago</button>
-                <button onclick="window.adminSuspender('${c.id}')" class="btn-acao btn-suspender">🛑 Suspender</button>
-                <button onclick="window.adminAlterarPlano('${c.id}')" class="btn-acao btn-plano">🔄 Plano</button>
-                <button onclick="window.adminExcluirConta('${c.id}')" class="btn-acao btn-excluir">🗑️ Excluir</button>
-            </td>`;
-        tbody.appendChild(tr);
-    });
+            <td data-label="Ações" class="texto-centro"></td>
+        `;
+
+        const acoes = tr.lastElementChild;
+
+        const botoes = [
+            ["Pago", "btn-pago", () => adminConfirmarPagamento(c.id)],
+            ["Suspender", "btn-suspender", () => adminSuspender(c.id)],
+            ["Plano", "btn-plano", () => adminAlterarPlano(c.id)],
+            ["Excluir", "btn-excluir", () => adminExcluirConta(c.id)]
+        ];
+
+        for (const [texto, classe, acao] of botoes) {
+            const btn = document.createElement("button");
+            btn.className = `btn-acao ${classe}`;
+            btn.textContent = texto;
+            btn.addEventListener("click", acao);
+            acoes.append(btn);
+        }
+
+        tbody.append(tr);
+    }
 }
 
-document.getElementById('admin-busca-cliente')?.addEventListener('input', renderizarTabelaAdmin);
+document.getElementById("admin-busca-cliente")
+    ?.addEventListener("input", renderizarTabelaAdmin);
 
-window.adminConfirmarPagamento = async function(uid) {
-    const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
-    const novaData = new Date(); novaData.setDate(novaData.getDate() + 30);
-    const vencFormatado = novaData.toISOString().split('T')[0];
-    if (!confirm(`Confirmar pagamento de ${cliente.nome}?\n\nNovo vencimento: ${vencFormatado.split('-').reverse().join('/')}`)) return;
-    try { await updateDoc(doc(db, "usuarios", uid), { statusPagamento: "ativo", vencimento: vencFormatado }); alert("✅ Pagamento confirmado!"); carregarClientes(); } 
-    catch (e) { alert("Erro: " + e.message); }
-};
+async function adminConfirmarPagamento(uid) {
+    const cliente = clientesAdminGlobais.find(c => c.id === uid);
+    if (!cliente) return;
 
-window.adminSuspender = async function(uid) {
-    const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
-    if (!confirm(`Suspender o acesso de ${cliente.nome}?`)) return;
-    try { await updateDoc(doc(db, "usuarios", uid), { statusPagamento: "suspenso" }); alert("🛑 Cliente suspenso."); carregarClientes(); } 
-    catch (e) { alert("Erro: " + e.message); }
-};
+    const novaData = new Date();
+    novaData.setDate(novaData.getDate() + 30);
 
-window.adminAlterarPlano = async function(uid) {
-    const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
-    const novoPlano = prompt(`Alterar plano de ${cliente.nome}:\n\nDigite: start, pro, elite, elite_premium, fvm_start, fvm_pro, fvm_elite ou fvm_elite_premium`, cliente.planoPreferido);
-    if (!novoPlano) return;
-    const planoLimpo = novoPlano.toLowerCase().trim();
-    const planosValidos = ['start', 'pro', 'elite', 'elite_premium', 'fvm_start', 'fvm_pro', 'fvm_elite', 'fvm_elite_premium'];
-    
-    if (!planosValidos.includes(planoLimpo)) return alert("Plano inválido.");
-    try { await updateDoc(doc(db, "usuarios", uid), { planoPreferido: planoLimpo }); alert(`✅ Plano alterado para ${planoLimpo.toUpperCase()}`); carregarClientes(); } 
-    catch (e) { alert("Erro: " + e.message); }
-};
+    const vencimento = [
+        novaData.getFullYear(),
+        String(novaData.getMonth() + 1).padStart(2, "0"),
+        String(novaData.getDate()).padStart(2, "0")
+    ].join("-");
 
-window.adminExcluirConta = async function(uid) {
-    const cliente = clientesAdminGlobais.find(c => c.id === uid); if (!cliente) return;
-    
-    if (!confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR a conta de ${cliente.nome}?\n\nTodos os dados de plano, cobranças e status serão apagados permanentemente.\n\n(Nota: O login deste e-mail no Firebase Auth deverá ser apagado manualmente pelo Console do Firebase).`)) return;
-    
+    if (!confirm(`Confirmar pagamento de ${cliente.nome}?`)) return;
+
+    try {
+        await updateDoc(doc(db, "usuarios", uid), {
+            statusPagamento: "ativo",
+            vencimento
+        });
+
+        alert("Pagamento confirmado!");
+        await carregarClientes();
+    } catch (e) {
+        alert("Erro: " + e.message);
+    }
+}
+
+async function adminSuspender(uid) {
+    const cliente = clientesAdminGlobais.find(c => c.id === uid);
+    if (!cliente) return;
+
+    if (!confirm(`Suspender ${cliente.nome}?`)) return;
+
+    try {
+        await updateDoc(doc(db, "usuarios", uid), {
+            statusPagamento: "suspenso"
+        });
+
+        alert("Cliente suspenso.");
+        await carregarClientes();
+    } catch (e) {
+        alert("Erro: " + e.message);
+    }
+}
+
+async function adminAlterarPlano(uid) {
+    const cliente = clientesAdminGlobais.find(c => c.id === uid);
+    if (!cliente) return;
+
+    const novo = prompt(
+        "Digite o plano: start, pro, elite, elite_premium, fvm_start, fvm_pro, fvm_elite ou fvm_elite_premium",
+        cliente.planoPreferido || ""
+    );
+
+    if (!novo) return;
+
+    const plano = novo.trim().toLowerCase();
+
+    const validos = [
+        "start", "pro", "elite", "elite_premium",
+        "fvm_start", "fvm_pro", "fvm_elite", "fvm_elite_premium"
+    ];
+
+    if (!validos.includes(plano)) {
+        alert("Plano inválido.");
+        return;
+    }
+
+    try {
+        await updateDoc(doc(db, "usuarios", uid), {
+            planoPreferido: plano
+        });
+
+        alert("Plano alterado!");
+        await carregarClientes();
+    } catch (e) {
+        alert("Erro: " + e.message);
+    }
+}
+
+async function adminExcluirConta(uid) {
+    const cliente = clientesAdminGlobais.find(c => c.id === uid);
+    if (!cliente) return;
+
+    if (!confirm(`Excluir o cadastro de ${cliente.nome}? O login do Firebase Auth não será excluído.`)) return;
+
     try {
         await deleteDoc(doc(db, "usuarios", uid));
-        alert("🗑️ Conta excluída com sucesso do banco de dados!");
-        carregarClientes();
+        alert("Cadastro excluído do Firestore.");
+        await carregarClientes();
     } catch (e) {
-        alert("Erro ao excluir: " + e.message);
+        alert("Erro: " + e.message);
     }
-};
-
-// ==========================================
-// 5. NEO WAVE MONITOR E AUTOPILOT
-// ==========================================
-function atualizarMonitorAdmin() {
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    let vencemHoje = 0; let vencem7 = 0; let atrasados = 0;
-
-    clientesAdminGlobais.forEach(c => {
-        if (c.statusPagamento === 'suspenso' || !c.vencimento) return;
-        const dataVenc = new Date(c.vencimento + 'T00:00:00');
-        const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
-        if (diffDias < 0) atrasados++;
-        else if (diffDias === 0) vencemHoje++;
-        else if (diffDias <= 7) vencem7++;
-    });
-
-    document.getElementById('monitor-vencem-hoje').textContent = vencemHoje;
-    document.getElementById('monitor-vencem-7').textContent = vencem7;
-    document.getElementById('monitor-atrasados').textContent = atrasados;
 }
 
-document.getElementById('btn-monitor-whatsapp')?.addEventListener('click', () => {
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    let lista = "🔔 *Neo Wave Monitor - Cobranças*\n\n"; let tem = false;
-    clientesAdminGlobais.forEach(c => {
-        if (c.statusPagamento === 'suspenso' || !c.vencimento) return;
-        const v = new Date(c.vencimento + 'T00:00:00'); const diff = Math.ceil((v - hoje) / (1000 * 60 * 60 * 24));
-        if (diff < 0) { lista += `🔴 *${c.nome}* - VENCIDO há ${Math.abs(diff)} dia(s) (Plano ${c.planoPreferido.toUpperCase()})\n`; tem = true; } 
-        else if (diff === 0) { lista += `🟠 *${c.nome}* - Vence HOJE (Plano ${c.planoPreferido.toUpperCase()})\n`; tem = true; } 
-        else if (diff <= 7) { lista += `🟡 *${c.nome}* - Vence em ${diff} dia(s) (Plano ${c.planoPreferido.toUpperCase()})\n`; tem = true; }
-    });
-    if (!tem) return alert("Nenhuma cobrança pendente. 🎉");
-    navigator.clipboard.writeText(lista).then(() => alert("✅ Lista copiada!")).catch(() => alert("Erro ao copiar."));
-});
+// NEO WAVE MONITOR
 
-async function carregarEstadoAutopilot() {
-    try {
-        const snap = await getDoc(doc(db, "config_admin", "autopilot"));
-        if (snap.exists()) { modoAusenteAtivo = snap.data().ativo || false; atualizarBotaoAusente(); }
-   } catch (e) {
-    console.error(
-        "Erro ao carregar o Neo Wave Autopilot:",
-        e.code,
-        e.message
+function diasAteVencimento(vencimento) {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    return Math.round(
+        (new Date(vencimento + "T00:00:00") - hoje) / 86400000
     );
 }
 
-function atualizarBotaoAusente() {
-    const btn = document.getElementById('btn-toggle-ausente');
-    const painel = document.getElementById('painel-despacho');
-    if (!btn) return;
+function atualizarMonitorAdmin() {
+    let hoje = 0;
+    let seteDias = 0;
+    let atrasados = 0;
 
-    if (modoAusenteAtivo) {
-        btn.style.background = '#f39c12'; btn.style.color = '#000';
-        btn.innerHTML = '<i data-lucide="zap" style="width: 16px; vertical-align: middle;"></i> Modo Ausente ATIVO';
-        painel.style.display = 'block'; gerarAcoesAutopilot();
-    } else {
-        btn.style.background = '#333'; btn.style.color = '#ccc';
-        btn.innerHTML = '<i data-lucide="power" style="width: 16px; vertical-align: middle;"></i> Ativar Modo Ausente';
-        painel.style.display = 'none';
+    for (const c of clientesAdminGlobais) {
+        if (c.statusPagamento === "suspenso" || !c.vencimento) continue;
+
+        const dias = diasAteVencimento(c.vencimento);
+
+        if (dias < 0) atrasados++;
+        else if (dias === 0) hoje++;
+        else if (dias <= 7) seteDias++;
     }
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    document.getElementById("monitor-vencem-hoje").textContent = hoje;
+    document.getElementById("monitor-vencem-7").textContent = seteDias;
+    document.getElementById("monitor-atrasados").textContent = atrasados;
 }
 
-document.getElementById('btn-toggle-ausente')?.addEventListener('click', async () => {
-    modoAusenteAtivo = !modoAusenteAtivo;
-    try { await setDoc(doc(db, "config_admin", "autopilot"), { ativo: modoAusenteAtivo, atualizadoEm: new Date() }); atualizarBotaoAusente(); } 
-    catch (e) { alert("Erro: " + e.message); modoAusenteAtivo = !modoAusenteAtivo; }
-});
+document.getElementById("btn-monitor-whatsapp")
+    ?.addEventListener("click", async () => {
+        let lista = "Neo Wave Monitor - Cobranças\n\n";
 
-function gerarAcoesAutopilot() {
-    const container = document.getElementById('lista-despacho');
-    const tbodyVenc = document.getElementById('tabela-vencimentos-corpo');
-    if (!container || !tbodyVenc) return;
+        for (const c of clientesAdminGlobais) {
+            if (c.statusPagamento === "suspenso" || !c.vencimento) continue;
 
-    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    let acoes = []; let vencimentos = [];
+            const dias = diasAteVencimento(c.vencimento);
+            if (dias > 7) continue;
 
-    clientesAdminGlobais.forEach(c => {
-        if (c.statusPagamento === 'suspenso' || !c.vencimento) return;
-        const v = new Date(c.vencimento + 'T00:00:00');
-        const diff = Math.ceil((v - hoje) / (1000 * 60 * 60 * 24));
+            const situacao = dias < 0
+                ? `Vencido há ${Math.abs(dias)} dia(s)`
+                : dias === 0
+                    ? "Vence hoje"
+                    : `Vence em ${dias} dia(s)`;
 
-        vencimentos.push({ nome: c.nome, plano: (c.planoPreferido || '—').toUpperCase(), data: c.vencimento.split('-').reverse().join('/'), dias: diff, status: diff < 0 ? 'vencido' : (diff === 0 ? 'hoje' : (diff <= 7 ? 'proximo' : 'ok')) });
+            lista += `${c.nome || "Cliente"} - ${situacao} - Plano ${(c.planoPreferido || "—").toUpperCase()}\n`;
+        }
 
-        if (diff < 0) acoes.push({ cliente: c, tipo: 'vencido', dias: Math.abs(diff), mensagem: `Olá, ${c.nome}! Tudo bem? 💜\n\nNotamos que seu plano *${c.planoPreferido.toUpperCase()}* na Neo Flux venceu há ${Math.abs(diff)} dia(s).\n\nPara continuar tendo acesso, basta renovar. Qualquer dúvida, estamos por aqui! 🚀` });
-        else if (diff === 0) acoes.push({ cliente: c, tipo: 'hoje', dias: 0, mensagem: `Olá, ${c.nome}! Tudo bem? 💜\n\nPassando para avisar que seu plano *${c.planoPreferido.toUpperCase()}* na Neo Flux vence *hoje*. Renove agora! 🚀` });
-        else if (diff <= 7) acoes.push({ cliente: c, tipo: 'proximo', dias: diff, mensagem: `Olá, ${c.nome}! Tudo bem? 💜\n\nSeu plano *${c.planoPreferido.toUpperCase()}* na Neo Flux vence em ${diff} dia(s). Fica o lembrete carinhoso! 💜` });
+        try {
+            await navigator.clipboard.writeText(lista);
+            alert("Lista copiada!");
+        } catch (e) {
+            alert("Não foi possível copiar.");
+        }
     });
 
-    if (acoes.length === 0) container.innerHTML = '<p style="color: #00c853; text-align: center; padding: 15px;">✅ Tudo em ordem!</p>';
-    else {
-        container.innerHTML = "";
-        acoes.forEach(acao => {
-            const c = acao.cliente;
-            const cor = acao.tipo === 'vencido' ? '#e74c3c' : (acao.tipo === 'hoje' ? '#ff9800' : '#00d2ff');
-            const emoji = acao.tipo === 'vencido' ? '🔴' : (acao.tipo === 'hoje' ? '🟠' : '🟡');
-            const div = document.createElement('div');
-            div.style.cssText = `background: #121212; border-left: 4px solid ${cor}; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;`;
-            div.innerHTML = `<div><strong style="color: white;">${emoji} ${c.nome}</strong><p style="margin: 2px 0 0 0; color: #888; font-size: 0.8rem;">${acao.tipo === 'vencido' ? `Atrasado ${acao.dias} dia(s)` : (acao.tipo === 'hoje' ? 'Vence hoje' : `Vence em ${acao.dias} dia(s)`)}</p></div><button onclick="window.enviarCobrancaAutopilot('${c.id}', '${acao.mensagem.replace(/'/g, "\\'")}')" style="padding: 8px 15px; background: #25D366; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">Enviar</button>`;
-            container.appendChild(div);
-        });
-    }
+// NEO WAVE AUTOPILOT
 
-    vencimentos.sort((a, b) => a.dias - b.dias);
-    if (vencimentos.length === 0) tbodyVenc.innerHTML = '<tr><td colspan="4" class="admin-tabela-vazia">Nenhum vencimento cadastrado.</td></tr>';
-    else {
-        tbodyVenc.innerHTML = "";
-        vencimentos.forEach(v => {
-            let badgeClass = "badge-ativo";
-            let texto = `Em ${v.dias} dias`;
-            
-            if (v.status === 'vencido') { badgeClass = "badge-vencido"; texto = `Atrasado ${Math.abs(v.dias)} dia(s)`; } 
-            else if (v.status === 'hoje') { badgeClass = "badge-pendente"; texto = "Vence HOJE"; } 
-            else if (v.status === 'proximo') { badgeClass = "badge-pendente"; texto = `Faltam ${v.dias} dias`; }
-            
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td data-label="Cliente"><span class="cliente-nome">${v.nome}</span></td>
-                <td data-label="Plano"><span class="cliente-plano">${v.plano}</span></td>
-                <td data-label="Vencimento">${v.data}</td>
-                <td data-label="Situação" class="texto-direita">
-                    <span class="badge-status ${badgeClass}">${texto}</span>
-                </td>`;
-            tbodyVenc.appendChild(tr);
-        });
+async function carregarEstadoAutopilot() {
+    try {
+        const snap = await getDoc(
+            doc(db, "config_admin", "autopilot")
+        );
+
+        modoAusenteAtivo = snap.exists()
+            ? snap.data().ativo === true
+            : false;
+
+        atualizarBotaoAusente();
+
+    } catch (e) {
+        console.error(
+            "Erro ao carregar o Neo Wave Autopilot:",
+            e.code,
+            e.message
+        );
     }
-    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-window.enviarCobrancaAutopilot = function(uid, mensagem) {
-    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
-    const hoje = new Date().toISOString().split('T')[0];
-    setDoc(doc(db, "historico_cobrancas", `${uid}_${hoje}`), { uid: uid, data: hoje, enviadoEm: new Date() }).catch(e => console.warn(e));
+function atualizarBotaoAusente() {
+    const btn = document.getElementById("btn-toggle-ausente");
+    const painel = document.getElementById("painel-despacho");
+
+    if (!btn || !painel) return;
+
+    if (modoAusenteAtivo) {
+        btn.style.background = "#f39c12";
+        btn.style.color = "#000";
+        btn.textContent = "Modo Ausente ATIVO";
+        painel.style.display = "block";
+        gerarAcoesAutopilot();
+    } else {
+        btn.style.background = "#333";
+        btn.style.color = "#ccc";
+        btn.textContent = "Ativar Modo Ausente";
+        painel.style.display = "none";
+    }
+}
+
+document.getElementById("btn-toggle-ausente")
+    ?.addEventListener("click", async () => {
+        const novoEstado = !modoAusenteAtivo;
+
+        try {
+            await setDoc(
+                doc(db, "config_admin", "autopilot"),
+                {
+                    ativo: novoEstado,
+                    atualizadoEm: new Date()
+                }
+            );
+
+            modoAusenteAtivo = novoEstado;
+            atualizarBotaoAusente();
+
+        } catch (e) {
+            console.error("Erro ao salvar Autopilot:", e);
+            alert("Erro ao ativar Autopilot: " + e.message);
+        }
+    });
+
+function gerarAcoesAutopilot() {
+    const container = document.getElementById("lista-despacho");
+    const tabela = document.getElementById("tabela-vencimentos-corpo");
+
+    if (!container || !tabela) return;
+
+    container.replaceChildren();
+    tabela.replaceChildren();
+
+    const vencimentos = clientesAdminGlobais
+        .filter(c => c.vencimento && c.statusPagamento !== "suspenso")
+        .map(c => ({
+            cliente: c,
+            dias: diasAteVencimento(c.vencimento)
+        }))
+        .sort((a, b) => a.dias - b.dias);
+
+    for (const item of vencimentos) {
+        const c = item.cliente;
+        const dias = item.dias;
+
+        const tr = document.createElement("tr");
+
+        const situacao = dias < 0
+            ? `Atrasado ${Math.abs(dias)} dia(s)`
+            : dias === 0
+                ? "Vence hoje"
+                : `Faltam ${dias} dias`;
+
+        for (const valor of [
+            c.nome || "Cliente",
+            (c.planoPreferido || "—").toUpperCase(),
+            c.vencimento.split("-").reverse().join("/"),
+            situacao
+        ]) {
+            const td = document.createElement("td");
+            td.textContent = valor;
+            tr.append(td);
+        }
+
+        tabela.append(tr);
+
+        if (dias > 7) continue;
+
+        const mensagem = dias < 0
+            ? `Olá, ${c.nome}! Seu plano ${(c.planoPreferido || "").toUpperCase()} na Neo Flux venceu há ${Math.abs(dias)} dia(s). Podemos ajudar com a renovação?`
+            : dias === 0
+                ? `Olá, ${c.nome}! Seu plano Neo Flux vence hoje. Podemos ajudar com a renovação?`
+                : `Olá, ${c.nome}! Seu plano Neo Flux vence em ${dias} dia(s). Passando para lembrar da renovação!`;
+
+        const card = document.createElement("div");
+        card.className = "admin-item-despacho";
+
+        const descricao = document.createElement("p");
+        descricao.textContent = `${c.nome || "Cliente"} — ${situacao}`;
+
+        const botao = document.createElement("button");
+        botao.textContent = "Enviar WhatsApp";
+        botao.className = "botao-principal";
+
+        botao.addEventListener("click", () => {
+            window.enviarCobrancaAutopilot(c.id, mensagem);
+        });
+
+        card.append(descricao, botao);
+        container.append(card);
+    }
+
+    if (!container.children.length) {
+        const p = document.createElement("p");
+        p.textContent = "Tudo em ordem!";
+        container.append(p);
+    }
+}
+
+window.enviarCobrancaAutopilot = async function(uid, mensagem) {
+    window.open(
+        `https://wa.me/?text=${encodeURIComponent(mensagem)}`,
+        "_blank",
+        "noopener,noreferrer"
+    );
+
+    const hoje = new Date().toISOString().split("T")[0];
+
+    try {
+        await setDoc(
+            doc(db, "historico_cobrancas", `${uid}_${hoje}`),
+            {
+                uid,
+                data: hoje,
+                enviadoEm: new Date()
+            }
+        );
+    } catch (e) {
+        console.warn("Erro ao registrar cobrança:", e);
+    }
 };
 
-// ==========================================
-// 6. OBSERVADOR DE ESTADO (SEGURANÇA)
-// ==========================================
-onAuthStateChanged(auth, (user) => {
-    const emailAdmin = "neoflux2012@gmail.com"; 
+// MARKETPLACE ADMIN
 
+const marketAdminAutorizado = () =>
+    auth.currentUser?.email === emailAdmin &&
+    auth.currentUser?.emailVerified === true;
+
+function marketEl(tag, texto = "") {
+    const el = document.createElement(tag);
+    el.textContent = String(texto ?? "");
+    return el;
+}
+
+function marketStatus(texto) {
+    const el = document.getElementById("market-admin-status");
+    if (el) el.textContent = texto;
+}
+
+function marketData(valor) {
+    return valor?.toDate
+        ? valor.toDate().toLocaleString("pt-BR")
+        : "—";
+}
+
+async function carregarMarketplaceAdmin() {
+    if (!marketAdminAutorizado()) {
+        marketStatus("Confirme o e-mail do administrador para acessar a moderação.");
+        return;
+    }
+
+    const pedidos = document.getElementById("market-admin-pedidos");
+    const denuncias = document.getElementById("market-admin-denuncias");
+    const suspensoes = document.getElementById("market-admin-suspensoes");
+
+    if (!pedidos || !denuncias || !suspensoes) return;
+
+    marketStatus("Carregando dados do Marketplace...");
+
+    try {
+        const [p, d, s] = await Promise.all([
+            getDocs(collection(db, "marketplaceBoosterPedidos")),
+            getDocs(collection(db, "marketplaceDenuncias")),
+            getDocs(collection(db, "marketplaceSuspensoes"))
+        ]);
+
+        pedidos.replaceChildren();
+        denuncias.replaceChildren();
+        suspensoes.replaceChildren();
+
+        const totalPedidos = document.getElementById("market-total-pedidos");
+        const totalDenuncias = document.getElementById("market-total-denuncias");
+        const totalSuspensoes = document.getElementById("market-total-suspensoes");
+
+        if (totalPedidos) {
+            totalPedidos.textContent = p.docs.filter(
+                x => x.data().status === "pendente"
+            ).length;
+        }
+
+        if (totalDenuncias) {
+            totalDenuncias.textContent = d.docs.filter(
+                x => x.data().status === "pendente"
+            ).length;
+        }
+
+        if (totalSuspensoes) {
+            totalSuspensoes.textContent = s.docs.filter(
+                x => x.data().ativo === true
+            ).length;
+        }
+
+        // SOLICITAÇÕES DE BOOSTER
+
+        const pedidosOrdenados = [...p.docs].sort(
+            (a, b) =>
+                (b.data().criadoEm?.toMillis?.() || 0) -
+                (a.data().criadoEm?.toMillis?.() || 0)
+        );
+
+        for (const snap of pedidosOrdenados) {
+            const item = snap.data();
+            const card = marketEl("article");
+
+            card.append(
+                marketEl("strong", item.nomeVitrine || item.idSubsite || "Vitrine"),
+                marketEl(
+                    "p",
+                    `${item.nomeCliente || "Cliente"} • ${item.status || "—"} • R$ ${((item.valorCentavos || 1000) / 100).toFixed(2)} • ${item.dias || 14} dias • ${marketData(item.criadoEm)}`
+                )
+            );
+
+            if (item.status === "pendente") {
+                const aprovar = marketEl("button", "Confirmar Pix e ativar");
+
+                aprovar.addEventListener("click", async () => {
+                    if (!marketAdminAutorizado()) return;
+
+                    if (!confirm("Você conferiu o Pix no banco? Ativar Booster por 14 dias?")) return;
+
+                    aprovar.disabled = true;
+
+                    try {
+                        if (!item.idSubsite) {
+                            throw new Error("ID da vitrine não informado.");
+                        }
+
+                        const refVitrine = doc(
+                            db,
+                            "marketplacePublicos",
+                            item.idSubsite
+                        );
+
+                        const vitrine = await getDoc(refVitrine);
+
+                        if (!vitrine.exists()) {
+                            throw new Error("Vitrine não está publicada.");
+                        }
+
+                        const inicio = new Date();
+                        const fim = new Date(inicio.getTime() + 14 * 86400000);
+
+                        const batch = writeBatch(db);
+
+                        batch.update(refVitrine, {
+                            boosterAte: fim
+                        });
+
+                        batch.update(snap.ref, {
+                            status: "aprovado",
+                            aprovadoEm: inicio,
+                            expiraEm: fim
+                        });
+
+                        await batch.commit();
+                        await carregarMarketplaceAdmin();
+
+                    } catch (e) {
+                        alert("Falha ao aprovar: " + e.message);
+                        aprovar.disabled = false;
+                    }
+                });
+
+                const recusar = marketEl("button", "Recusar");
+
+                recusar.addEventListener("click", async () => {
+                    if (!confirm("Recusar solicitação?")) return;
+
+                    try {
+                        await updateDoc(snap.ref, {
+                            status: "recusado"
+                        });
+
+                        await carregarMarketplaceAdmin();
+                    } catch (e) {
+                        alert("Erro: " + e.message);
+                    }
+                });
+
+                card.append(aprovar, recusar);
+            }
+
+            pedidos.append(card);
+        }
+
+        if (!p.size) {
+            pedidos.append(marketEl("p", "Nenhuma solicitação de Booster."));
+        }
+
+        // DENÚNCIAS
+
+        for (const snap of d.docs) {
+            const item = snap.data();
+            const card = marketEl("article");
+
+            card.append(
+                marketEl(
+                    "strong",
+                    `Vitrine: ${item.idVitrine || "—"} • ${item.status || "—"}`
+                ),
+                marketEl("p", `Motivo: ${item.motivo || "—"}`)
+            );
+
+            if (item.status === "pendente") {
+                const resolver = async suspender => {
+                    if (!confirm(
+                        suspender
+                            ? "Suspender a vitrine pública?"
+                            : "Rejeitar denúncia?"
+                    )) return;
+
+                    try {
+                        const batch = writeBatch(db);
+
+                        if (suspender) {
+                            if (!item.idVitrine) {
+                                throw new Error("ID da vitrine não informado.");
+                            }
+
+                            batch.set(
+                                doc(db, "marketplaceSuspensoes", item.idVitrine),
+                                {
+                                    ativo: true,
+                                    motivo: item.motivo || "",
+                                    criadoEm: new Date()
+                                }
+                            );
+
+                            batch.delete(
+                                doc(db, "marketplacePublicos", item.idVitrine)
+                            );
+                        }
+
+                        batch.update(snap.ref, {
+                            status: suspender ? "suspensa" : "rejeitada",
+                            analisadoEm: new Date()
+                        });
+
+                        await batch.commit();
+                        await carregarMarketplaceAdmin();
+
+                    } catch (e) {
+                        alert("Erro: " + e.message);
+                    }
+                };
+
+                const suspender = marketEl("button", "Suspender vitrine");
+                suspender.addEventListener("click", () => resolver(true));
+
+                const rejeitar = marketEl("button", "Rejeitar denúncia");
+                rejeitar.addEventListener("click", () => resolver(false));
+
+                card.append(suspender, rejeitar);
+            }
+
+            denuncias.append(card);
+        }
+
+        if (!d.size) {
+            denuncias.append(marketEl("p", "Nenhuma denúncia recebida."));
+        }
+
+        // VITRINES SUSPENSAS
+
+        const suspensas = s.docs.filter(x => x.data().ativo === true);
+
+        for (const snap of suspensas) {
+            const item = snap.data();
+            const card = marketEl("article");
+
+            card.append(
+                marketEl("strong", `Vitrine: ${snap.id}`),
+                marketEl(
+                    "p",
+                    `Motivo: ${item.motivo || "—"} • ${marketData(item.criadoEm)}`
+                ),
+                marketEl(
+                    "p",
+                    "Suspensão ativa. A reativação exige revisão antes de republicar."
+                )
+            );
+
+            suspensoes.append(card);
+        }
+
+        if (!suspensas.length) {
+            suspensoes.append(marketEl("p", "Nenhuma vitrine suspensa."));
+        }
+
+        marketStatus("Dados atualizados. Confira os pagamentos no banco.");
+
+    } catch (e) {
+        console.error("Erro ao carregar Marketplace:", e);
+        marketStatus("Erro ao carregar Marketplace: " + e.message);
+    }
+}
+
+document.getElementById("market-admin-atualizar")
+    ?.addEventListener("click", carregarMarketplaceAdmin);
+
+// OBSERVADOR DE LOGIN
+
+onAuthStateChanged(auth, user => {
     if (user && user.email === emailAdmin) {
-        mostrarTela('tela-admin-painel');
+        mostrarTela("tela-admin-painel");
         carregarClientes();
         carregarMarketplaceAdmin();
+
     } else if (user) {
+        mostrarTela("tela-admin-login");
         signOut(auth);
         alert("Acesso negado. Você não é o administrador.");
+
     } else {
-        mostrarTela('tela-admin-login');
+        mostrarTela("tela-admin-login");
     }
 });
-
-// ==========================================
-// MARKETPLACE - ADMINISTRAÇÃO CENTRALIZADA
-// ==========================================
-const marketAdminEmail = 'neoflux2012@gmail.com';
-const marketAdminAutorizado = () => auth.currentUser?.email === marketAdminEmail && auth.currentUser?.emailVerified === true;
-const marketEl = (tag, txt) => { const el = document.createElement(tag); el.textContent = String(txt ?? ''); return el; };
-const marketStatus = txt => { const el=document.getElementById('market-admin-status'); if(el)el.textContent=txt; };
-const marketData = value => value?.toDate ? value.toDate().toLocaleString('pt-BR') : '—';
-
-async function carregarMarketplaceAdmin(){
-  if(!marketAdminAutorizado()) { marketStatus('Confirme o e-mail do administrador para acessar a moderação.'); return; }
-  marketStatus('Carregando dados do Marketplace...');
-  const pedidos=document.getElementById('market-admin-pedidos');
-  const denuncias=document.getElementById('market-admin-denuncias');
-  const suspensoes=document.getElementById('market-admin-suspensoes');
-  try {
-    const [p,d,s]=await Promise.all([
-      getDocs(collection(db,'marketplaceBoosterPedidos')),
-      getDocs(collection(db,'marketplaceDenuncias')),
-      getDocs(collection(db,'marketplaceSuspensoes'))
-    ]);
-    pedidos.replaceChildren(); denuncias.replaceChildren(); suspensoes.replaceChildren();
-    document.getElementById('market-total-pedidos').textContent=p.docs.filter(x=>x.data().status==='pendente').length;
-    document.getElementById('market-total-denuncias').textContent=d.docs.filter(x=>x.data().status==='pendente').length;
-    document.getElementById('market-total-suspensoes').textContent=s.docs.filter(x=>x.data().ativo===true).length;
-
-    for(const snap of p.docs.sort((a,b)=>(b.data().criadoEm?.toMillis?.()||0)-(a.data().criadoEm?.toMillis?.()||0))){
-      const item=snap.data(); const card=marketEl('article','');
-      card.append(marketEl('strong',item.nomeVitrine||item.idSubsite||'Vitrine'));
-      card.append(marketEl('p',`${item.nomeCliente||'Cliente'} • ${item.status||'—'} • R$ ${((item.valorCentavos||1000)/100).toFixed(2)} • ${item.dias||14} dias • ${marketData(item.criadoEm)}`));
-      if(item.status==='pendente'){
-        const aprovar=marketEl('button','✓ Confirmar Pix e ativar');
-        aprovar.onclick=async()=>{
-          if(!marketAdminAutorizado())return;
-          if(!confirm('Você conferiu o recebimento do Pix no banco? Ativar destaque por 14 dias?'))return;
-          aprovar.disabled=true;
-          try{
-            const refVitrine=doc(db,'marketplacePublicos',item.idSubsite);
-            const vitrine=await getDoc(refVitrine);
-            if(!vitrine.exists())throw Error('Vitrine não está publicada.');
-            const inicio=new Date(),fim=new Date(inicio.getTime()+14*86400000);
-            const batch=writeBatch(db);
-            batch.update(refVitrine,{boosterAte:fim});
-            batch.update(snap.ref,{status:'aprovado',aprovadoEm:inicio,expiraEm:fim});
-            await batch.commit(); await carregarMarketplaceAdmin();
-          }catch(e){alert('Falha ao aprovar: '+e.message);aprovar.disabled=false;}
-        };
-        const recusar=marketEl('button','Recusar');
-        recusar.onclick=async()=>{if(!confirm('Recusar solicitação?'))return;try{await updateDoc(snap.ref,{status:'recusado'});await carregarMarketplaceAdmin()}catch(e){alert(e.message)}};
-        card.append(aprovar,recusar);
-      }
-      pedidos.append(card);
-    }
-    if(!p.size)pedidos.append(marketEl('p','Nenhuma solicitação de Booster.'));
-
-    for(const snap of d.docs){
-      const item=snap.data(),card=marketEl('article','');
-      card.append(marketEl('strong',`Vitrine: ${item.idVitrine||'—'} • ${item.status||'—'}`));
-      card.append(marketEl('p',`Motivo: ${item.motivo||'—'}`));
-      if(item.status==='pendente'){
-        const resolver=async suspender=>{
-          if(!confirm(suspender?'Suspender a vitrine pública?':'Rejeitar denúncia?'))return;
-          try{
-            const batch=writeBatch(db);
-            if(suspender){
-              batch.set(doc(db,'marketplaceSuspensoes',item.idVitrine),{ativo:true,motivo:item.motivo||'',criadoEm:new Date()});
-              batch.delete(doc(db,'marketplacePublicos',item.idVitrine));
-            }
-            batch.update(snap.ref,{status:suspender?'suspensa':'rejeitada',analisadoEm:new Date()});
-            await batch.commit(); await carregarMarketplaceAdmin();
-          }catch(e){alert('Erro: '+e.message)}
-        };
-        const suspender=marketEl('button','Suspender vitrine');suspender.onclick=()=>resolver(true);
-        const rejeitar=marketEl('button','Rejeitar denúncia');rejeitar.onclick=()=>resolver(false);
-        card.append(suspender,rejeitar);
-      }
-      denuncias.append(card);
-    }
-    if(!d.size)denuncias.append(marketEl('p','Nenhuma denúncia recebida.'));
-
-    for(const snap of s.docs.filter(x=>x.data().ativo===true)){
-      const item=snap.data(),card=marketEl('article','');
-      card.append(marketEl('strong',`Vitrine: ${snap.id}`));
-      card.append(marketEl('p',`Motivo: ${item.motivo||'—'} • ${marketData(item.criadoEm)}`));
-      card.append(marketEl('p','Suspensão ativa. A reativação exige revisão antes de republicar.'));
-      suspensoes.append(card);
-    }
-    if(!s.docs.some(x=>x.data().ativo===true))suspensoes.append(marketEl('p','Nenhuma vitrine suspensa.'));
-    marketStatus('Dados atualizados. Confira cada pagamento diretamente no banco.');
-  }catch(e){console.error(e);marketStatus('Erro ao carregar Marketplace: '+e.message)}
-}
-document.getElementById('market-admin-atualizar')?.addEventListener('click',carregarMarketplaceAdmin);
