@@ -28,7 +28,8 @@ document.addEventListener('click', (e) => {
 
 // 🔹 2. FUNÇÃO DO TUTORIAL (Só aparece 1 vez por navegador)
 function iniciarTutorial() {
-    const jaViuTutorial = localStorage.getItem('neowave_tutorial_visto');
+   const chaveTutorial = `neowave_tutorial_v2_${subsiteAtualIdWave}`;
+const jaViuTutorial = localStorage.getItem(chaveTutorial);
     const caixaChat = document.getElementById('neo-wave-chat');
     const body = document.getElementById('neo-wave-body');
     
@@ -63,7 +64,7 @@ function iniciarTutorial() {
         }, 4000);
 
         // Salva no navegador para não repetir na próxima vez
-        localStorage.setItem('neowave_tutorial_visto', 'true');
+        localStorage.setItem(chaveTutorial, 'true');
     }
 }
 
@@ -183,3 +184,31 @@ window.confirmarQuebra = async function() {
         alert("Erro ao dar baixa: " + e.message);
     }
 };
+
+/* ==========================================
+   REINICIAR TUTORIAL NEO WAVE
+   ========================================== */
+
+window.reiniciarTutorialNeoWave = function() {
+
+    if (!subsiteAtualIdWave) {
+        alert("Abra uma empresa primeiro!");
+        return;
+    }
+
+    const chaveTutorial =
+        `neowave_tutorial_v2_${subsiteAtualIdWave}`;
+
+    localStorage.removeItem(chaveTutorial);
+
+    const modal = document.getElementById(
+        "modal-comandos-neo-wave"
+    );
+
+    if (modal) {
+        modal.style.display = "none";
+    }
+
+    iniciarTutorial();
+};
+
