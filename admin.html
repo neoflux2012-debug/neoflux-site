@@ -282,7 +282,39 @@
       <div class="admin-market-section">
         <h3>Planos Neo Flux e FVM</h3>
         <p>Preencha os preços em reais. Promoções só valem no intervalo de datas definido, incluindo o último dia.</p>
-        <div id="precos-planos-grid" class="admin-precos-grid"></div>
+       <div class="neo-editor-layout">
+
+  <aside class="neo-editor-menu">
+    <h4>Família de planos</h4>
+
+    <div class="neo-editor-familias">
+      <button type="button" class="neo-familia-btn ativo" data-familia="neo">
+        Neo Flux
+      </button>
+
+      <button type="button" class="neo-familia-btn" data-familia="fvm">
+        FVM
+      </button>
+    </div>
+
+    <h4>Selecionar plano</h4>
+
+    <div id="neo-editor-lista" class="neo-editor-lista"></div>
+  </aside>
+
+  <div class="neo-editor-principal">
+    <div class="neo-editor-cabecalho">
+      <div>
+        <small>EDITANDO PLANO</small>
+        <h3 id="neo-editor-titulo">Start</h3>
+      </div>
+      <span class="neo-editor-indicador">Editor de preços</span>
+    </div>
+
+    <div id="precos-planos-grid" class="admin-precos-grid"></div>
+  </div>
+
+</div>
       </div>
       <div class="admin-market-section"><h3>🚀 Anúncios Booster da vitrine</h3><div id="precos-booster-grid" class="admin-precos-grid"></div></div>
       <p class="admin-precos-aviso">Atenção: estas configurações são salvas no Firebase, mas as páginas públicas atuais ainda usam valores fixos. Elas não mudam a cobrança nem a oferta exibida até integrar o leitor de preços na área pública.</p>
