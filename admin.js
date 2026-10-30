@@ -857,23 +857,164 @@ function campoSelect(rotulo,nome,opcoes,valor){
   for(const [id,txt] of opcoes){const o=document.createElement('option');o.value=id;o.textContent=txt;select.append(o);}
   select.value=valor||opcoes[0][0];label.append(select);return label;
 }
-function montarCardPreco(id,titulo,dados,precoPadrao,booster=false){
-  const card=document.createElement('div');card.className='admin-precos-item';card.dataset.id=id;
-  const h=document.createElement('h4');h.textContent=titulo;card.append(h);
-  card.append(campoPreco('Preço normal (R$)','normal',dados.normal ?? precoPadrao));
-  card.append(campoPreco('Preço promocional (R$)','promocional',dados.promocional ?? ''));
-  const label=document.createElement('label');label.className='admin-precos-check';
-  const check=document.createElement('input');check.type='checkbox';check.name='ativo';check.checked=dados.ativo===true;
-  label.append(check,document.createTextNode('Ativar promoção'));card.append(label);
-  card.append(campoPreco('Início da promoção','inicio',dados.inicio||'','date'));
-  card.append(campoPreco('Fim da promoção','fim',dados.fim||'','date'));
-  if(booster){card.append(campoPreco('Duração do anúncio (dias)','dias',dados.dias ?? 14));}
-  else card.append(campoSelect('Condição da oferta','aplicacao',[
-    ['primeira_mensalidade','Somente primeira mensalidade'],
-    ['recorrente','Preço recorrente para novos contratos']
-  ],dados.aplicacao));
-  return card;
+
+function montarCardPreco(id, titulo, dados, precoPadrao, booster = false) {
+    const card = document.createElement("div");
+    card.className = "admin-precos-item";
+    card.dataset.id = id;
+
+    const h = document.createElement("h4");
+    h.textContent = titulo;
+    card.append(h);
+
+    // Mantém o Booster com o funcionamento original
+    if (booster) {
+        card.append(campoPreco("Preço normal (R$)", "normal", dados.normal ?? precoPadrao));
+        card.append(campoPreco("Preço promocional (R$)", "promocional", dados.promocional ?? ""));
+
+        const label = document.createElement("label");
+        label.className = "admin-precos-check";
+
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.name = "ativo";
+        check.checked = dados.ativo === true;
+
+        label.append(check, document.createTextNode("Ativar promoção"));
+        card.append(label);
+
+        card.append(campoPreco("Início da promoção", "inicio", dados.inicio || "", "date"));
+        card.append(campoPreco("Fim da promoção", "fim", dados.fim || "", "date"));
+        card.append(campoPreco("Duração do anúncio (dias)", "dias", dados.dias ?? 14));
+
+        return card;
+    }
+
+    // Mensalidade
+    const mensalidade = document.createElement("div");
+    mensalidade.className = "neo-preco-grupo";
+
+    const tituloMensalidade = document.createElement("h5");
+    tituloMensalidade.textContent = "💜 Mensalidade";
+    mensalidade.append(tituloMensalidade);
+
+    mensalidade.append(campoPreco("Mensalidade normal (R$)", "normal", dados.normal ?? precoPadrao));
+    mensalidade.append(campoPreco("Mensalidade promocional (R$)", "promocional", dados.promocional ?? ""));
+
+    const labelMensal = document.createElement("label");
+    labelMensal.className = "admin-precos-check";
+
+    const checkMensal = document.createElement("input");
+    checkMensal.type = "checkbox";
+    checkMensal.name = "ativo";
+    checkMensal.checked = dados.ativo === true;
+
+    labelMensal.append(checkMensal, document.createTextNode("Ativar promoção da mensalidade"));
+    mensalidade.append(labelMensal);
+
+    mensalidade.append(campoPreco("Início da promoção", "inicio", dados.inicio || "", "date"));
+    mensalidade.append(campoPreco("Fim da promoção", "fim", dados.fim || "", "date"));
+
+    mensalidade.append(campoSelect("Condição da oferta", "aplicacao", [
+        ["primeira_mensalidade", "Somente primeira mensalidade"],
+        ["recorrente", "Preço recorrente para novos contratos"]
+    ], dados.aplicacao));
+
+    card.append(mensalidade);
+
+    // Implantação
+    const implantacao = dados.implantacao || {};
+
+    const grupoImplantacao = document.createElement("div");
+    grupoImplantacao.className = "neo-preco-grupo";
+
+    const tituloImplantacao = document.createElement("h5");
+    tituloImplantacao.textContent = "🚀 Taxa de implantação";
+    grupoImplantacao.append(tituloImplantacao);
+
+    grupoImplantacao.append(campoPreco("Implantação normal (R$)", "implantacao_normal", implantacao.normal ?? 99.99));
+    grupoImplantacao.append(campoPreco("Implantação promocional (R$)", "implantacao_promocional", implantacao.promocional ?? ""));
+
+    const labelImplantacao = document.createElement("label");
+    labelImplantacao.className = "admin-precos-check";
+
+    const checkImplantacao = document.createElement("input");
+    checkImplantacao.type = "checkbox";
+    checkImplantacao.name = "implantacao_ativo";
+    checkImplantacao.checked = implantacao.ativo === true;
+
+    labelImplantacao.append(checkImplantacao, document.createTextNode("Ativar promoção da implantação"));
+    grupoImplantacao.append(labelImplantacao);
+
+    grupoImplantacao.append(campoPreco("Início da promoção", "implantacao_inicio", implantacao.inicio || "", "date"));
+    grupoImplantacao.append(campoPreco("Fim da promoção", "implantacao_fim", implantacao.fim || "", "date"));
+
+    card.append(grupoImplantacao);
+
+    // Prévia da oferta
+    const previa = document.createElement("div");
+    previa.className = "neo-preco-previa";
+    card.append(previa);
+
+    function atualizarPrevia() {
+        const pegar = nome => card.querySelector(`[name="${nome}"]`);
+        const moeda = valor => Number(valor).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
+
+        const hoje = new Date().toLocaleDateString("en-CA");
+
+        function valorAtual(prefixo) {
+            const normal = Number(pegar(prefixo + "normal").value);
+            const promocional = pegar(prefixo + "promocional").value;
+            const ativo = pegar(prefixo + "ativo").checked;
+            const inicio = pegar(prefixo + "inicio").value;
+            const fim = pegar(prefixo + "fim").value;
+
+            const emPromocao = ativo &&
+                promocional !== "" &&
+                Number(promocional) < normal &&
+                inicio && fim &&
+                hoje >= inicio && hoje <= fim;
+
+            return {
+                normal,
+                promocional: emPromocao ? Number(promocional) : null,
+                fim
+            };
+        }
+
+        const mensal = valorAtual("");
+        const impl = valorAtual("implantacao_");
+
+        const montarLinha = (nome, valor) => {
+            if (valor.promocional === null) {
+                return `<p>${nome}: <strong>${moeda(valor.normal)}</strong></p>`;
+            }
+
+            return `<p>${nome}: <del>${moeda(valor.normal)}</del>
+                <strong>${moeda(valor.promocional)}</strong>
+                <small>até ${valor.fim.split("-").reverse().join("/")}</small></p>`;
+        };
+
+        previa.innerHTML = `
+            <h5>👀 Prévia da oferta atual</h5>
+            ${montarLinha("Mensalidade", mensal)}
+            ${montarLinha("Implantação", impl)}
+        `;
+    }
+
+    card.querySelectorAll("input, select").forEach(campo => {
+        campo.addEventListener("input", atualizarPrevia);
+        campo.addEventListener("change", atualizarPrevia);
+    });
+
+    atualizarPrevia();
+
+    return card;
 }
+
 async function carregarPrecosAdmin(){
   const status=document.getElementById('precos-status');
   if(!precosAutorizado()){if(status)status.textContent='Acesso requer administrador com e-mail verificado.';return;}
