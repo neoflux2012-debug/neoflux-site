@@ -264,3 +264,19 @@
         justify-content: center;
     }
 }
+
+/* Correção do posicionamento do tutorial */
+#neo-wave-tour-overlay {
+    pointer-events: auto;
+}
+
+.neo-wave-tour-caixa {
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+    .neo-wave-tour-caixa {
+        max-width: calc(100vw - 32px);
+    }
+}
