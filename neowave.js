@@ -31,7 +31,7 @@ function obterRecursosWave() {
         elite_premium: { kits: true, relatorios: true, analista: true, contratos: true },
         fvm_start: { kits: true, maxKits: 3, relatorios: false, analista: false, contratos: false },
         fvm_pro: { kits: true, relatorios: true, analista: false, contratos: false },
-        fvm_elite: { kits: true, relatorios: true, analista: true, contratos: false },
+        fvm_elite: { kits: true, relatorios: true, analista: true, contratos: true },
         fvm_elite_premium: { kits: true, relatorios: true, analista: true, contratos: true }
     };
 
