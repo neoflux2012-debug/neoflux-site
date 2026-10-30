@@ -171,3 +171,96 @@
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* ==========================================
+   TUTORIAL INTERATIVO NEO WAVE
+   ========================================== */
+
+#neo-wave-tour-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.78);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.neo-wave-tour-caixa {
+    width: 100%;
+    max-width: 430px;
+    background: #15101e;
+    border: 1px solid #8a2be2;
+    border-radius: 18px;
+    padding: 26px;
+    box-sizing: border-box;
+    color: white;
+    box-shadow: 0 0 35px rgba(138, 43, 226, 0.35);
+    position: relative;
+    z-index: 10002;
+}
+
+.neo-wave-tour-caixa h3 {
+    color: #c99bff;
+    font-size: 1.3rem;
+    margin: 12px 0;
+}
+
+.neo-wave-tour-caixa p {
+    line-height: 1.6;
+    color: #ddd;
+}
+
+.neo-wave-tour-progresso {
+    font-size: 0.8rem;
+    color: #a77bd8 !important;
+}
+
+.neo-wave-tour-botoes {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: 22px;
+}
+
+.neo-wave-tour-botoes button {
+    border: 1px solid #704099;
+    background: #292033;
+    color: white;
+    border-radius: 9px;
+    padding: 10px 13px;
+    cursor: pointer;
+}
+
+.neo-wave-tour-botoes button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.neo-wave-tour-botoes .neo-wave-tour-proximo {
+    background: #8a2be2;
+    border-color: #8a2be2;
+    font-weight: bold;
+}
+
+.neo-wave-tour-destaque {
+    position: relative !important;
+    z-index: 10001 !important;
+    outline: 3px solid #b57bff !important;
+    outline-offset: 5px;
+    box-shadow: 0 0 25px rgba(138,43,226,0.8) !important;
+    border-radius: 8px;
+}
+
+@media (max-width: 600px) {
+    .neo-wave-tour-caixa {
+        padding: 20px;
+    }
+
+    .neo-wave-tour-botoes {
+        justify-content: center;
+    }
+}
