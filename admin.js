@@ -1028,25 +1028,90 @@ async function carregarPrecosAdmin(){
     if(status)status.textContent='Configurações carregadas. Valores públicos ainda não estão integrados.';
   }catch(e){console.error(e);if(status)status.textContent='Erro ao carregar: '+e.message;}
 }
-function lerCardPreco(card){
-  const pegar=n=>card.querySelector(`[name="${n}"]`);
-  const normal=Number(pegar('normal').value);
-  const strPromo=pegar('promocional').value;
-  const promocional=strPromo===''?null:Number(strPromo);
-  const ativo=pegar('ativo').checked;
-  const inicio=pegar('inicio').value,fim=pegar('fim').value;
-  if(!Number.isFinite(normal)||normal<0||normal>100000)throw Error('Preço normal inválido em '+card.dataset.id);
-  if(promocional!==null&&(!Number.isFinite(promocional)||promocional<0||promocional>=normal))throw Error('Preço promocional deve ser menor que o normal em '+card.dataset.id);
-  if(ativo&&(!inicio||!fim||promocional===null))throw Error('Preencha preço e datas da promoção em '+card.dataset.id);
-  if(inicio&&fim&&fim<inicio)throw Error('Data final anterior à inicial em '+card.dataset.id);
-  const out={normal,promocional,ativo,inicio,fim};
-  if(card.dataset.id==='booster'){
-    const dias=Number(pegar('dias').value);
-    if(!Number.isInteger(dias)||dias<1||dias>365)throw Error('Duração do Booster deve ser de 1 a 365 dias');
-    out.dias=dias;
-  }else out.aplicacao=pegar('aplicacao').value;
-  return out;
+
+function lerCardPreco(card) {
+    if (!card) {
+        throw new Error("Card de preços não encontrado.");
+    }
+
+    const pegar = nome => card.querySelector(`[name="${nome}"]`);
+
+    function lerPromocao(prefixo = "") {
+        const normal = Number(pegar(prefixo + "normal").value);
+        const textoPromocional = pegar(prefixo + "promocional").value;
+        const promocional = textoPromocional === ""
+            ? null
+            : Number(textoPromocional);
+
+        const ativo = pegar(prefixo + "ativo").checked;
+        const inicio = pegar(prefixo + "inicio").value;
+        const fim = pegar(prefixo + "fim").value;
+
+        const identificacao = card.dataset.id +
+            (prefixo ? " - implantação" : " - mensalidade/Booster");
+
+        if (!Number.isFinite(normal) || normal < 0 || normal > 100000) {
+            throw new Error("Preço normal inválido: " + identificacao);
+        }
+
+        if (
+            promocional !== null &&
+            (!Number.isFinite(promocional) ||
+             promocional < 0 ||
+             promocional >= normal)
+        ) {
+            throw new Error(
+                "O preço promocional deve ser menor que o normal: " +
+                identificacao
+            );
+        }
+
+        if (ativo && (!inicio || !fim || promocional === null)) {
+            throw new Error(
+                "Preencha o preço promocional e as duas datas: " +
+                identificacao
+            );
+        }
+
+        if (inicio && fim && fim < inicio) {
+            throw new Error(
+                "A data final não pode ser anterior à inicial: " +
+                identificacao
+            );
+        }
+
+        return {
+            normal,
+            promocional,
+            ativo,
+            inicio,
+            fim
+        };
+    }
+
+    const resultado = lerPromocao();
+
+    // Booster continua com sua estrutura original
+    if (card.dataset.id === "booster") {
+        const dias = Number(pegar("dias").value);
+
+        if (!Number.isInteger(dias) || dias < 1 || dias > 365) {
+            throw new Error(
+                "Duração do Booster deve ser de 1 a 365 dias."
+            );
+        }
+
+        resultado.dias = dias;
+        return resultado;
+    }
+
+    // Planos: mensalidade e implantação independentes
+    resultado.aplicacao = pegar("aplicacao").value;
+    resultado.implantacao = lerPromocao("implantacao_");
+
+    return resultado;
 }
+
 document.getElementById('btn-salvar-precos')?.addEventListener('click',async()=>{
   const status=document.getElementById('precos-status'),btn=document.getElementById('btn-salvar-precos');
   if(!precosAutorizado()){alert('Administrador não autorizado ou e-mail não verificado.');return;}
@@ -1054,7 +1119,10 @@ document.getElementById('btn-salvar-precos')?.addEventListener('click',async()=>
     const planos={};
     for(const card of document.querySelectorAll('#precos-planos-grid .admin-precos-item'))planos[card.dataset.id]=lerCardPreco(card);
     const booster=lerCardPreco(document.querySelector('#precos-booster-grid .admin-precos-item'));
-    if(!confirm('Salvar configurações no Firebase? Isso ainda não muda os preços mostrados aos clientes.'))return;
+    if (!confirm(
+    "Salvar mensalidades, taxas de implantação e promoções no Firebase? " +
+    "Os preços públicos ainda não estão integrados."
+)) return;
     btn.disabled=true;
     await setDoc(PRECOS_DOC,{planos,booster,atualizadoEm:new Date(),atualizadoPor:auth.currentUser.uid});
     status.textContent='Configurações salvas no Firebase. Integração pública pendente.';
