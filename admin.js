@@ -1262,3 +1262,92 @@ document.querySelectorAll("[data-admin-atalho]").forEach(botao => {
         )?.click();
     });
 });
+// ==========================================
+// NEO FLUX ADMIN 2.0 - SELETOR DE PLANOS
+// ==========================================
+
+function iniciarEditorInteligente() {
+    const grid = document.getElementById("precos-planos-grid");
+    const lista = document.getElementById("neo-editor-lista");
+    const titulo = document.getElementById("neo-editor-titulo");
+
+    if (!grid || !lista || !titulo) return;
+
+    let familiaAtual = "neo";
+    let planoAtual = "start";
+
+    const nomes = {
+        start: "Start",
+        pro: "Pro",
+        elite: "Elite",
+        elite_premium: "Elite Premium"
+    };
+
+    function selecionarPlano(id) {
+        planoAtual = id;
+
+        const idCompleto = familiaAtual === "fvm"
+            ? "fvm_" + id
+            : id;
+
+        grid.querySelectorAll(".admin-precos-item").forEach(card => {
+            card.classList.toggle(
+                "neo-plano-visivel",
+                card.dataset.id === idCompleto
+            );
+        });
+
+        titulo.textContent =
+            (familiaAtual === "fvm" ? "FVM " : "") + nomes[id];
+
+        lista.querySelectorAll(".neo-plano-btn").forEach(botao => {
+            botao.classList.toggle(
+                "ativo",
+                botao.dataset.plano === id
+            );
+        });
+    }
+
+    function montarLista() {
+        lista.replaceChildren();
+
+        Object.entries(nomes).forEach(([id, nome]) => {
+            const botao = document.createElement("button");
+            botao.type = "button";
+            botao.className = "neo-plano-btn";
+            botao.dataset.plano = id;
+            botao.textContent = nome;
+
+            botao.addEventListener("click", () => selecionarPlano(id));
+
+            lista.append(botao);
+        });
+
+        selecionarPlano(planoAtual);
+    }
+
+    document.querySelectorAll(".neo-familia-btn").forEach(botao => {
+        botao.addEventListener("click", () => {
+            familiaAtual = botao.dataset.familia;
+            planoAtual = "start";
+
+            document.querySelectorAll(".neo-familia-btn").forEach(b => {
+                b.classList.toggle("ativo", b === botao);
+            });
+
+            montarLista();
+        });
+    });
+
+    montarLista();
+
+    // Os cards são recriados após carregar os dados do Firebase.
+    // Observa essa atualização para manter o plano selecionado visível.
+    const observador = new MutationObserver(() => {
+        selecionarPlano(planoAtual);
+    });
+
+    observador.observe(grid, { childList: true });
+}
+
+iniciarEditorInteligente();
