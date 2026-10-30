@@ -1193,3 +1193,47 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
 @media(max-width:1100px){#tela-market-busca .market-hero-ref{grid-template-columns:1fr;gap:25px}#market-search-results .market-card-corpo{padding-left:115px}#market-search-results .market-card-logo{width:85px;height:85px;top:-25px}#market-search-results .market-card-rodape{flex-wrap:wrap}#market-search-results .market-card-rodape button{width:100%}}
 @media(max-width:900px){#market-search-results.market-resultados{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){#tela-market-busca{padding:12px 4px 28px}#tela-market-busca .market-hero-ref{padding:18px 8px 28px}#tela-market-busca .market-hero-copy h1{font-size:2.2rem}#tela-market-busca .market-search-field{flex-wrap:wrap}#tela-market-busca #market-search-button{padding:10px}#market-search-results.market-resultados{grid-template-columns:1fr;gap:18px}#market-search-results .market-card-corpo{padding:18px 16px 16px 124px;min-height:155px}#market-search-results .market-card-logo{width:94px;height:94px;top:-32px;left:15px}#market-search-results .market-card-rodape{margin-left:-108px;width:calc(100% + 108px);flex-wrap:nowrap}#market-search-results .market-card-rodape button{width:auto}}
+.neo-pagamento-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+.neo-resumo-pagamento {
+  background: #121212;
+  border: 1px solid #8a2be2;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 0 20px rgba(138,43,226,.15);
+}
+
+.neo-linha {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.neo-total {
+  border-top: 1px solid #8a2be2;
+  padding-top: 16px;
+  margin-top: 20px;
+}
+
+.neo-total strong {
+  display: block;
+  font-size: 2rem;
+  color: #b57bff;
+}
+
+.neo-resumo-pagamento p {
+  font-size: .8rem;
+  margin-top: 15px;
+}
+
+@media (max-width: 650px) {
+  .neo-pagamento-grid {
+    grid-template-columns: 1fr;
+  }
+}
