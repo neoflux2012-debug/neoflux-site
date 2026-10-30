@@ -979,3 +979,149 @@ main {
     color: #b5a1cb;
     margin-top: 4px;
 }
+/* =========================================
+   NEO FLUX ADMIN 2.0 - EDITOR INTELIGENTE
+========================================= */
+
+.neo-editor-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    margin-top: 20px;
+}
+
+.neo-editor-menu {
+    background: #140f20;
+    border: 1px solid #49315f;
+    border-radius: 16px;
+    padding: 18px;
+}
+
+.neo-editor-menu h4 {
+    color: #cda7ff;
+    font-size: 13px;
+    margin: 10px 0 14px;
+}
+
+.neo-editor-familias {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 25px;
+}
+
+.neo-familia-btn,
+.neo-plano-btn {
+    font-family: inherit;
+    cursor: pointer;
+    color: #c8b6dc;
+    background: #21172e;
+    border: 1px solid #403052;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+.neo-familia-btn {
+    padding: 11px 5px;
+    font-size: 12px;
+}
+
+.neo-editor-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.neo-plano-btn {
+    width: 100%;
+    text-align: left;
+    padding: 14px;
+    font-size: 13px;
+}
+
+.neo-familia-btn:hover,
+.neo-plano-btn:hover {
+    background: #38214f;
+    color: white;
+}
+
+.neo-familia-btn.ativo,
+.neo-plano-btn.ativo {
+    background: #59328b;
+    color: white;
+    border-color: #a66be8;
+    font-weight: 600;
+}
+
+.neo-editor-principal {
+    min-width: 0;
+    background: #140f20;
+    border: 1px solid #49315f;
+    border-radius: 16px;
+    padding: 22px;
+}
+
+.neo-editor-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.neo-editor-cabecalho small {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #ac86d9;
+}
+
+.neo-editor-cabecalho h3 {
+    color: white;
+    margin: 6px 0 0;
+}
+
+.neo-editor-indicador {
+    color: #cba6f5;
+    background: #2b1c40;
+    padding: 9px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+}
+
+/* Apenas um card visível por vez */
+
+#precos-planos-grid {
+    display: block;
+    margin: 0;
+}
+
+#precos-planos-grid .admin-precos-item {
+    display: none;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 20px;
+}
+
+#precos-planos-grid .admin-precos-item.neo-plano-visivel {
+    display: flex;
+}
+
+#precos-planos-grid .neo-preco-grupo {
+    margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+    .neo-editor-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .neo-editor-lista {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .neo-editor-principal {
+        padding: 14px;
+    }
+}7
