@@ -331,7 +331,9 @@ async function carregarDadosCliente(uid) {
         const snap = await getDoc(doc(db, "usuarios", uid));
         if (snap.exists()) {
             const dados = snap.data();
+            
             planoAtual = dados.planoPreferido;
+            window.planoAtualNeoWave = planoAtual;
             document.getElementById('cliente-nome').textContent = dados.nome;
             document.getElementById('cliente-plano').textContent = (nomesPlanos[planoAtual] || planoAtual).toUpperCase();
             document.getElementById('cliente-status').textContent = dados.statusPagamento;
