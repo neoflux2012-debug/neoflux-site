@@ -939,3 +939,59 @@ onAuthStateChanged(auth, user => {
         mostrarTela("tela-admin-login");
     }
 });
+// ==========================================
+// NEO FLUX ADMIN 2.0 - MENU LATERAL
+// ==========================================
+
+function iniciarNavegacaoAdmin() {
+    const conteudo = document.querySelector(".neo-admin-conteudo");
+    const botoes = document.querySelectorAll("[data-admin-aba]");
+
+    if (!conteudo || !botoes.length) return;
+
+    const grupos = {
+        inicio: [".admin-header"],
+        planos: ["#admin-precos-painel"],
+        clientes: [".admin-caixa-clientes"],
+        wave: [".admin-card-monitor", ".admin-card-autopilot"],
+        marketplace: [".admin-marketplace:not(#admin-precos-painel)"]
+    };
+
+    const secoes = [];
+
+    for (const [aba, seletores] of Object.entries(grupos)) {
+        for (const seletor of seletores) {
+            conteudo.querySelectorAll(seletor).forEach(elemento => {
+                if (elemento.parentElement !== conteudo) return;
+
+                elemento.dataset.adminSecao = aba;
+                secoes.push(elemento);
+            });
+        }
+    }
+
+    function abrirAba(aba) {
+        botoes.forEach(botao => {
+            const ativo = botao.dataset.adminAba === aba;
+            botao.classList.toggle("ativo", ativo);
+            botao.setAttribute("aria-pressed", String(ativo));
+        });
+
+        secoes.forEach(secao => {
+            secao.classList.toggle(
+                "neo-secao-ativa",
+                secao.dataset.adminSecao === aba
+            );
+        });
+    }
+
+    botoes.forEach(botao => {
+        botao.addEventListener("click", () => {
+            abrirAba(botao.dataset.adminAba);
+        });
+    });
+
+    abrirAba("inicio");
+}
+
+iniciarNavegacaoAdmin();
