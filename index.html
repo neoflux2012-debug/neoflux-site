@@ -286,12 +286,59 @@
             <p>Sua conta foi criada, <strong id="resumo-nome-pagamento">...</strong>!</p>
             <p style="text-align: left; color: #ccc;">Plano escolhido: <strong id="resumo-plano-pagamento" style="color: #00d2ff;">...</strong></p>
 
-            <div class="caixa-pix">
-                <p style="margin-bottom: 12px; color: #ccc;">Pague com Pix escaneando o QR Code abaixo:</p>
-                <img id="img-qrcode" src="./qrcode.png" alt="QR Code Pix">
-                <p style="margin: 0 0 6px 0; color: #888; font-size: 0.85rem;">Chave Pix (Telefone):</p>
-                <p class="chave-pix" style="margin: 0;">(61) 99161-4509</p>
-            </div>
+           
+<div class="neo-pagamento-grid">
+
+    <!-- QR CODE ORIGINAL -->
+    <div class="caixa-pix">
+        <p style="margin-bottom: 12px; color: #ccc;">
+            Pague com Pix escaneando o QR Code abaixo:
+        </p>
+
+        <img id="img-qrcode" src="./qrcode.png" alt="QR Code Pix">
+
+        <p style="margin: 0 0 6px 0; color: #888; font-size: 0.85rem;">
+            Chave Pix (Telefone):
+        </p>
+
+        <p class="chave-pix" style="margin: 0;">
+            (61) 99161-4509
+        </p>
+    </div>
+
+    <!-- NOVO CARD DE IMPLANTAÇÃO -->
+    <aside class="neo-resumo-pagamento">
+        <h3>💜 Resumo do pagamento</h3>
+
+        <div class="neo-linha">
+            <span id="neo-nome-plano">Plano selecionado</span>
+            <strong id="neo-valor-plano">R$ 0,00</strong>
+        </div>
+
+        <div class="neo-linha">
+            <span>Implantação única</span>
+            <strong>R$ 100,00</strong>
+        </div>
+
+        <div class="neo-total">
+            <span>Total a transferir</span>
+            <strong id="neo-valor-total">R$ 0,00</strong>
+        </div>
+
+        <p>
+            A implantação é cobrada uma única vez.
+            Nas próximas mensalidades, você paga
+            somente o valor do plano.
+        </p>
+
+        <p style="font-size: 0.75rem; color: #aaa;">
+            Confira o valor total e informe-o no seu
+            aplicativo bancário ao realizar o Pix.
+        </p>
+    </aside>
+
+</div>
+
 
             <p style="font-size: 0.85rem; color: #888; margin: 10px 0 20px 0;">
                 Após o pagamento, envie o comprovante pelo WhatsApp <strong>(61) 99161-4509</strong> para liberação do acesso.
