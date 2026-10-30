@@ -1053,21 +1053,62 @@
             <div class="neo-wave-input-area"><input type="text" id="neo-wave-input" placeholder="Digite aqui..."><button id="btn-neo-wave-enviar"><i data-lucide="send" style="width: 16px; height: 16px;"></i></button></div>
         </div>
 
-        <!-- MODAL DE COMANDOS NEO WAVE -->
-        <div id="modal-comandos-neo-wave" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-            <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 0 40px rgba(138,43,226,0.3);">
-                <i data-lucide="terminal" style="color: #8a2be2; width: 40px; height: 40px; margin-bottom: 15px;"></i>
-                <h2 style="margin-top: 0;">Comandos do Neo Wave</h2>
-                <p style="color: #ccc; margin-bottom: 25px;">O que você gostaria que eu fizesse por você agora?</p>
-                
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('modal-registrar-quebra').style.display='flex';">Registrar Quebra de Peça</button>
-                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-abrir-orcamento-inteligente').click();">Gerar Orçamento Rápido</button>
-                    <button class="botao-principal" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-agendar-festa').click();">Novo Pedido / Festa</button>
-                </div>
-                <button class="botao-principal" style="background: #333; margin-top: 20px;" onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'">Fechar</button>
-            </div>
+      
+<!-- MODAL DE COMANDOS NEO WAVE -->
+<div id="modal-comandos-neo-wave"
+     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+
+    <div style="background: #121212; border: 1px solid #8a2be2; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 0 40px rgba(138,43,226,0.3);">
+
+        <i data-lucide="terminal"
+           style="color: #8a2be2; width: 40px; height: 40px; margin-bottom: 15px;"></i>
+
+        <h2 style="margin-top: 0;">
+            Comandos do Neo Wave
+        </h2>
+
+        <p style="color: #ccc; margin-bottom: 25px;">
+            O que você gostaria que eu fizesse por você agora?
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+
+            <!-- REGISTRAR QUEBRA -->
+            <button class="botao-principal"
+                onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('modal-registrar-quebra').style.display='flex';">
+                Registrar Quebra de Peça
+            </button>
+
+            <!-- ORÇAMENTO RÁPIDO -->
+            <button class="botao-principal"
+                onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-abrir-orcamento-inteligente').click();">
+                Gerar Orçamento Rápido
+            </button>
+
+            <!-- NOVA FESTA -->
+            <button class="botao-principal"
+                onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-agendar-festa').click();">
+                Novo Pedido / Festa
+            </button>
+
+            <!-- REINICIAR TUTORIAL -->
+            <button class="botao-principal"
+                style="background: #241332; border: 1px solid #8a2be2;"
+                onclick="reiniciarTutorialNeoWave()">
+                🎓 Reiniciar Tutorial
+            </button>
+
         </div>
+
+        <!-- FECHAR -->
+        <button class="botao-principal"
+            style="background: #333; margin-top: 20px;"
+            onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'">
+            Fechar
+        </button>
+
+    </div>
+</div>
 
         <!-- MODAL DE REGISTRAR QUEBRA -->
         <div id="modal-registrar-quebra" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
