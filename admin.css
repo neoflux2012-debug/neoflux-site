@@ -928,3 +928,54 @@ main {
         grid-template-columns: 1fr;
     }
 }
+/* EDITOR DE PLANOS - NEO FLUX */
+
+.neo-preco-grupo {
+    padding: 15px;
+    background: rgba(20, 13, 33, 0.7);
+    border: 1px solid #44305e;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.neo-preco-grupo h5 {
+    margin: 0 0 5px;
+    color: #c89aff;
+    font-size: 14px;
+}
+
+.neo-preco-previa {
+    padding: 16px;
+    background: #251637;
+    border: 1px solid #8151b5;
+    border-radius: 12px;
+}
+
+.neo-preco-previa h5 {
+    margin: 0 0 12px;
+    color: #d7b4ff;
+}
+
+.neo-preco-previa p {
+    margin: 10px 0;
+    color: white;
+    font-size: 13px;
+}
+
+.neo-preco-previa strong {
+    color: #b88aff;
+    font-size: 18px;
+}
+
+.neo-preco-previa del {
+    color: #92869d;
+    margin-right: 8px;
+}
+
+.neo-preco-previa small {
+    display: block;
+    color: #b5a1cb;
+    margin-top: 4px;
+}
