@@ -133,36 +133,123 @@ function atualizarResumoPagamento(plano) {
 }
 
 
-// ==========================================
-// 4. CONTROLE DE TELAS E LOADING
-// ==========================================
+/* ==========================================
+   4. CONTROLE DE TELAS E LOADING
+   ========================================== */
+
 const todasAsTelas = document.querySelectorAll('.tela');
 
+// Controle da prévia de pagamento
+let modoTestePagamento = false;
+let planoTestePagamento = "";
+
+// ==========================================
+// MOSTRAR TELAS
+// ==========================================
+
 function mostrarTela(id) {
-    todasAsTelas.forEach(t => t.classList.remove('ativa'));
+
+    todasAsTelas.forEach(t => {
+        t.classList.remove('ativa');
+    });
+
     const tela = document.getElementById(id);
-    if (tela) tela.classList.add('ativa');
 
-   
-if (id === 'tela-pagamento') {
-
-    const imgQr = document.getElementById('img-qrcode');
-
-    if (imgQr) {
-        imgQr.src = `./qrcode.png?t=${new Date().getTime()}`;
+    if (tela) {
+        tela.classList.add('ativa');
     }
 
-    // Atualiza mensalidade + implantação
-    atualizarResumoPagamento(planoAtual);
-}
+    // Tela de pagamento
+    if (id === 'tela-pagamento') {
+
+        const imgQr = document.getElementById('img-qrcode');
+
+        if (imgQr) {
+            imgQr.src = `./qrcode.png?t=${Date.now()}`;
+        }
+
+        // Usa o plano de teste somente na prévia
+        const planoExibido = modoTestePagamento
+            ? planoTestePagamento
+            : planoAtual;
+
+        atualizarResumoPagamento(planoExibido);
+    }
 
     window.scrollTo(0, 0);
 }
 
+// ==========================================
+// LOADING
+// ==========================================
+
 function carregar(ativo) {
+
     const overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.style.display = ativo ? 'flex' : 'none';
+
+    if (overlay) {
+        overlay.style.display = ativo ? 'flex' : 'none';
+    }
 }
+
+// ==========================================
+// TESTAR PAGAMENTO - ADMINISTRADOR
+// ==========================================
+
+window.testarPagamentoNeoFlux = function(plano = "pro") {
+
+    const usuario = auth.currentUser;
+
+    // Somente o administrador autenticado
+    if (
+        !usuario ||
+        !usuario.emailVerified ||
+        usuario.email?.toLowerCase() !== "neoflux2012@gmail.com"
+    ) {
+        alert("Acesso permitido somente ao administrador.");
+        return;
+    }
+
+    // Planos que podem ser visualizados
+    const planosPermitidos = [
+        "start",
+        "pro",
+        "elite",
+        "elite_premium",
+        "fvm_start",
+        "fvm_pro",
+        "fvm_elite",
+        "fvm_elite_premium"
+    ];
+
+    if (!planosPermitidos.includes(plano)) {
+        alert("Plano inválido!");
+        return;
+    }
+
+    modoTestePagamento = true;
+    planoTestePagamento = plano;
+
+    // Abre a tela sem criar cadastro
+    mostrarTela("tela-pagamento");
+
+    console.log(
+        "💜 Neo Flux: prévia do pagamento",
+        plano
+    );
+};
+
+// ==========================================
+// ENCERRAR TESTE DE PAGAMENTO
+// ==========================================
+
+window.encerrarTestePagamentoNeoFlux = function() {
+
+    modoTestePagamento = false;
+    planoTestePagamento = "";
+
+    console.log("💜 Modo de teste encerrado.");
+};
 
 // ==========================================
 // 5. NAVEGAÇÃO E CADASTRO
