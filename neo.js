@@ -45,9 +45,9 @@ const termosPlanos = {
 
 const limitesPlanosBase = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
 const recursosPlanosBase = {
-    start:         { kits: false, relatorios: false, assistente: true,  valores: false, contratos: false, sugestaoMensagem: false, analista: false },
+    start:         { kits: true, relatorios: false, assistente: true,  valores: false, contratos: false, sugestaoMensagem: false, analista: false },
     pro:           { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: false },
-    elite:         { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: true  },
+    elite:         { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true, sugestaoMensagem: true,  analista: true  },
     elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  }
 };
 
@@ -61,8 +61,11 @@ function getRecursos(plano) {
         
         const regrasBase = recursosPlanosBase[planoBase] || recursosPlanosBase.start;
         
-        // 🔹 AQUI: Libera contratos APENAS para o FVM Elite Premium
-        const temContrato = (plano === 'fvm_elite_premium');
+        // 🔹 AQUI: Libera contratos APENAS para o FVM Elite Premium e FVM Elite.
+        const temContrato = (
+    plano === 'fvm_elite' ||
+    plano === 'fvm_elite_premium'
+);
         
         return { ...regrasBase, maxKits: 999, contratos: temContrato };
     }
