@@ -9,44 +9,44 @@ const db = getFirestore(app);
 
 let subsiteAtualIdWave = "";
 
-// 🔹 1. LIGAR OS BOTÕES E INICIAR TUTORIAL
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('btn-acessar')) {
-        subsiteAtualIdWave = e.target.getAttribute('data-id');
-        
-        setTimeout(() => {
-            const btnChat = document.getElementById('btn-neo-wave');
-            const btnComandos = document.getElementById('btn-comandos-neo-wave');
-            if (btnChat) btnChat.style.display = 'flex';
-            if (btnComandos) btnComandos.style.display = 'flex';
-
-            // 🔹 DISPARA O TUTORIAL
-            iniciarTutorial();
-        }, 500);
-    }
-});
-
-// 🔹 2. FUNÇÃO DO TUTORIAL (Só aparece 1 vez por navegador)
 
 /* ==========================================
-   2. TUTORIAL INTERATIVO NEO WAVE
+   1 E 2. TUTORIAL INTERATIVO NEO WAVE
    ========================================== */
-
 let etapasTutorialWave = [];
 let etapaAtualWave = 0;
 let elementoDestacadoWave = null;
 
-function chaveTutorialWave() {
-    return `neowave_tutorial_v2_${subsiteAtualIdWave}`;
+function obterPlanoWave() {
+    return window.planoAtualNeoWave || "start";
+}
+
+function obterRecursosWave() {
+   const plano = obterPlanoWave();
+
+    const permissoes = {
+        start: { kits: true, maxKits: 3, relatorios: false, analista: false, contratos: false },
+        pro: { kits: true, relatorios: true, analista: false, contratos: false },
+        elite: { kits: true, relatorios: true, analista: true, contratos: false },
+        elite_premium: { kits: true, relatorios: true, analista: true, contratos: true },
+        fvm_start: { kits: true, maxKits: 3, relatorios: false, analista: false, contratos: false },
+        fvm_pro: { kits: true, relatorios: true, analista: false, contratos: false },
+        fvm_elite: { kits: true, relatorios: true, analista: true, contratos: false },
+        fvm_elite_premium: { kits: true, relatorios: true, analista: true, contratos: true }
+    };
+
+    return permissoes[plano] || permissoes.start;
 }
 
 function localizarElementoWave(seletores) {
     for (const seletor of seletores) {
         const elemento = document.querySelector(seletor);
 
-        if (elemento &&
+        if (
+            elemento &&
             elemento.getClientRects().length > 0 &&
-            getComputedStyle(elemento).visibility !== "hidden") {
+            getComputedStyle(elemento).visibility !== "hidden"
+        ) {
             return elemento;
         }
     }
@@ -57,120 +57,108 @@ function localizarElementoWave(seletores) {
 function iniciarTutorial() {
     if (!subsiteAtualIdWave) return;
 
-    if (localStorage.getItem(chaveTutorialWave()) === "true") {
-        return;
-    }
+    const chave = `neowave_tutorial_v2_${subsiteAtualIdWave}`;
 
-    // O plano precisa ser informado pelo sistema principal.
-    // Sem essa informação, mostramos somente recursos gerais.
-    const plano = window.planoAtualNeoWave || "";
+    if (localStorage.getItem(chave) === "true") return;
 
-    const ehStart = ["start", "fvm_start"].includes(plano);
-
-    const temPro = [
-        "pro", "elite", "elite_premium",
-        "fvm_pro", "fvm_elite", "fvm_elite_premium"
-    ].includes(plano);
-
-    const temElite = [
-        "elite", "elite_premium",
-        "fvm_elite", "fvm_elite_premium"
-    ].includes(plano);
-
-    const temPremium = [
-        "elite_premium", "fvm_elite_premium"
-    ].includes(plano);
+    const plano = obterPlanoWave();
+    const recursos = obterRecursosWave();
 
     etapasTutorialWave = [
         {
             titulo: "💜 Bem-vindo à Neo Flux!",
-            texto: "Eu sou o Neo Wave! Vou te apresentar os principais recursos do seu sistema. Vamos começar?",
+            texto: "Eu sou o Neo Wave! Vou te apresentar seu sistema.",
             seletores: []
         },
         {
             titulo: "📅 Festas e pedidos",
-            texto: "Aqui você começa a organizar seus eventos e pedidos.",
-            seletores: [
-                "#btn-agendar-festa"
-            ]
+            texto: "Aqui você agenda e organiza suas festas.",
+            seletores: ["#btn-agendar-festa"]
         },
         {
-            titulo: "🤖 Seu assistente",
-            texto: "Este sou eu! Clique aqui sempre que precisar de ajuda para usar a Neo Flux.",
-            seletores: [
-                "#btn-neo-wave"
-            ]
+            titulo: "📦 Catálogo",
+            texto: "Aqui você cadastra as peças do seu acervo.",
+            seletores: ["#btn-abrir-catalogo"]
         }
     ];
 
-    if (temPro) {
-        etapasTutorialWave.push({
-            titulo: "🎁 Kits",
-            texto: "Nos planos com acesso a Kits, você pode organizar combinações de peças para suas locações.",
-            seletores: [
-                "#btn-gerenciar-kits",
-                "#btn-kits"
-            ]
-        });
+  
+if (recursos.kits) {
+    etapasTutorialWave.push({
+        titulo: "🎁 Kits",
+        texto: plano === "start" || plano === "fvm_start"
+            ? "Seu plano Start permite cadastrar até 3 kits."
+            : "Aqui você organiza seus kits de locação.",
+        seletores: ["#btn-abrir-kits"]
+    });
+}
 
+    if (recursos.relatorios) {
         etapasTutorialWave.push({
-            titulo: "💰 Orçamento inteligente",
-            texto: "Aqui você pode acessar as ferramentas de orçamento disponíveis no seu plano.",
-            seletores: [
-                "#btn-abrir-orcamento-inteligente"
-            ]
-        });
-    }
-
-    if (temElite) {
-        etapasTutorialWave.push({
-            titulo: "📊 Análise do negócio",
-            texto: "Nos planos com acesso ao Analista, você pode acompanhar informações do seu negócio.",
-            seletores: [
-                "#btn-abrir-analista",
-                "#btn-analista"
-            ]
+            titulo: "📊 Relatórios",
+            texto: "Acompanhe os relatórios da sua empresa.",
+            seletores: ["#btn-relatorios"]
         });
     }
 
-    if (temPremium) {
+if (recursos.relatorios) {
+    etapasTutorialWave.push({
+        titulo: "💰 Orçamento Inteligente",
+        texto: "Aqui você pode preparar orçamentos e agilizar o atendimento aos seus clientes!",
+        seletores: [
+            "#btn-abrir-orcamento-inteligente",
+            "#btn-gerar-orcamento"
+        ]
+    });
+}
+
+    if (recursos.analista) {
+        etapasTutorialWave.push({
+            titulo: "📈 Neo Wave Analista",
+            texto: "Acompanhe indicadores e análises do negócio.",
+            seletores: ["#card-analista"]
+        });
+    }
+
+    if (recursos.contratos) {
         etapasTutorialWave.push({
             titulo: "✍️ Contratos",
-            texto: "Seu plano também inclui o módulo de contratos.",
-            seletores: [
-                "#btn-contratos",
-                "#btn-gerenciar-contratos"
-            ]
+            texto: "Aqui você acessa o módulo de contratos.",
+            seletores: ["#btn-abrir-contratos"]
         });
     }
 
-    if (ehStart) {
+    if (plano.startsWith("fvm_")) {
         etapasTutorialWave.push({
-            titulo: "✨ Seu plano Start",
-            texto: "Você já pode começar a organizar sua empresa! Alguns recursos avançados ficam disponíveis nos planos superiores.",
+            titulo: "🛠️ Plano FVM",
+            texto: "Você está utilizando a versão Faça Você Mesmo da Neo Flux.",
             seletores: []
         });
     }
 
-    etapasTutorialWave.push({
-        titulo: "🤫 Um segredinho...",
-        texto: "Está vendo o botão de terminal >_? Ele guarda comandos especiais! Você também pode voltar aqui e reiniciar este tutorial quando quiser.",
-        seletores: [
-            "#btn-comandos-neo-wave"
-        ]
-    });
-
-    etapasTutorialWave.push({
-        titulo: "🚀 Tudo pronto!",
-        texto: "Agora é com você! Explore sua empresa e, quando precisar, pode chamar o Neo Wave. 💜",
-        seletores: []
-    });
+    etapasTutorialWave.push(
+        {
+            titulo: "🤖 Neo Wave",
+            texto: "Clique aqui sempre que precisar da minha ajuda!",
+            seletores: ["#btn-neo-wave"]
+        },
+        {
+            titulo: "⌨️ Comandos especiais",
+            texto: "O botão >_ abre os comandos especiais e permite reiniciar este tutorial.",
+            seletores: ["#btn-comandos-neo-wave"]
+        },
+        {
+            titulo: "🚀 Tudo pronto!",
+            texto: "Agora você já pode explorar sua empresa. Conte comigo! 💜",
+            seletores: []
+        }
+    );
 
     etapaAtualWave = 0;
 
-    // Fecha o chat para não cobrir o tutorial
-    const chat = document.getElementById("neo-wave-chat");
-    if (chat) chat.style.display = "none";
+    document.getElementById("neo-wave-chat")?.style.setProperty(
+        "display", "none"
+    );
 
     mostrarEtapaTutorialWave();
 }
@@ -179,7 +167,9 @@ function mostrarEtapaTutorialWave() {
     document.getElementById("neo-wave-tour-overlay")?.remove();
 
     if (elementoDestacadoWave) {
-        elementoDestacadoWave.classList.remove("neo-wave-tour-destaque");
+        elementoDestacadoWave.classList.remove(
+            "neo-wave-tour-destaque"
+        );
         elementoDestacadoWave = null;
     }
 
@@ -191,7 +181,7 @@ function mostrarEtapaTutorialWave() {
     if (alvo) {
         alvo.scrollIntoView({
             behavior: "instant",
-            block: "center"
+            block: "nearest"
         });
 
         alvo.classList.add("neo-wave-tour-destaque");
@@ -233,13 +223,13 @@ function mostrarEtapaTutorialWave() {
     const proximo = document.createElement("button");
     proximo.className = "neo-wave-tour-proximo";
 
-    const ultimaEtapa =
+    const ultima =
         etapaAtualWave === etapasTutorialWave.length - 1;
 
-    proximo.textContent = ultimaEtapa ? "Concluir 💜" : "Próximo";
+    proximo.textContent = ultima ? "Concluir 💜" : "Próximo";
 
     proximo.onclick = () => {
-        if (ultimaEtapa) {
+        if (ultima) {
             finalizarTutorialWave();
         } else {
             etapaAtualWave++;
@@ -249,61 +239,85 @@ function mostrarEtapaTutorialWave() {
 
     botoes.append(pular, voltar, proximo);
     caixa.append(progresso, titulo, descricao, botoes);
-    
-overlay.appendChild(caixa);
-document.body.appendChild(overlay);
+    overlay.appendChild(caixa);
+    document.body.appendChild(overlay);
 
-// Posiciona a explicação sem cobrir o botão destacado
-if (alvo) {
-    const rect = alvo.getBoundingClientRect();
-    const larguraCaixa = caixa.offsetWidth;
-    const alturaCaixa = caixa.offsetHeight;
-    const margem = 16;
+    // Posiciona a caixa longe do botão destacado
+    if (alvo) {
+        const rect = alvo.getBoundingClientRect();
+        const largura = caixa.offsetWidth;
+        const altura = caixa.offsetHeight;
+        const margem = 16;
 
-    // Prefere mostrar abaixo do botão
-    let top = rect.bottom + margem;
+        const opcoes = [
+            {
+                x: rect.left,
+                y: rect.bottom + margem
+            },
+            {
+                x: rect.left,
+                y: rect.top - altura - margem
+            },
+            {
+                x: rect.right + margem,
+                y: rect.top
+            },
+            {
+                x: rect.left - largura - margem,
+                y: rect.top
+            }
+        ];
 
-    // Se não couber abaixo, mostra acima
-    if (top + alturaCaixa > window.innerHeight - margem) {
-        top = rect.top - alturaCaixa - margem;
+        const cabe = opcoes.find(p =>
+            p.x >= margem &&
+            p.y >= margem &&
+            p.x + largura <= window.innerWidth - margem &&
+            p.y + altura <= window.innerHeight - margem
+        );
+
+        if (cabe) {
+            caixa.style.position = "fixed";
+            caixa.style.left = `${cabe.x}px`;
+            caixa.style.top = `${cabe.y}px`;
+            caixa.style.transform = "none";
+        }
     }
-
-    // Se também não couber acima, procura o espaço maior
-    if (top < margem) {
-        const espacoAcima = rect.top;
-        const espacoAbaixo = window.innerHeight - rect.bottom;
-
-        top = espacoAbaixo >= espacoAcima
-            ? rect.bottom + margem
-            : margem;
-    }
-
-    const left = Math.max(
-        margem,
-        Math.min(
-            rect.left,
-            window.innerWidth - larguraCaixa - margem
-        )
-    );
-
-    caixa.style.position = "fixed";
-    caixa.style.left = `${left}px`;
-    caixa.style.top = `${top}px`;
-    caixa.style.margin = "0";
 }
-    
+
 function finalizarTutorialWave() {
     document.getElementById("neo-wave-tour-overlay")?.remove();
 
     if (elementoDestacadoWave) {
-        elementoDestacadoWave.classList.remove("neo-wave-tour-destaque");
+        elementoDestacadoWave.classList.remove(
+            "neo-wave-tour-destaque"
+        );
         elementoDestacadoWave = null;
     }
 
     if (subsiteAtualIdWave) {
-        localStorage.setItem(chaveTutorialWave(), "true");
+        localStorage.setItem(
+            `neowave_tutorial_v2_${subsiteAtualIdWave}`,
+            "true"
+        );
     }
 }
+
+document.addEventListener("click", e => {
+    const botao = e.target.closest(".btn-acessar");
+    if (!botao) return;
+
+    subsiteAtualIdWave = botao.getAttribute("data-id");
+
+    setTimeout(() => {
+        document.getElementById("btn-neo-wave")
+            ?.style.setProperty("display", "flex");
+
+        document.getElementById("btn-comandos-neo-wave")
+            ?.style.setProperty("display", "flex");
+
+        iniciarTutorial();
+    }, 700);
+});
 
 // 🔹 3. ABRIR/FECHAR O CHAT
 const btnAbrirChat = document.getElementById('btn-neo-wave');
@@ -330,9 +344,9 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
     setTimeout(() => {
         const typingEl = document.getElementById(idTyping); if (typingEl) typingEl.remove();
         
-        const plano = window.planoAtual || 'start';
-        const ehStart = (plano === 'start' || plano === 'fvm_start');
-        
+       
+const plano = obterPlanoWave();
+const ehStart = (plano === 'start' || plano === 'fvm_start');
         let resposta = "Ainda estou aprendendo, mas posso te ajudar com: Orçamento, Kits, Contratos, Relatórios, Histórico, Analista e Planos. O que você precisa?";
 
         if (msg.includes('quebra') || msg.includes('quebrou')) {
@@ -350,10 +364,15 @@ document.getElementById('btn-neo-wave-enviar')?.addEventListener('click', () => 
             if (ehStart || plano === 'pro' || plano === 'elite' || plano === 'fvm_pro' || plano === 'fvm_elite') resposta = "🔒 O módulo **Contratos** está disponível apenas no plano **Elite Premium**.";
             else resposta = "Para gerar contratos, vá no card **Contratos** (laranja). Você pode subir o PDF e a logo da sua empresa. ✍️";
         }
-        else if (msg.includes('kit')) {
-            if (ehStart) resposta = "🔒 O módulo **Kits** está disponível a partir do plano **Pro**.";
-            else resposta = "No card **Kits**, você pode cadastrar novos modelos com nome, foto e preço! 🎁";
-        }
+        
+else if (msg.includes('kit')) {
+    if (plano === 'start' || plano === 'fvm_start') {
+        resposta = "🎁 Seu plano permite cadastrar até 3 kits! Acesse o card Kits para começar.";
+    } else {
+        resposta = "🎁 No card Kits, você pode cadastrar seus modelos com nome, foto e preço!";
+    }
+}
+
         else if (msg.includes('reuniao') || msg.includes('reunião')) {
             resposta = "Para agendar uma reunião, clique no card de **Reuniões** (ícone de calendário azul). Eu te aviso 30 minutos antes quando estiver chegando a hora! ⏰";
         }
