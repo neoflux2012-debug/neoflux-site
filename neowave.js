@@ -249,10 +249,49 @@ function mostrarEtapaTutorialWave() {
 
     botoes.append(pular, voltar, proximo);
     caixa.append(progresso, titulo, descricao, botoes);
-    overlay.appendChild(caixa);
-    document.body.appendChild(overlay);
-}
+    
+overlay.appendChild(caixa);
+document.body.appendChild(overlay);
 
+// Posiciona a explicação sem cobrir o botão destacado
+if (alvo) {
+    const rect = alvo.getBoundingClientRect();
+    const larguraCaixa = caixa.offsetWidth;
+    const alturaCaixa = caixa.offsetHeight;
+    const margem = 16;
+
+    // Prefere mostrar abaixo do botão
+    let top = rect.bottom + margem;
+
+    // Se não couber abaixo, mostra acima
+    if (top + alturaCaixa > window.innerHeight - margem) {
+        top = rect.top - alturaCaixa - margem;
+    }
+
+    // Se também não couber acima, procura o espaço maior
+    if (top < margem) {
+        const espacoAcima = rect.top;
+        const espacoAbaixo = window.innerHeight - rect.bottom;
+
+        top = espacoAbaixo >= espacoAcima
+            ? rect.bottom + margem
+            : margem;
+    }
+
+    const left = Math.max(
+        margem,
+        Math.min(
+            rect.left,
+            window.innerWidth - larguraCaixa - margem
+        )
+    );
+
+    caixa.style.position = "fixed";
+    caixa.style.left = `${left}px`;
+    caixa.style.top = `${top}px`;
+    caixa.style.margin = "0";
+}
+    
 function finalizarTutorialWave() {
     document.getElementById("neo-wave-tour-overlay")?.remove();
 
