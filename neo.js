@@ -84,6 +84,55 @@ const nomesPlanos = {
     fvm_start: "FVM Start", fvm_pro: "FVM Pro", fvm_elite: "FVM Elite", fvm_elite_premium: "FVM Elite Premium"
 };
 
+/* ==========================================
+   RESUMO DE PAGAMENTO - NEO FLUX
+   ========================================== */
+
+const TAXA_IMPLANTACAO = 100;
+
+function atualizarResumoPagamento(plano) {
+
+    // Valores mensais dos planos
+    const precos = {
+        start: 49.99,
+        pro: 69.99,
+        elite: 99.99
+
+        // Faltam confirmar Elite Premium
+        // e os quatro planos FVM.
+    };
+
+    const preco = precos[plano];
+
+    const nomeEl = document.getElementById("neo-nome-plano");
+    const valorEl = document.getElementById("neo-valor-plano");
+    const totalEl = document.getElementById("neo-valor-total");
+
+    if (!nomeEl || !valorEl || !totalEl) return;
+
+    nomeEl.textContent = nomesPlanos[plano] || plano;
+
+    if (preco === undefined) {
+        valorEl.textContent = "A confirmar";
+        totalEl.textContent = "A confirmar";
+        console.warn("Preço não configurado:", plano);
+        return;
+    }
+
+    const formatar = valor =>
+        valor.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
+
+    valorEl.textContent = formatar(preco);
+
+    totalEl.textContent = formatar(
+        preco + TAXA_IMPLANTACAO
+    );
+}
+
+
 // ==========================================
 // 4. CONTROLE DE TELAS E LOADING
 // ==========================================
@@ -94,10 +143,19 @@ function mostrarTela(id) {
     const tela = document.getElementById(id);
     if (tela) tela.classList.add('ativa');
 
-    if (id === 'tela-pagamento') {
-        const imgQr = document.getElementById('img-qrcode');
-        if (imgQr) imgQr.src = `./qrcode.png?t=${new Date().getTime()}`;
+   
+if (id === 'tela-pagamento') {
+
+    const imgQr = document.getElementById('img-qrcode');
+
+    if (imgQr) {
+        imgQr.src = `./qrcode.png?t=${new Date().getTime()}`;
     }
+
+    // Atualiza mensalidade + implantação
+    atualizarResumoPagamento(planoAtual);
+}
+
     window.scrollTo(0, 0);
 }
 
