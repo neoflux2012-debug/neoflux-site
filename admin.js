@@ -958,6 +958,11 @@ function iniciarNavegacaoAdmin() {
     };
 
     const secoes = [];
+    const dashboard = conteudo.querySelector(".neo-dashboard-inicio");
+if (dashboard) {
+    dashboard.dataset.adminSecao = "inicio";
+    secoes.push(dashboard);
+}
 
     for (const [aba, seletores] of Object.entries(grupos)) {
         for (const seletor of seletores) {
@@ -995,3 +1000,56 @@ function iniciarNavegacaoAdmin() {
 }
 
 iniciarNavegacaoAdmin();
+// NEO FLUX - INDICADORES DO DASHBOARD
+
+function atualizarDashboardNeo() {
+    const clientes = clientesAdminGlobais;
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const ativos = clientes.filter(c =>
+        c.statusPagamento === "ativo" &&
+        c.vencimento &&
+        new Date(c.vencimento + "T00:00:00") >= hoje
+    );
+
+    const vencemHoje = clientes.filter(c =>
+        c.statusPagamento !== "suspenso" &&
+        c.vencimento &&
+        diasAteVencimento(c.vencimento) === 0
+    );
+
+    const atrasados = clientes.filter(c =>
+        c.statusPagamento !== "suspenso" &&
+        c.vencimento &&
+        diasAteVencimento(c.vencimento) < 0
+    );
+
+    const atualizar = (id, valor) => {
+        const elemento = document.getElementById(id);
+        if (elemento) elemento.textContent = valor;
+    };
+
+    atualizar("neo-total-clientes", clientes.length);
+    atualizar("neo-clientes-ativos", ativos.length);
+    atualizar("neo-vencem-hoje", vencemHoje.length);
+    atualizar("neo-atrasados", atrasados.length);
+}
+
+// Atualiza o resumo sempre que o monitor for atualizado
+const atualizarMonitorOriginal = atualizarMonitorAdmin;
+
+atualizarMonitorAdmin = function() {
+    atualizarMonitorOriginal();
+    atualizarDashboardNeo();
+};
+
+// Atalhos da tela inicial
+document.querySelectorAll("[data-admin-atalho]").forEach(botao => {
+    botao.addEventListener("click", () => {
+        document.querySelector(
+            `[data-admin-aba="${botao.dataset.adminAtalho}"]`
+        )?.click();
+    });
+});
