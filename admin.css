@@ -831,3 +831,100 @@ main {
         text-align: center;
     }
 }
+/* NEO FLUX - VISÃO GERAL */
+
+.neo-dashboard-inicio {
+    display: none;
+}
+
+.neo-dashboard-inicio.neo-secao-ativa {
+    display: block;
+}
+
+.neo-boas-vindas {
+    padding: 28px;
+    background: linear-gradient(120deg, #25143b, #100d1a);
+    border: 1px solid #503271;
+    border-radius: 18px;
+    margin-bottom: 22px;
+}
+
+.neo-boas-vindas span {
+    color: #bd94f5;
+    font-size: 11px;
+    letter-spacing: 2px;
+}
+
+.neo-boas-vindas h2 {
+    color: white;
+    background: none;
+    -webkit-text-fill-color: white;
+    text-align: left;
+    margin: 12px 0;
+}
+
+.neo-boas-vindas p,
+.neo-dashboard-resumo p {
+    text-align: left;
+}
+
+.neo-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.neo-dashboard-card {
+    padding: 24px;
+    background: #171121;
+    border: 1px solid #39274e;
+    border-radius: 15px;
+}
+
+.neo-dashboard-card span {
+    display: block;
+    color: #b6a7c9;
+    font-size: 13px;
+}
+
+.neo-dashboard-card strong {
+    display: block;
+    color: white;
+    font-size: 34px;
+    margin-top: 12px;
+}
+
+.neo-dashboard-resumo {
+    margin-top: 22px;
+    padding: 24px;
+    background: #171121;
+    border: 1px solid #39274e;
+    border-radius: 15px;
+}
+
+.neo-dashboard-atalhos {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.neo-dashboard-atalhos button {
+    padding: 15px;
+    border: 1px solid #66408e;
+    border-radius: 10px;
+    background: #2b1a40;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.neo-dashboard-atalhos button:hover {
+    background: #472669;
+}
+
+@media (max-width: 650px) {
+    .neo-dashboard-grid,
+    .neo-dashboard-atalhos {
+        grid-template-columns: 1fr;
+    }
+}
