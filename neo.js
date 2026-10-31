@@ -172,6 +172,8 @@ async function carregarPrecosPublicosNeo() {
         }
 
         const planos = snapshot.data().planos || {};
+      console.log("🔍 PLANOS SALVOS NO FIREBASE:", planos);
+console.log("🔍 DADOS DO START:", planos.start);
 
         for (const id of Object.keys(precosPadraoNeo)) {
             if (planos[id]) {
