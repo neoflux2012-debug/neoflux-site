@@ -1237,3 +1237,40 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
     grid-template-columns: 1fr;
   }
 }
+/* NEO FLUX - PREÇOS E PROMOÇÕES PÚBLICAS */
+
+.card-plano .preco,
+.card-fvm-sub .preco {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-plano .preco del,
+.card-fvm-sub .preco del {
+    font-size: 14px;
+    font-weight: 400;
+    color: #999;
+}
+
+.card-plano .preco strong,
+.card-fvm-sub .preco strong {
+    font-size: 26px;
+    font-weight: 700;
+    color: #c18aff;
+}
+
+.card-plano .preco small,
+.card-fvm-sub .preco small {
+    font-size: 11px;
+    font-weight: 400;
+    color: #c8a6f2;
+}
+
+.neo-info-implantacao {
+    font-size: 12px;
+    color: #aaa;
+    margin: 8px 0 15px;
+    text-align: center;
+}
