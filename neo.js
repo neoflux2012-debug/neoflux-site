@@ -15,6 +15,186 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ==========================================
+   NEO FLUX - PREÇOS PÚBLICOS DO FIREBASE
+========================================== */
+
+const precosPublicosNeo = {};
+
+const precosPadraoNeo = {
+    start: 49.99,
+    pro: 79.99,
+    elite: 99.99,
+    elite_premium: 149.99,
+    fvm_start: 49.99,
+    fvm_pro: 79.99,
+    fvm_elite: 99.99,
+    fvm_elite_premium: 149.99
+};
+
+function moedaNeo(valor) {
+    return Number(valor).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    });
+}
+
+function dataLocalNeo() {
+    const agora = new Date();
+
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, "0");
+    const dia = String(agora.getDate()).padStart(2, "0");
+
+    return `${ano}-${mes}-${dia}`;
+}
+
+function ofertaNeo(dados, padrao) {
+    const normal = Number(dados?.normal ?? padrao);
+
+    const promocional = dados?.promocional == null
+        ? null
+        : Number(dados.promocional);
+
+    const hoje = dataLocalNeo();
+
+    const promocaoAtiva =
+        dados?.ativo === true &&
+        Number.isFinite(promocional) &&
+        promocional >= 0 &&
+        promocional < normal &&
+        Boolean(dados.inicio) &&
+        Boolean(dados.fim) &&
+        hoje >= dados.inicio &&
+        hoje <= dados.fim;
+
+    return {
+        normal,
+        atual: promocaoAtiva ? promocional : normal,
+        promocaoAtiva,
+        fim: dados?.fim || ""
+    };
+}
+
+function desenharPrecoNeo(elemento, oferta) {
+    if (!elemento) return;
+
+    elemento.replaceChildren();
+
+    if (oferta.promocaoAtiva) {
+        const antigo = document.createElement("del");
+        antigo.textContent = moedaNeo(oferta.normal);
+
+        const atual = document.createElement("strong");
+        atual.textContent = moedaNeo(oferta.atual);
+
+        const validade = document.createElement("small");
+        validade.textContent =
+            "Oferta até " +
+            oferta.fim.split("-").reverse().join("/");
+
+        elemento.append(antigo, atual, validade);
+    } else {
+        elemento.textContent = moedaNeo(oferta.atual);
+    }
+}
+
+function atualizarCardsPublicosNeo() {
+    for (const [id, padrao] of Object.entries(precosPadraoNeo)) {
+        const dados = precosPublicosNeo[id] || {};
+        const mensalidade = ofertaNeo(dados, padrao);
+
+        const seletor = id.startsWith("fvm_")
+            ? `.card-fvm-sub [data-plano="${id}"]`
+            : `.card-plano[data-plano="${id}"]`;
+
+        const botao = document.querySelector(seletor);
+        const card = id.startsWith("fvm_")
+            ? botao?.closest(".card-fvm-sub")
+            : botao;
+
+        if (!card) continue;
+
+        const preco = card.querySelector(".preco");
+        desenharPrecoNeo(preco, mensalidade);
+
+        // Informação adicional de implantação
+        let info = card.querySelector(".neo-info-implantacao");
+
+        if (!info) {
+            info = document.createElement("p");
+            info.className = "neo-info-implantacao";
+            preco?.after(info);
+        }
+
+        const implantacao = ofertaNeo(
+            dados.implantacao,
+            99.99
+        );
+
+        info.textContent =
+            "Implantação única: " + moedaNeo(implantacao.atual);
+
+        if (implantacao.promocaoAtiva) {
+            info.textContent += " (oferta especial)";
+        }
+    }
+
+    // Atualiza o preço inicial exibido no card FVM
+    const fvm = document.querySelector("#card-fvm .preco");
+
+    if (fvm) {
+        const valores = Object.keys(precosPadraoNeo)
+            .filter(id => id.startsWith("fvm_"))
+            .map(id => ofertaNeo(
+                precosPublicosNeo[id],
+                precosPadraoNeo[id]
+            ).atual);
+
+        fvm.textContent = "A partir de " +
+            moedaNeo(Math.min(...valores));
+    }
+}
+
+async function carregarPrecosPublicosNeo() {
+    try {
+        const referencia = doc(
+            db,
+            "config_admin",
+            "precos_promocoes"
+        );
+
+        const snapshot = await getDoc(referencia);
+
+        if (!snapshot.exists()) {
+            console.warn("Configuração de preços ainda não publicada.");
+            return;
+        }
+
+        const planos = snapshot.data().planos || {};
+
+        for (const id of Object.keys(precosPadraoNeo)) {
+            if (planos[id]) {
+                precosPublicosNeo[id] = planos[id];
+            }
+        }
+
+        atualizarCardsPublicosNeo();
+
+        console.log("💜 Preços públicos carregados do Firebase.");
+
+    } catch (erro) {
+        console.error(
+            "Não foi possível carregar os preços públicos:",
+            erro
+        );
+    }
+}
+
+atualizarCardsPublicosNeo();
+carregarPrecosPublicosNeo();
+
+
 console.log("Firebase conectado com sucesso! O erro do projectId sumiu!");
 
 setPersistence(auth, browserLocalPersistence).catch((error) => {
