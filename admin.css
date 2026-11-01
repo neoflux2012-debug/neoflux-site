@@ -1125,3 +1125,12 @@ main {
         padding: 14px;
     }
 }7
+/* ABA TESTE GRÁTIS */
+.neo-teste-admin { margin-bottom: 25px; }
+.neo-teste-descricao { text-align: left; margin: 12px 0 20px; }
+.neo-teste-resumo { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:22px; }
+.neo-teste-resumo article { background:#0a0a0a; border:1px solid #333; border-radius:12px; padding:18px; }
+.neo-teste-resumo small { display:block; color:#aaa; margin-bottom:8px; }
+.neo-teste-resumo strong { font-size:1.9rem; color:#b78aff; }
+#neo-teste-filtro { max-width:250px; }
+@media(max-width:900px){ #neo-teste-filtro { max-width:none; } }
