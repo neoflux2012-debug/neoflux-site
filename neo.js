@@ -1552,6 +1552,33 @@ document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () =
 // 🔹 MÓDULO DE REUNIÕES
 // ==========================================
 
+/* ==========================================
+   CLIENTES E CAMPANHAS - ABRIR E FECHAR
+========================================== */
+
+const modalClientesCampanhas =
+    document.getElementById("modal-clientes-campanhas");
+
+document.getElementById("btn-abrir-clientes-campanhas")
+    ?.addEventListener("click", () => {
+
+        if (!modalClientesCampanhas) return;
+
+        modalClientesCampanhas.style.display = "flex";
+
+        if (typeof lucide !== "undefined") {
+            lucide.createIcons();
+        }
+    });
+
+document.getElementById("btn-fechar-clientes-campanhas")
+    ?.addEventListener("click", () => {
+
+        if (modalClientesCampanhas) {
+            modalClientesCampanhas.style.display = "none";
+        }
+    });
+
 const btnAbrirReuniao = document.getElementById('btn-abrir-reuniao');
 const btnFecharReuniao = document.getElementById('btn-fechar-modal-reuniao');
 const modalReuniao = document.getElementById('modal-reuniao');
