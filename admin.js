@@ -130,8 +130,9 @@ async function carregarClientes() {
             upgrades.innerHTML = '<tr><td colspan="3">Nenhum pedido de upgrade.</td></tr>';
         }
 
-        atualizarMonitorAdmin();
-        await carregarEstadoAutopilot();
+       atualizarMonitorAdmin();
+renderizarTestesGratisAdmin();
+await carregarEstadoAutopilot();
 
     } catch (e) {
         console.error("Erro ao carregar clientes:", e);
@@ -1161,7 +1162,8 @@ function iniciarNavegacaoAdmin() {
     const grupos = {
         inicio: [".admin-header"],
         planos: ["#admin-precos-painel"],
-        clientes: [".admin-caixa-clientes"],
+        clientes: [".admin-caixa-clientes:not(#neo-teste-admin)"],
+        teste: ["#neo-teste-admin"],
         wave: [".admin-card-monitor", ".admin-card-autopilot"],
         marketplace: [".admin-marketplace:not(#admin-precos-painel)"]
     };
@@ -1351,3 +1353,174 @@ function iniciarEditorInteligente() {
 }
 
 iniciarEditorInteligente();
+
+ // ==========================================
+ // TESTE GRÁTIS ELITE - MONITOR ADMIN
+ // ==========================================
+
+function neoTesteData(valor) {
+    if (typeof valor === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+        const d = new Date(valor + "T00:00:00");
+        return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    if (valor?.toDate) return valor.toDate();
+    return null;
+}
+
+function neoTesteDias(data) {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const fim = new Date(data);
+    fim.setHours(0, 0, 0, 0);
+
+    return Math.round((fim - hoje) / 86400000);
+}
+
+function neoTesteFormatar(data) {
+    return data ? data.toLocaleDateString("pt-BR") : "—";
+}
+
+function neoTesteSituacao(c) {
+    const t = c.testeGratis;
+
+    if (!t || t.utilizado !== true || t.plano !== "elite") {
+        return null;
+    }
+
+    const inicio = neoTesteData(t.inicio);
+    const fim = neoTesteData(t.fim);
+
+    if (!inicio || !fim || fim <= inicio) return null;
+
+    const dias = neoTesteDias(fim);
+    const convertido = t.convertido === true;
+
+    return {
+        inicio,
+        fim,
+        dias,
+        status: convertido
+            ? "convertido"
+            : dias <= 0
+                ? "encerrado"
+                : dias <= 3
+                    ? "proximo"
+                    : "ativo"
+    };
+}
+
+function renderizarTestesGratisAdmin() {
+    const tbody = document.getElementById("neo-teste-lista");
+    if (!tbody) return;
+
+    const busca = (
+        document.getElementById("neo-teste-busca")?.value || ""
+    ).toLowerCase();
+
+    const filtro =
+        document.getElementById("neo-teste-filtro")?.value || "todos";
+
+    const registros = clientesAdminGlobais
+        .map(c => ({
+            c,
+            teste: neoTesteSituacao(c)
+        }))
+        .filter(x => x.teste);
+
+    const contar = (id, quantidade) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = quantidade;
+    };
+
+    contar(
+        "neo-teste-ativos",
+        registros.filter(x =>
+            ["ativo", "proximo"].includes(x.teste.status)
+        ).length
+    );
+
+    contar(
+        "neo-teste-proximos",
+        registros.filter(x => x.teste.status === "proximo").length
+    );
+
+    contar(
+        "neo-teste-encerrados",
+        registros.filter(x => x.teste.status === "encerrado").length
+    );
+
+    contar(
+        "neo-teste-convertidos",
+        registros.filter(x => x.teste.status === "convertido").length
+    );
+
+    const visiveis = registros
+        .filter(({ c, teste }) =>
+            (filtro === "todos" || teste.status === filtro) &&
+            `${c.nome || ""} ${c.email || ""}`
+                .toLowerCase()
+                .includes(busca)
+        )
+        .sort((a, b) => a.teste.fim - b.teste.fim);
+
+    tbody.replaceChildren();
+
+    for (const { c, teste } of visiveis) {
+        const tr = document.createElement("tr");
+
+        const statusNome = {
+            ativo: "Em teste",
+            proximo: "Terminando",
+            encerrado: "Encerrado",
+            convertido: "Convertido"
+        }[teste.status];
+
+        const valores = [
+            `${c.nome || "Sem nome"} — ${c.email || ""}`,
+            "ELITE",
+            neoTesteFormatar(teste.inicio),
+            neoTesteFormatar(teste.fim),
+            teste.dias > 0
+                ? `${teste.dias} dia(s)`
+                : "0 dias",
+            statusNome
+        ];
+
+        for (const valor of valores) {
+            const td = document.createElement("td");
+            td.textContent = valor;
+            tr.append(td);
+        }
+
+        tbody.append(tr);
+    }
+
+    if (!visiveis.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+
+        td.colSpan = 6;
+
+        td.textContent = registros.length
+            ? "Nenhum teste corresponde aos filtros."
+            : "Nenhum teste registrado ainda. A ativação será integrada no painel do cliente.";
+
+        tr.append(td);
+        tbody.append(tr);
+    }
+
+    const aviso = document.getElementById("neo-teste-aviso");
+
+    if (aviso) {
+        aviso.textContent =
+            "Monitor somente leitura. O bloqueio automático e as ações do Autopilot serão integrados na etapa do cliente e das regras do Firebase.";
+    }
+}
+
+document.getElementById("neo-teste-busca")
+    ?.addEventListener("input", renderizarTestesGratisAdmin);
+
+document.getElementById("neo-teste-filtro")
+    ?.addEventListener("change", renderizarTestesGratisAdmin);
