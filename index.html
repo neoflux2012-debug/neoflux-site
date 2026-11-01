@@ -655,6 +655,79 @@
                 </div>
             </div>
         </section>
+        
+<!-- MODAL CLIENTES E CAMPANHAS -->
+<div id="modal-clientes-campanhas"
+     style="display:none; position:fixed; inset:0;
+     background:rgba(0,0,0,0.9); z-index:9999;
+     justify-content:center; align-items:center;
+     padding:20px;">
+
+    <div style="background:#121212; border:1px solid #8a2be2;
+         border-radius:12px; padding:25px; width:100%;
+         max-width:850px; max-height:90vh; overflow-y:auto;">
+
+        <div style="display:flex; justify-content:space-between;
+             align-items:center; gap:12px; margin-bottom:20px;">
+
+            <h2 style="color:white; margin:0;">
+                <i data-lucide="users-round"
+                   style="color:#b57bff; width:24px;"></i>
+                Clientes e Campanhas
+            </h2>
+
+            <button id="btn-fechar-clientes-campanhas"
+                    type="button"
+                    style="background:none; border:none;
+                    color:white; cursor:pointer;">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div style="display:grid;
+             grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+             gap:15px;">
+
+            <div style="background:#1c1c1c; padding:20px;
+                 border-radius:10px; border:1px solid #333;">
+                <i data-lucide="contact"
+                   style="color:#00d2ff;"></i>
+                <h3>Meus Clientes</h3>
+                <p>Cadastre e organize seus clientes.</p>
+                <button type="button" class="botao-principal"
+                        disabled>
+                    Em breve
+                </button>
+            </div>
+
+            <div style="background:#1c1c1c; padding:20px;
+                 border-radius:10px; border:1px solid #333;">
+                <i data-lucide="cake"
+                   style="color:#f39c12;"></i>
+                <h3>Aniversariantes</h3>
+                <p>Acompanhe datas especiais.</p>
+                <button type="button" class="botao-principal"
+                        disabled>
+                    Em breve
+                </button>
+            </div>
+
+            <div style="background:#1c1c1c; padding:20px;
+                 border-radius:10px; border:1px solid #333;">
+                <i data-lucide="megaphone"
+                   style="color:#b57bff;"></i>
+                <h3>Campanhas</h3>
+                <p>Crie ações para conquistar novas vendas.</p>
+                <button type="button" class="botao-principal"
+                        disabled>
+                    Em breve
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
                 <!-- MODAL AGENDAR REUNIÃO -->
         <div id="modal-reuniao" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px;">
