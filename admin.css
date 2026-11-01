@@ -1134,3 +1134,82 @@ main {
 .neo-teste-resumo strong { font-size:1.9rem; color:#b78aff; }
 #neo-teste-filtro { max-width:250px; }
 @media(max-width:900px){ #neo-teste-filtro { max-width:none; } }
+
+/* =====================================
+   NEO FLUX - TESTE GRÁTIS ADMIN
+   ===================================== */
+
+.neo-teste-cabecalho {
+    margin-bottom: 25px;
+}
+
+.neo-teste-cabecalho h2 {
+    text-align: left;
+    margin-bottom: 8px;
+}
+
+.neo-teste-cabecalho p {
+    text-align: left;
+}
+
+.neo-teste-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.neo-teste-card {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.neo-teste-card span {
+    color: #aaa;
+    font-size: 0.85rem;
+}
+
+.neo-teste-card strong {
+    color: #fff;
+    font-size: 2rem;
+}
+
+.neo-teste-card:nth-child(1) strong {
+    color: #00c853;
+}
+
+.neo-teste-card:nth-child(2) strong {
+    color: #ff9800;
+}
+
+.neo-teste-card:nth-child(3) strong {
+    color: #e74c3c;
+}
+
+.neo-teste-card:nth-child(4) strong {
+    color: #b066ff;
+}
+
+.neo-teste-aviso {
+    margin-top: 20px;
+    color: #888;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+@media (max-width: 900px) {
+    .neo-teste-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .neo-teste-cards {
+        grid-template-columns: 1fr;
+    }
+}
