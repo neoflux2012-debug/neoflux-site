@@ -2728,3 +2728,15 @@ neoEl('neo-abrir-camera')?.addEventListener('click',async()=>{
 neoEl('neo-parar-camera')?.addEventListener('click',neoPararLeitor);
 neoEl('neo-ajuda-geral')?.addEventListener('click',()=>alert('Ajuda Neo: use Festas para reservas, Catálogo para cadastrar peças e controlar estoque, Kits para conjuntos, e os demais cards para as funções do seu plano. No Catálogo, a baixa manual está disponível em todos os planos; o leitor QR está disponível no Pro ou superior.'));
 neoEl('neo-ajuda-catalogo')?.addEventListener('click',()=>alert('Ajuda Neo — Catálogo: cadastre nome, categoria e quantidade antes de movimentar. Selecione a peça, escolha Saída ou Devolução, informe a quantidade e confirme. No Pro ou superior, gere um QR por modelo, escaneie com a câmera e confirme no mesmo card. Este controle avulso não substitui a devolução vinculada às festas.'));
+
+document.getElementById("btn-abrir-fvm")?.addEventListener("click", () => {
+    const modal = document.getElementById("modal-fvm");
+
+    if (!modal) {
+        console.error("Modal FVM não encontrado!");
+        return;
+    }
+
+    modal.style.display = "flex";
+    console.log(" Modal FVM aberto!");
+});
