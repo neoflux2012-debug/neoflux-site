@@ -1058,64 +1058,6 @@ function calcularFrete() {
 ['frete-km', 'frete-preco', 'frete-consumo', 'frete-ida-volta'].forEach(id => { document.getElementById(id)?.addEventListener('input', calcularFrete); });
 document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
 
-/* ==========================================
-   NEO FLUX - CADASTRO AUTOMÁTICO DE CLIENTES
-========================================== */
-
-async function cadastrarClienteDaFestaNeo(dadosFesta) {
-    if (!subsiteAtualId || !auth.currentUser) {
-        throw new Error("Subsite ou usuário não identificado.");
-    }
-
-    const nome = String(dadosFesta.nome || "").trim();
-    const telefone = String(dadosFesta.telefone || "").trim();
-    const cpf = String(dadosFesta.cpf || "").trim();
-
-    if (!nome || !telefone) return;
-
-    // Procura clientes somente desta empresa.
-    const consulta = query(
-        collection(db, "clientes_campanhas"),
-        where("idSubsite", "==", subsiteAtualId)
-    );
-
-    const resultado = await getDocs(consulta);
-
-    const somenteNumeros = valor =>
-        String(valor || "").replace(/\D/g, "");
-
-    const clienteExistente = resultado.docs.find(item => {
-        const cliente = item.data();
-
-        if (cpf && cliente.cpf &&
-            somenteNumeros(cliente.cpf) === somenteNumeros(cpf)) {
-            return true;
-        }
-
-        return somenteNumeros(cliente.telefone) ===
-            somenteNumeros(telefone);
-    });
-
-    if (clienteExistente) {
-        await updateDoc(clienteExistente.ref, {
-            nome,
-            telefone,
-            cpf,
-            atualizadoEm: new Date()
-        });
-    } else {
-        await addDoc(collection(db, "clientes_campanhas"), {
-            idSubsite: subsiteAtualId,
-            nome,
-            telefone,
-            cpf,
-            aniversario: "",
-            aceitaCampanhas: false,
-            criadoEm: new Date()
-        });
-    }
-}
-
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
     e.preventDefault(); 
     carregar(true);
@@ -1153,25 +1095,11 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     };
 
     try {
-        
-if (idEdicao) {
-    await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
-} else {
-    await addDoc(collection(db, "festas"), dadosFesta);
-}
-
-// O cadastro de clientes não deve impedir o agendamento.
-try {
-    await cadastrarClienteDaFestaNeo(dadosFesta);
-} catch (erroCliente) {
-    console.error("Erro ao cadastrar cliente:", erroCliente);
-    alert(
-        "A festa foi salva, mas o cadastro do cliente não foi concluído."
-    );
-}
-
-alert(idEdicao ? "Festa atualizada!" : "Festa agendada!");
-
+        if (idEdicao) await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
+        else await addDoc(collection(db, "festas"), dadosFesta);
+        try { await ccCadastrarDaFesta(dadosFesta); }
+        catch (erroCliente) { console.error("Cadastro automático do cliente falhou:", erroCliente); alert("A festa foi salva, mas o cadastro automático do cliente falhou. Verifique as regras do Firestore."); }
+        alert(idEdicao ? "Festa atualizada!" : "Festa agendada!");
         document.getElementById('form-agendar-festa').reset(); 
         document.getElementById('festa-id-edicao').value = "";
         document.getElementById('titulo-modal-festa').textContent = "Agendar Nova Festa"; 
@@ -1628,31 +1556,149 @@ document.getElementById('btn-fechar-relatorios')?.addEventListener('click', () =
 // ==========================================
 
 /* ==========================================
-   CLIENTES E CAMPANHAS - ABRIR E FECHAR
+   CLIENTES E CAMPANHAS - NEO FLUX
 ========================================== */
-
-const modalClientesCampanhas =
-    document.getElementById("modal-clientes-campanhas");
-
-document.getElementById("btn-abrir-clientes-campanhas")
-    ?.addEventListener("click", () => {
-
-        if (!modalClientesCampanhas) return;
-
-        modalClientesCampanhas.style.display = "flex";
-
-        if (typeof lucide !== "undefined") {
-            lucide.createIcons();
-        }
-    });
-
-document.getElementById("btn-fechar-clientes-campanhas")
-    ?.addEventListener("click", () => {
-
-        if (modalClientesCampanhas) {
-            modalClientesCampanhas.style.display = "none";
-        }
-    });
+const ccEl = id => document.getElementById(id);
+let ccClientes = [];
+let ccHistorico = [];
+let ccFestas = [];
+let ccDestinatarios = [];
+let ccCampanhaAtual = "";
+const ccNumeros = s => String(s || "").replace(/\D/g, "");
+const ccStatus = s => { if (ccEl("cc-status")) ccEl("cc-status").textContent = s; };
+const ccConsulta = nome => query(collection(db, nome), where("idSubsite", "==", subsiteAtualId));
+const ccData = d => d?.toDate?.() || (d instanceof Date ? d : null);
+const ccDataCurta = d => { const v=ccData(d); return v ? v.toLocaleDateString("pt-BR") : "—"; };
+const ccTelefone = s => { let n=ccNumeros(s); if(n.length===11 || n.length===10) n="55"+n; return n.length>=12 && n.length<=13 ? n : ""; };
+const ccTexto = (tag, value) => {const el=document.createElement(tag);el.textContent=String(value??"");return el;};
+const ccBotao = (rotulo, fn) => {const b=document.createElement("button");b.type="button";b.textContent=rotulo;b.addEventListener("click",fn);return b;};
+const ccAviso = (container, mensagem) => container.appendChild(ccTexto("p",mensagem));
+function ccMudarAba(aba) {
+  for(const nome of ["clientes","aniversarios","campanhas","historico"]) {
+    ccEl("cc-aba-"+nome).hidden = nome !== aba;
+  }
+  document.querySelectorAll(".cc-aba").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.aba===aba)));
+  ccRenderizar();
+}
+async function ccCarregar() {
+  if (!subsiteAtualId) return;
+  const id = subsiteAtualId;
+  ccStatus("Carregando dados...");
+  try {
+    const [clientes, historico, festas] = await Promise.all([
+      getDocs(ccConsulta("clientes_campanhas")),
+      getDocs(ccConsulta("campanhas_historico")),
+      getDocs(ccConsulta("festas"))
+    ]);
+    if(id!==subsiteAtualId) return;
+    ccClientes=clientes.docs.map(d=>({id:d.id,...d.data()}));
+    ccHistorico=historico.docs.map(d=>({id:d.id,...d.data()}));
+    ccFestas=festas.docs.map(d=>({id:d.id,...d.data()}));
+    ccStatus(`${ccClientes.length} cliente(s) cadastrado(s).`);
+    ccRenderizar();
+  } catch(e) { console.error(e);ccStatus("Não foi possível carregar: "+e.message); }
+}
+function ccLinha(container, titulo, detalhe, botoes=[]) {
+  const linha=document.createElement("div");linha.className="cc-item";
+  const info=document.createElement("div");info.append(ccTexto("strong",titulo),ccTexto("div",detalhe));
+  const acoes=document.createElement("div");acoes.className="cc-acoes";botoes.forEach(b=>acoes.append(b));
+  linha.append(info,acoes);container.append(linha);
+}
+function ccEditar(c) {
+  ccEl("cc-id").value=c.id;
+  ccEl("cc-nome").value=c.nome||"";
+  ccEl("cc-telefone").value=c.telefone||"";
+  ccEl("cc-cpf").value=c.cpf||"";
+  ccEl("cc-aniversario").value=c.aniversario||"";
+  ccEl("cc-consentimento").checked=c.aceitaCampanhas===true;
+  ccMudarAba("clientes");ccEl("cc-nome").focus();
+}
+function ccLimpar() {ccEl("cc-form").reset();ccEl("cc-id").value="";}
+function ccRenderizar() {
+  const lista=ccEl("cc-lista");lista.replaceChildren();
+  const busca=(ccEl("cc-busca").value||"").toLowerCase();
+  const filtrados=ccClientes.filter(c=>`${c.nome||""} ${c.telefone||""}`.toLowerCase().includes(busca)).sort((a,b)=>(a.nome||"").localeCompare(b.nome||""));
+  if(!filtrados.length) ccAviso(lista,"Nenhum cliente encontrado.");
+  filtrados.forEach(c=>ccLinha(lista,c.nome,`${c.telefone} • Aniversário: ${c.aniversario ? c.aniversario.split("-").reverse().join("/") : "não informado"} • Marketing: ${c.aceitaCampanhas ? "autorizado" : "não autorizado"}`,[
+    ccBotao("Editar",()=>ccEditar(c)),
+    ccBotao("Excluir",async()=>{if(!confirm(`Excluir ${c.nome}?`))return;try{await deleteDoc(doc(db,"clientes_campanhas",c.id));await ccCarregar();}catch(e){alert(e.message);}})
+  ]));
+  const aniversarios=ccEl("cc-aniversariantes");aniversarios.replaceChildren();
+  const mes=String(new Date().getMonth()+1).padStart(2,"0");
+  const aniversariantes=ccClientes.filter(c=>/^\d{4}-\d{2}-\d{2}$/.test(c.aniversario||"") && c.aniversario.slice(5,7)===mes).sort((a,b)=>a.aniversario.slice(8).localeCompare(b.aniversario.slice(8)));
+  if(!aniversariantes.length) ccAviso(aniversarios,"Nenhum aniversário cadastrado neste mês.");
+  aniversariantes.forEach(c=>ccLinha(aniversarios,c.nome,`${c.aniversario.slice(8,10)}/${mes} • ${c.telefone}`,c.aceitaCampanhas?[ccBotao("Preparar WhatsApp",()=>ccAbrirWhatsapp(c,"Oi, {nome}! 🎉 Feliz aniversário! Que seu dia seja especial! 💜","aniversario"))]:[]));
+  const historico=ccEl("cc-historico");historico.replaceChildren();
+  if(!ccHistorico.length) ccAviso(historico,"Nenhum contato registrado.");
+  [...ccHistorico].sort((a,b)=>(ccData(b.criadoEm)?.getTime()||0)-(ccData(a.criadoEm)?.getTime()||0)).forEach(h=>ccLinha(historico,h.nomeCliente||"Cliente",`${h.campanha||"Campanha"} • ${ccDataCurta(h.criadoEm)} • WhatsApp preparado (envio não confirmado)`));
+}
+async function ccSalvarCliente(e) {
+  e.preventDefault();
+  const id=ccEl("cc-id").value;
+  const nome=ccEl("cc-nome").value.trim(), telefone=ccEl("cc-telefone").value.trim();
+  const cpf=ccEl("cc-cpf").value.trim(), aniversario=ccEl("cc-aniversario").value;
+  if(!nome || !ccTelefone(telefone))return alert("Informe nome e telefone válido com DDD.");
+  const duplicado=ccClientes.find(c=>c.id!==id && ((cpf && ccNumeros(c.cpf)===ccNumeros(cpf)) || ccNumeros(c.telefone)===ccNumeros(telefone)));
+  if(duplicado)return alert("Este CPF ou telefone já está cadastrado. Edite o cliente existente.");
+  const dados={nome,telefone,cpf,aniversario,aceitaCampanhas:ccEl("cc-consentimento").checked};
+  try {
+    if(id)await updateDoc(doc(db,"clientes_campanhas",id),{...dados,atualizadoEm:new Date()});
+    else await addDoc(collection(db,"clientes_campanhas"),{...dados,idSubsite:subsiteAtualId,criadoEm:new Date()});
+    ccLimpar();await ccCarregar();ccStatus("Cliente salvo com sucesso!");
+  }catch(e){console.error(e);alert("Erro ao salvar cliente: "+e.message);}
+}
+async function ccCadastrarDaFesta(festa) {
+  const nome=String(festa.nome||"").trim(),telefone=String(festa.telefone||"").trim(),cpf=String(festa.cpf||"").trim();
+  if(!nome || !ccTelefone(telefone))return;
+  const snap=await getDocs(ccConsulta("clientes_campanhas"));
+  const existente=snap.docs.find(d=>{const c=d.data();return (cpf && c.cpf && ccNumeros(c.cpf)===ccNumeros(cpf)) || ccNumeros(c.telefone)===ccNumeros(telefone);});
+  if(existente) {
+    // Não altera aniversário nem consentimento cadastrados manualmente.
+    await updateDoc(existente.ref,{nome,telefone,cpf,atualizadoEm:new Date()});
+  } else {
+    await addDoc(collection(db,"clientes_campanhas"),{idSubsite:subsiteAtualId,nome,telefone,cpf,aniversario:"",aceitaCampanhas:false,criadoEm:new Date()});
+  }
+}
+function ccClientesAntigos() {
+  const limite=new Date();limite.setDate(limite.getDate()-90);
+  return ccClientes.filter(c=>{
+    const festas=ccFestas.filter(f=>(c.cpf && f.cpf && ccNumeros(c.cpf)===ccNumeros(f.cpf)) || ccNumeros(f.telefone)===ccNumeros(c.telefone));
+    return festas.length>0 && festas.every(f=>/^\d{4}-\d{2}-\d{2}$/.test(f.data||"") && new Date(f.data+"T12:00:00")<limite);
+  });
+}
+function ccPrepararCampanha() {
+  const publico=ccEl("cc-publico").value;
+  const mes=String(new Date().getMonth()+1).padStart(2,"0");
+  const elegiveis=ccClientes.filter(c=>c.aceitaCampanhas===true && ccTelefone(c.telefone));
+  ccDestinatarios=publico==="aniversario" ? elegiveis.filter(c=>/^\d{4}-\d{2}-\d{2}$/.test(c.aniversario||"") && c.aniversario.slice(5,7)===mes) : publico==="antigos" ? ccClientesAntigos().filter(c=>elegiveis.some(x=>x.id===c.id)) : elegiveis;
+  ccCampanhaAtual=ccEl("cc-titulo").value.trim()||"Campanha";
+  const area=ccEl("cc-destinatarios");area.replaceChildren();
+  ccAviso(area,`${ccDestinatarios.length} destinatário(s) com autorização. Cada mensagem é aberta individualmente; nenhum envio automático.`);
+  ccDestinatarios.forEach(c=>ccLinha(area,c.nome,c.telefone,[ccBotao("Abrir WhatsApp",()=>ccAbrirWhatsapp(c,ccEl("cc-mensagem").value,ccCampanhaAtual))]));
+}
+async function ccAbrirWhatsapp(cliente,modelo,campanha) {
+  const numero=ccTelefone(cliente.telefone);
+  if(!numero)return alert("Telefone inválido.");
+  const mensagem=String(modelo||"").replaceAll("{nome}",cliente.nome||"");
+  if(!mensagem.trim())return alert("Escreva a mensagem.");
+  const url=`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+  // Abrir diretamente no clique para não bloquear pop-ups.
+  window.open(url,"_blank","noopener,noreferrer");
+  try {
+    await addDoc(collection(db,"campanhas_historico"),{idSubsite:subsiteAtualId,idCliente:cliente.id,nomeCliente:cliente.nome,campanha,criadoEm:new Date(),status:"whatsapp_aberto"});
+    await ccCarregar();
+  }catch(e){console.error("Histórico não salvo:",e);ccStatus("WhatsApp aberto, mas o histórico não foi salvo: "+e.message);}
+}
+document.getElementById("btn-abrir-clientes-campanhas")?.addEventListener("click",()=>{
+  ccEl("modal-clientes-campanhas").style.display="flex";ccMudarAba("clientes");ccCarregar();
+  if(typeof lucide!=="undefined")lucide.createIcons();
+});
+ccEl("btn-fechar-clientes-campanhas")?.addEventListener("click",()=>ccEl("modal-clientes-campanhas").style.display="none");
+document.querySelectorAll(".cc-aba").forEach(b=>b.addEventListener("click",()=>ccMudarAba(b.dataset.aba)));
+ccEl("cc-form")?.addEventListener("submit",ccSalvarCliente);
+ccEl("cc-limpar")?.addEventListener("click",ccLimpar);
+ccEl("cc-busca")?.addEventListener("input",ccRenderizar);
+ccEl("cc-criar-campanha")?.addEventListener("click",ccPrepararCampanha);
 
 const btnAbrirReuniao = document.getElementById('btn-abrir-reuniao');
 const btnFecharReuniao = document.getElementById('btn-fechar-modal-reuniao');
