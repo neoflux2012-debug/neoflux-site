@@ -76,6 +76,28 @@ function ofertaNeo(dados, padrao) {
     };
 }
 
+function obterPrecoPlanoNeo(id) {
+    if (!Object.prototype.hasOwnProperty.call(precosPadraoNeo, id)) {
+        return null;
+    }
+
+    const dados = precosPublicosNeo[id] || {};
+
+    return {
+        mensalidade: ofertaNeo(
+            dados,
+            precosPadraoNeo[id]
+        ),
+
+        implantacao: ofertaNeo(
+            dados.implantacao,
+            99.99
+        ),
+
+        aplicacao: dados.aplicacao || "primeira_mensalidade"
+    };
+}
+
 function desenharPrecoNeo(elemento, oferta) {
     if (!elemento) return;
 
@@ -108,11 +130,13 @@ function atualizarCardsPublicosNeo() {
             ? `.card-fvm-sub [data-plano="${id}"]`
             : `.card-plano[data-plano="${id}"]`;
 
-        const botao = document.querySelector(seletor);
-        const card = id.startsWith("fvm_")
-            ? botao?.closest(".card-fvm-sub")
-            : botao;
-
+       const card = id.startsWith("fvm_")
+    ? document.querySelector(
+        `.card-fvm-sub:has(.btn-fvm-subplano[data-plano="${id}"])`
+      )
+    : document.querySelector(
+        `.card-plano[data-plano="${id}"]`
+      );
         if (!card) continue;
 
         const preco = card.querySelector(".preco");
@@ -273,50 +297,37 @@ const nomesPlanos = {
    RESUMO DE PAGAMENTO - NEO FLUX
    ========================================== */
 
-const TAXA_IMPLANTACAO = 100;
-
 function atualizarResumoPagamento(plano) {
 
-    // Valores mensais dos planos
-    const precos = {
-        start: 49.99,
-        pro: 69.99,
-        elite: 99.99
-
-        // Faltam confirmar Elite Premium
-        // e os quatro planos FVM.
-    };
-
-    const preco = precos[plano];
+    // Busca mensalidade e implantação configuradas no Admin
+    const preco = obterPrecoPlanoNeo(plano);
 
     const nomeEl = document.getElementById("neo-nome-plano");
     const valorEl = document.getElementById("neo-valor-plano");
+    const implantacaoEl = document.getElementById("neo-valor-implantacao");
     const totalEl = document.getElementById("neo-valor-total");
 
-    if (!nomeEl || !valorEl || !totalEl) return;
+    if (!nomeEl || !valorEl || !implantacaoEl || !totalEl) return;
 
     nomeEl.textContent = nomesPlanos[plano] || plano;
 
-    if (preco === undefined) {
+    if (!preco) {
         valorEl.textContent = "A confirmar";
+        implantacaoEl.textContent = "A confirmar";
         totalEl.textContent = "A confirmar";
-        console.warn("Preço não configurado:", plano);
         return;
     }
 
-    const formatar = valor =>
-        valor.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        });
+    const mensalidade = preco.mensalidade.atual;
+    const implantacao = preco.implantacao.atual;
 
-    valorEl.textContent = formatar(preco);
+    valorEl.textContent = moedaNeo(mensalidade);
+    implantacaoEl.textContent = moedaNeo(implantacao);
 
-    totalEl.textContent = formatar(
-        preco + TAXA_IMPLANTACAO
+    totalEl.textContent = moedaNeo(
+        mensalidade + implantacao
     );
 }
-
 
 /* ==========================================
    4. CONTROLE DE TELAS E LOADING
