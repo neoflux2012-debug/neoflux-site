@@ -656,79 +656,60 @@
             </div>
         </section>
         
-<!-- MODAL CLIENTES E CAMPANHAS -->
-<div id="modal-clientes-campanhas"
-     style="display:none; position:fixed; inset:0;
-     background:rgba(0,0,0,0.9); z-index:9999;
-     justify-content:center; align-items:center;
-     padding:20px;">
-
-    <div style="background:#121212; border:1px solid #8a2be2;
-         border-radius:12px; padding:25px; width:100%;
-         max-width:850px; max-height:90vh; overflow-y:auto;">
-
-        <div style="display:flex; justify-content:space-between;
-             align-items:center; gap:12px; margin-bottom:20px;">
-
-            <h2 style="color:white; margin:0;">
-                <i data-lucide="users-round"
-                   style="color:#b57bff; width:24px;"></i>
-                Clientes e Campanhas
-            </h2>
-
-            <button id="btn-fechar-clientes-campanhas"
-                    type="button"
-                    style="background:none; border:none;
-                    color:white; cursor:pointer;">
-                <i data-lucide="x"></i>
-            </button>
-        </div>
-
-        <div style="display:grid;
-             grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-             gap:15px;">
-
-            <div style="background:#1c1c1c; padding:20px;
-                 border-radius:10px; border:1px solid #333;">
-                <i data-lucide="contact"
-                   style="color:#00d2ff;"></i>
-                <h3>Meus Clientes</h3>
-                <p>Cadastre e organize seus clientes.</p>
-                <button type="button" class="botao-principal"
-                        disabled>
-                    Em breve
-                </button>
-            </div>
-
-            <div style="background:#1c1c1c; padding:20px;
-                 border-radius:10px; border:1px solid #333;">
-                <i data-lucide="cake"
-                   style="color:#f39c12;"></i>
-                <h3>Aniversariantes</h3>
-                <p>Acompanhe datas especiais.</p>
-                <button type="button" class="botao-principal"
-                        disabled>
-                    Em breve
-                </button>
-            </div>
-
-            <div style="background:#1c1c1c; padding:20px;
-                 border-radius:10px; border:1px solid #333;">
-                <i data-lucide="megaphone"
-                   style="color:#b57bff;"></i>
-                <h3>Campanhas</h3>
-                <p>Crie ações para conquistar novas vendas.</p>
-                <button type="button" class="botao-principal"
-                        disabled>
-                    Em breve
-                </button>
-            </div>
-
-        </div>
+<!-- NEO FLUX - CLIENTES E CAMPANHAS -->
+<div id="modal-clientes-campanhas" style="display:none;position:fixed;inset:0;z-index:10020;background:rgba(0,0,0,.88);align-items:center;justify-content:center;padding:14px;">
+  <div style="background:#111;color:#fff;border:1px solid #8a2be2;border-radius:14px;width:min(950px,100%);max-height:94vh;overflow:auto;padding:22px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <h2 style="margin:0;"><i data-lucide="users-round"></i> Clientes e Campanhas</h2>
+      <button type="button" id="btn-fechar-clientes-campanhas" aria-label="Fechar" style="background:#333;color:#fff;border:0;padding:9px;border-radius:8px;"><i data-lucide="x"></i></button>
     </div>
+    <p style="color:#aaa;">Cadastros privados da sua empresa. O WhatsApp abre a mensagem para revisão e envio manual.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;">
+      <button type="button" class="cc-aba" data-aba="clientes">Meus clientes</button>
+      <button type="button" class="cc-aba" data-aba="aniversarios">Aniversariantes</button>
+      <button type="button" class="cc-aba" data-aba="campanhas">Campanhas</button>
+      <button type="button" class="cc-aba" data-aba="historico">Histórico</button>
+    </div>
+    <p id="cc-status" role="status" style="color:#b57bff;"></p>
+    <section id="cc-aba-clientes">
+      <h3>Adicionar / editar cliente</h3>
+      <form id="cc-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;">
+        <input type="hidden" id="cc-id">
+        <label>Nome<input id="cc-nome" required maxlength="120" placeholder="Nome" class="cc-input"></label>
+        <label>WhatsApp<input id="cc-telefone" required maxlength="20" placeholder="(61) 99999-9999" class="cc-input"></label>
+        <label>CPF (opcional)<input id="cc-cpf" maxlength="20" class="cc-input"></label>
+        <label>Aniversário (opcional)<input id="cc-aniversario" type="date" class="cc-input"></label>
+        <label style="grid-column:1/-1;"><input id="cc-consentimento" type="checkbox"> Cliente autorizou mensagens promocionais no WhatsApp</label>
+        <div style="grid-column:1/-1;display:flex;gap:8px;"><button type="submit" class="botao-principal">Salvar cliente</button><button type="button" id="cc-limpar">Limpar</button></div>
+      </form>
+      <h3>Lista de clientes</h3>
+      <input id="cc-busca" placeholder="Pesquisar nome ou telefone" class="cc-input" style="width:100%;">
+      <div id="cc-lista"></div>
+    </section>
+    <section id="cc-aba-aniversarios" hidden><h3>Aniversariantes do mês</h3><div id="cc-aniversariantes"></div></section>
+    <section id="cc-aba-campanhas" hidden>
+      <h3>Criar campanha</h3>
+      <label>Público<select id="cc-publico" class="cc-input"><option value="aniversario">Aniversariantes do mês</option><option value="antigos">Clientes antigos (90+ dias sem festa)</option><option value="todos">Todos que autorizaram campanhas</option></select></label>
+      <label>Nome da campanha<input id="cc-titulo" maxlength="100" class="cc-input" value="Promoção especial"></label>
+      <label>Mensagem (use {nome})<textarea id="cc-mensagem" rows="4" maxlength="1000" class="cc-input">Oi, {nome}! 💜 Temos novidades especiais para sua próxima festa. Quer conhecer?</textarea></label>
+      <button type="button" id="cc-criar-campanha" class="botao-principal">Preparar campanha</button>
+      <div id="cc-destinatarios"></div>
+    </section>
+    <section id="cc-aba-historico" hidden><h3>Contatos registrados</h3><div id="cc-historico"></div></section>
+  </div>
 </div>
+<style>
+#modal-clientes-campanhas .cc-input{display:block;box-sizing:border-box;width:100%;padding:10px;margin:5px 0 10px;background:#080808;border:1px solid #555;color:#fff;border-radius:7px;font:inherit}
+#modal-clientes-campanhas button{cursor:pointer;padding:9px 12px;border-radius:7px}
+#modal-clientes-campanhas .cc-aba{background:#292136;color:white;border:1px solid #66438c}
+#modal-clientes-campanhas .cc-aba[aria-selected="true"]{background:#8a2be2}
+#modal-clientes-campanhas .cc-item{border-bottom:1px solid #333;padding:12px 2px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+#modal-clientes-campanhas .cc-acoes{display:flex;flex-wrap:wrap;gap:6px}
+#modal-clientes-campanhas .cc-acoes button{background:#282035;color:#fff;border:1px solid #7452a4}
+#modal-clientes-campanhas [hidden]{display:none!important}
+</style>
 
-                <!-- MODAL AGENDAR REUNIÃO -->
+<!-- MODAL AGENDAR REUNIÃO -->
         <div id="modal-reuniao" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px;">
                 <h2 style="color: white; margin-top: 0;">Agendar Reunião</h2>
