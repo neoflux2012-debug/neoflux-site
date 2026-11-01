@@ -57,7 +57,9 @@
       <button type="button" class="neo-nav-btn" data-admin-aba="clientes">
         👥 Clientes
       </button>
-
+      <button type="button" class="neo-nav-btn" data-admin-aba="teste">
+  🎁 Teste Grátis
+</button>
       <button type="button" class="neo-nav-btn" data-admin-aba="teste">🎁 Teste Grátis</button>
 
       <button type="button" class="neo-nav-btn" data-admin-aba="wave">
@@ -75,6 +77,86 @@
   </aside>
 
   <div class="neo-admin-conteudo">
+   
+<section id="neo-teste-admin" class="admin-caixa-clientes" style="display:none;">
+
+  <div class="neo-teste-cabecalho">
+    <div>
+      <h2>🎁 Teste Grátis — ELITE</h2>
+      <p>Gerencie e acompanhe os testes gratuitos de 7 dias do Neo Flux.</p>
+    </div>
+  </div>
+
+  <div class="neo-teste-cards">
+
+    <div class="neo-teste-card">
+      <span>🟢 Em teste</span>
+      <strong id="neo-teste-ativos">0</strong>
+    </div>
+
+    <div class="neo-teste-card">
+      <span>⏳ Terminando em 3 dias</span>
+      <strong id="neo-teste-proximos">0</strong>
+    </div>
+
+    <div class="neo-teste-card">
+      <span>🔴 Encerrados</span>
+      <strong id="neo-teste-encerrados">0</strong>
+    </div>
+
+    <div class="neo-teste-card">
+      <span>💜 Convertidos</span>
+      <strong id="neo-teste-convertidos">0</strong>
+    </div>
+
+  </div>
+
+  <div class="admin-filtros">
+
+    <input
+      id="neo-teste-busca"
+      class="admin-input-busca"
+      type="search"
+      placeholder="Buscar empresa ou e-mail..."
+    >
+
+    <select id="neo-teste-filtro" class="admin-input-busca">
+      <option value="todos">Todos os testes</option>
+      <option value="ativo">Em teste</option>
+      <option value="proximo">Terminando</option>
+      <option value="encerrado">Encerrados</option>
+      <option value="convertido">Convertidos</option>
+    </select>
+
+  </div>
+
+  <div class="admin-tabela-wrapper">
+    <table class="tabela-admin">
+      <thead>
+        <tr>
+          <th>Empresa / Cliente</th>
+          <th>Plano</th>
+          <th>Início</th>
+          <th>Término</th>
+          <th>Dias restantes</th>
+          <th>Situação</th>
+        </tr>
+      </thead>
+
+      <tbody id="neo-teste-lista">
+        <tr>
+          <td colspan="6">Nenhum teste registrado.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p id="neo-teste-aviso" class="neo-teste-aviso">
+    Os testes serão exibidos quando a ativação estiver integrada ao painel do cliente.
+  </p>
+
+</section>
+
    <section class="neo-dashboard-inicio" data-admin-secao="inicio">
   <div class="neo-boas-vindas">
     <span>NEO FLUX ADMIN 2.0</span>
