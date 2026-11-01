@@ -1058,6 +1058,64 @@ function calcularFrete() {
 ['frete-km', 'frete-preco', 'frete-consumo', 'frete-ida-volta'].forEach(id => { document.getElementById(id)?.addEventListener('input', calcularFrete); });
 document.getElementById('frete-ida-volta')?.addEventListener('change', calcularFrete);
 
+/* ==========================================
+   NEO FLUX - CADASTRO AUTOMÁTICO DE CLIENTES
+========================================== */
+
+async function cadastrarClienteDaFestaNeo(dadosFesta) {
+    if (!subsiteAtualId || !auth.currentUser) {
+        throw new Error("Subsite ou usuário não identificado.");
+    }
+
+    const nome = String(dadosFesta.nome || "").trim();
+    const telefone = String(dadosFesta.telefone || "").trim();
+    const cpf = String(dadosFesta.cpf || "").trim();
+
+    if (!nome || !telefone) return;
+
+    // Procura clientes somente desta empresa.
+    const consulta = query(
+        collection(db, "clientes_campanhas"),
+        where("idSubsite", "==", subsiteAtualId)
+    );
+
+    const resultado = await getDocs(consulta);
+
+    const somenteNumeros = valor =>
+        String(valor || "").replace(/\D/g, "");
+
+    const clienteExistente = resultado.docs.find(item => {
+        const cliente = item.data();
+
+        if (cpf && cliente.cpf &&
+            somenteNumeros(cliente.cpf) === somenteNumeros(cpf)) {
+            return true;
+        }
+
+        return somenteNumeros(cliente.telefone) ===
+            somenteNumeros(telefone);
+    });
+
+    if (clienteExistente) {
+        await updateDoc(clienteExistente.ref, {
+            nome,
+            telefone,
+            cpf,
+            atualizadoEm: new Date()
+        });
+    } else {
+        await addDoc(collection(db, "clientes_campanhas"), {
+            idSubsite: subsiteAtualId,
+            nome,
+            telefone,
+            cpf,
+            aniversario: "",
+            aceitaCampanhas: false,
+            criadoEm: new Date()
+        });
+    }
+}
+
 document.getElementById('form-agendar-festa')?.addEventListener('submit', async (e) => {
     e.preventDefault(); 
     carregar(true);
@@ -1095,8 +1153,25 @@ document.getElementById('form-agendar-festa')?.addEventListener('submit', async 
     };
 
     try {
-        if (idEdicao) { await updateDoc(doc(db, "festas", idEdicao), dadosFesta); alert("Festa atualizada!"); } 
-        else { await addDoc(collection(db, "festas"), dadosFesta); alert("Festa agendada!"); }
+        
+if (idEdicao) {
+    await updateDoc(doc(db, "festas", idEdicao), dadosFesta);
+} else {
+    await addDoc(collection(db, "festas"), dadosFesta);
+}
+
+// O cadastro de clientes não deve impedir o agendamento.
+try {
+    await cadastrarClienteDaFestaNeo(dadosFesta);
+} catch (erroCliente) {
+    console.error("Erro ao cadastrar cliente:", erroCliente);
+    alert(
+        "A festa foi salva, mas o cadastro do cliente não foi concluído."
+    );
+}
+
+alert(idEdicao ? "Festa atualizada!" : "Festa agendada!");
+
         document.getElementById('form-agendar-festa').reset(); 
         document.getElementById('festa-id-edicao').value = "";
         document.getElementById('titulo-modal-festa').textContent = "Agendar Nova Festa"; 
