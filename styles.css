@@ -1501,3 +1501,72 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
         justify-content: flex-start;
     }
 }
+
+.neo-qr-overlay[hidden] {
+  display: none !important;
+}
+
+.neo-qr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, .8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.neo-qr-card {
+  position: relative;
+  width: min(100%, 380px);
+  padding: 28px;
+  border-radius: 20px;
+  background: #15101f;
+  border: 1px solid #673ab7;
+  color: white;
+  text-align: center;
+}
+
+.neo-qr-card p {
+  color: #aaa;
+}
+
+.neo-qr-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  color: white;
+  border: 0;
+  cursor: pointer;
+}
+
+#neo-qr-imagem {
+  display: flex;
+  justify-content: center;
+  margin: 24px auto;
+}
+
+#neo-qr-imagem canvas,
+#neo-qr-imagem img {
+  padding: 12px;
+  background: white;
+  border-radius: 10px;
+}
+
+#neo-qr-cor {
+  display: block;
+  margin: 10px auto 20px;
+  cursor: pointer;
+}
+
+#neo-qr-baixar {
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 10px;
+  background: #6d28d9;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
