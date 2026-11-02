@@ -60,6 +60,10 @@
       <button type="button" class="neo-nav-btn" data-admin-aba="teste">
   🎁 Teste Grátis
 </button>
+     <button type="button" class="neo-nav-btn" data-admin-aba="comunicados">
+  <i data-lucide="megaphone"></i>
+  Comunicados
+</button>
       <button type="button" class="neo-nav-btn" data-admin-aba="wave">
         🤖 Neo Wave
       </button>
@@ -153,6 +157,41 @@
     Os testes serão exibidos quando a ativação estiver integrada ao painel do cliente.
   </p>
 
+</section>
+
+<section id="neo-comunicados-admin"
+         class="admin-caixa-clientes"
+         data-admin-secao="comunicados">
+
+  <h2><i data-lucide="megaphone"></i> Comunicados</h2>
+  <p>Publique atualizações e novidades para os clientes Neo Flux.</p>
+
+  <form id="neo-form-comunicado">
+    <label for="neo-comunicado-titulo">Título</label>
+    <input
+      id="neo-comunicado-titulo"
+      type="text"
+      maxlength="100"
+      placeholder="Ex.: Nova atualização disponível!"
+      required
+    >
+
+    <label for="neo-comunicado-mensagem">Mensagem</label>
+    <textarea
+      id="neo-comunicado-mensagem"
+      maxlength="2000"
+      rows="5"
+      placeholder="Descreva a novidade..."
+      required
+    ></textarea>
+
+    <button type="submit" class="botao-principal">
+      <i data-lucide="send"></i>
+      Publicar para todos
+    </button>
+  </form>
+
+  <p id="neo-comunicado-status" role="status"></p>
 </section>
 
    <section class="neo-dashboard-inicio" data-admin-secao="inicio">
