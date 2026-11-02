@@ -1178,8 +1178,6 @@ if (dashboard) {
     for (const [aba, seletores] of Object.entries(grupos)) {
         for (const seletor of seletores) {
             conteudo.querySelectorAll(seletor).forEach(elemento => {
-                if (elemento.parentElement !== conteudo) return;
-
                 elemento.dataset.adminSecao = aba;
                 secoes.push(elemento);
             });
