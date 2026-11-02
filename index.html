@@ -386,22 +386,6 @@
     <i data-lucide="bell"></i>
     <span id="neo-notif-count" hidden>0</span>
   </button>
-
-  <div id="neo-notif-painel" class="neo-notif-painel" hidden>
-    <div class="neo-notif-topo">
-      <strong><i data-lucide="bell-ring"></i> Notificações</strong>
-      <button id="neo-notif-fechar" type="button"
-              aria-label="Fechar notificações">
-        <i data-lucide="x"></i>
-      </button>
-    </div>
-
-    <div id="neo-notif-lista">
-      <p>Carregando notificações...</p>
-    </div>
-    <p id="neo-notif-erro" role="status"></p>
-  </div>
-</div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button id="btn-voltar-escolha-admin" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #f39c12; display: none;">🔙 Voltar ao Portal Admin</button>
                     
@@ -540,6 +524,15 @@
         <section id="tela-subsite" class="tela" style="max-width: 100%;"><div style="text-align:right;margin:8px"><button type="button" id="neo-ajuda-geral" class="botao-principal" style="width:auto">❔ Ajuda Neo</button></div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h1 id="nome-do-subsite" style="color: #00d2ff; margin: 0;">...</h1>
+                <div class="neo-notif-area">
+    <button id="neo-notif-btn-subsite"
+            type="button"
+            aria-label="Abrir notificações"
+            aria-expanded="false">
+        <i data-lucide="bell"></i>
+        <span id="neo-notif-count-subsite" hidden>0</span>
+    </button>
+</div>
                 <button id="btn-voltar-cliente" class="botao-principal" style="width: auto; background: #333;">Voltar</button>
             </div>
 
@@ -1422,6 +1415,21 @@
     
     <!-- Carrega o cérebro do chat (Neo Wave) -->
     <script type="module" src="./neowave.js?v=2"></script>
+ <div id="neo-notif-painel" class="neo-notif-painel" hidden>
+    <div class="neo-notif-topo">
+      <strong><i data-lucide="bell-ring"></i> Notificações</strong>
+      <button id="neo-notif-fechar" type="button"
+              aria-label="Fechar notificações">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
 
+    <div id="neo-notif-lista">
+      <p>Carregando notificações...</p>
+    </div>
+    <p id="neo-notif-erro" role="status"></p>
+  </div>
+</div>
+    
 </body>
 </html>
