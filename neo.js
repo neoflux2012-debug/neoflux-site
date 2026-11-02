@@ -3155,3 +3155,81 @@ onAuthStateChanged(auth, user => {
     }
 });
 
+function configurarQRCodeNeoFlux(obterLinkVitrine) {
+  const abrir = document.getElementById("market-qr-abrir");
+  const modal = document.getElementById("neo-qr-modal");
+  const fechar = document.getElementById("neo-qr-fechar");
+  const area = document.getElementById("neo-qr-imagem");
+  const cor = document.getElementById("neo-qr-cor");
+  const baixar = document.getElementById("neo-qr-baixar");
+
+  if (!abrir || !modal || !fechar || !area || !cor || !baixar) {
+    return;
+  }
+
+  let linkAtual = "";
+
+  function gerarQRCode() {
+    if (typeof QRCode === "undefined" || !linkAtual) return;
+
+    area.innerHTML = "";
+
+    new QRCode(area, {
+      text: linkAtual,
+      width: 220,
+      height: 220,
+      colorDark: cor.value,
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
+
+  abrir.addEventListener("click", async () => {
+    linkAtual = await obterLinkVitrine();
+
+    if (!linkAtual) {
+      alert("Publique sua vitrine antes de gerar o QR Code.");
+      return;
+    }
+
+    modal.hidden = false;
+    gerarQRCode();
+  });
+
+  fechar.addEventListener("click", () => {
+    modal.hidden = true;
+  });
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) modal.hidden = true;
+  });
+
+  cor.addEventListener("input", gerarQRCode);
+
+  baixar.addEventListener("click", () => {
+    const canvas = area.querySelector("canvas");
+    const img = area.querySelector("img");
+
+    if (!canvas && !img) return;
+
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = 260;
+    exportCanvas.height = 260;
+
+    const ctx = exportCanvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, 260, 260);
+
+    const origem = canvas || img;
+
+    if (img && !img.complete) return;
+
+    ctx.drawImage(origem, 20, 20, 220, 220);
+
+    const a = document.createElement("a");
+    a.download = "neo-flux-qrcode.png";
+    a.href = exportCanvas.toDataURL("image/png");
+    a.click();
+  });
+}
+
