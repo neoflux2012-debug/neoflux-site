@@ -1405,3 +1405,49 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
     color: #ff9b9b;
     text-align: left;
 }
+
+/* SININHO NAS DUAS TELAS */
+
+#neo-notif-btn-subsite {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    background: #171124;
+    border: 1px solid #8a2be2;
+    border-radius: 14px;
+    color: white;
+    cursor: pointer;
+}
+
+#neo-notif-btn-subsite:hover {
+    background: #281640;
+}
+
+#neo-notif-count-subsite {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    padding: 2px 6px;
+    background: #e63966;
+    border-radius: 20px;
+    color: white;
+    font-size: 11px;
+}
+
+#neo-notif-count-subsite[hidden] {
+    display: none !important;
+}
+
+/* Janela compartilhada */
+#neo-notif-painel {
+    position: fixed;
+    top: 85px;
+    right: 20px;
+    left: auto;
+    z-index: 99999;
+    width: min(380px, calc(100vw - 32px));
+    max-height: min(500px, calc(100vh - 110px));
+    overflow-y: auto;
+}
