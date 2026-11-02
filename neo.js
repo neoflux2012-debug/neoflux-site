@@ -1750,6 +1750,11 @@ document.getElementById('form-reuniao')?.addEventListener('submit', async (e) =>
 // 10. OBSERVADOR DE ESTADO E ADMIN
 // ==========================================
 onAuthStateChanged(auth, (user) => {
+  
+    if (new URLSearchParams(window.location.search).has("vitrine")) {
+        return;
+    }
+
     if (user) {
         if (!user.emailVerified) { 
             mostrarTela('tela-verificacao'); 
