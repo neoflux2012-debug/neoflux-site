@@ -2994,7 +2994,10 @@ async function neoNotifCarregar() {
 
     try {
         const [avisos, leituras] = await Promise.all([
-            getDocs(collection(db, "comunicados")),
+           getDocs(query(
+    collection(db, "comunicados"),
+    where("publico", "==", "todos")
+)),
             getDocs(collection(
                 db, "usuarios", uid, "comunicadosLidos"
             ))
