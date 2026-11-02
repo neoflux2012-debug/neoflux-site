@@ -2892,19 +2892,17 @@ document.getElementById("btn-abrir-fvm")?.addEventListener("click", () => {
 
 /* ==========================================
    NEO FLUX - CENTRAL DE NOTIFICAÇÕES
+   Área do Cliente + Subsite
 ========================================== */
 
 const neoNotifBtn = document.getElementById("neo-notif-btn");
+const neoNotifBtnSubsite = document.getElementById("neo-notif-btn-subsite");
+
 const neoNotifPainel = document.getElementById("neo-notif-painel");
 const neoNotifLista = document.getElementById("neo-notif-lista");
 const neoNotifCount = document.getElementById("neo-notif-count");
+const neoNotifCountSubsite = document.getElementById("neo-notif-count-subsite");
 const neoNotifErro = document.getElementById("neo-notif-erro");
-
-const neoNotifBtnSubsite =
-    document.getElementById("neo-notif-btn-subsite");
-
-const neoNotifCountSubsite =
-    document.getElementById("neo-notif-count-subsite");
 
 let neoNotifUsuario = null;
 let neoNotifComunicados = [];
@@ -2916,23 +2914,30 @@ function neoNotifAtualizarContador() {
         item => !neoNotifLidos.has(item.id)
     ).length;
 
-    const texto = quantidade > 99 ? "99+" : quantidade;
+    const texto = quantidade > 99 ? "99+" : String(quantidade);
     const ocultar = quantidade === 0;
 
-    // Fora do subsite: Área do Cliente
     if (neoNotifCount) {
         neoNotifCount.textContent = texto;
         neoNotifCount.hidden = ocultar;
     }
 
-    // Dentro do subsite
     if (neoNotifCountSubsite) {
         neoNotifCountSubsite.textContent = texto;
         neoNotifCountSubsite.hidden = ocultar;
     }
 }
 
+// Sincroniza o estado dos botões
+function neoNotifSincronizarBotoes(aberto) {
+    neoNotifBtn?.setAttribute("aria-expanded", String(aberto));
+    neoNotifBtnSubsite?.setAttribute("aria-expanded", String(aberto));
+}
+
+// Renderiza as notificações
 function neoNotifRenderizar() {
+    if (!neoNotifLista) return;
+
     neoNotifLista.replaceChildren();
 
     if (!neoNotifComunicados.length) {
@@ -2957,6 +2962,7 @@ function neoNotifRenderizar() {
 
         const data = document.createElement("small");
         const criada = item.criadoEm?.toDate?.();
+
         data.textContent = criada
             ? criada.toLocaleString("pt-BR")
             : "Comunicado Neo Flux";
@@ -2974,23 +2980,33 @@ function neoNotifRenderizar() {
 
                 try {
                     const usuario = auth.currentUser;
+
                     if (!usuario || usuario.uid !== neoNotifUsuario) {
                         throw new Error("Sessão alterada.");
                     }
 
                     await setDoc(
-                        doc(db, "usuarios", usuario.uid,
-                            "comunicadosLidos", item.id),
+                        doc(
+                            db,
+                            "usuarios",
+                            usuario.uid,
+                            "comunicadosLidos",
+                            item.id
+                        ),
                         { lido: true }
                     );
 
                     neoNotifLidos.add(item.id);
                     neoNotifRenderizar();
+
                 } catch (erro) {
-                    neoNotifErro.textContent =
-                        "Não foi possível marcar como lida.";
+                    if (neoNotifErro) {
+                        neoNotifErro.textContent =
+                            "Não foi possível marcar como lida.";
+                    }
+
                     botao.disabled = false;
-                    console.error(erro);
+                    console.error("Erro ao marcar como lida:", erro);
                 }
             });
 
@@ -3003,26 +3019,43 @@ function neoNotifRenderizar() {
     neoNotifAtualizarContador();
 }
 
+// Busca os comunicados no Firebase
 async function neoNotifCarregar() {
     const usuario = auth.currentUser;
-    if (!usuario || !usuario.emailVerified) return;
+
+    if (!usuario || !usuario.emailVerified || !neoNotifLista) {
+        return;
+    }
 
     const uid = usuario.uid;
+
     neoNotifUsuario = uid;
-    neoNotifErro.textContent = "";
+
+    if (neoNotifErro) {
+        neoNotifErro.textContent = "";
+    }
+
     neoNotifLista.textContent = "Carregando notificações...";
 
     try {
         const [avisos, leituras] = await Promise.all([
-           getDocs(query(
-    collection(db, "comunicados"),
-    where("publico", "==", "todos")
-)),
-            getDocs(collection(
-                db, "usuarios", uid, "comunicadosLidos"
-            ))
+            getDocs(
+                query(
+                    collection(db, "comunicados"),
+                    where("publico", "==", "todos")
+                )
+            ),
+            getDocs(
+                collection(
+                    db,
+                    "usuarios",
+                    uid,
+                    "comunicadosLidos"
+                )
+            )
         ]);
 
+        // Impede mostrar dados de uma sessão anterior
         if (auth.currentUser?.uid !== uid) return;
 
         neoNotifLidos = new Set(
@@ -3032,7 +3065,10 @@ async function neoNotifCarregar() {
         );
 
         neoNotifComunicados = avisos.docs
-            .map(snap => ({ id: snap.id, ...snap.data() }))
+            .map(snap => ({
+                id: snap.id,
+                ...snap.data()
+            }))
             .filter(item =>
                 item.publico === "todos" &&
                 item.criadoEm
@@ -3045,38 +3081,77 @@ async function neoNotifCarregar() {
 
         neoNotifRenderizar();
 
-        if (window.lucide) window.lucide.createIcons();
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
 
     } catch (erro) {
         console.error("Erro nas notificações:", erro);
-        neoNotifErro.textContent =
-            "Não foi possível carregar as notificações.";
+
+        if (neoNotifErro) {
+            neoNotifErro.textContent =
+                "Não foi possível carregar as notificações.";
+        }
+
         neoNotifLista.textContent = "";
     }
 }
 
-neoNotifBtn?.addEventListener("click", async () => {
+// Abre ou fecha a mesma janela nas duas telas
+async function neoNotifAlternarPainel() {
+    if (!neoNotifPainel) return;
+
     const abrir = neoNotifPainel.hidden;
+
     neoNotifPainel.hidden = !abrir;
-    neoNotifBtn.setAttribute("aria-expanded", String(abrir));
+    neoNotifSincronizarBotoes(abrir);
 
-    if (abrir) await neoNotifCarregar();
-});
+    if (abrir) {
+        await neoNotifCarregar();
+    }
+}
 
+// Botão da Área do Cliente
+neoNotifBtn?.addEventListener(
+    "click",
+    neoNotifAlternarPainel
+);
+
+// Botão dentro do Subsite
+neoNotifBtnSubsite?.addEventListener(
+    "click",
+    neoNotifAlternarPainel
+);
+
+// Botão X para fechar
 document.getElementById("neo-notif-fechar")
     ?.addEventListener("click", () => {
+        if (!neoNotifPainel) return;
+
         neoNotifPainel.hidden = true;
-        neoNotifBtn.setAttribute("aria-expanded", "false");
+        neoNotifSincronizarBotoes(false);
     });
 
+// Limpa os dados ao sair da conta
 onAuthStateChanged(auth, user => {
     if (!user) {
         neoNotifUsuario = null;
         neoNotifComunicados = [];
         neoNotifLidos.clear();
-        neoNotifPainel.hidden = true;
-        neoNotifCount.hidden = true;
+
+        if (neoNotifPainel) {
+            neoNotifPainel.hidden = true;
+        }
+
+        neoNotifSincronizarBotoes(false);
+        neoNotifAtualizarContador();
+
+        if (neoNotifLista) {
+            neoNotifLista.replaceChildren();
+        }
+
     } else if (user.emailVerified) {
         neoNotifCarregar();
     }
 });
+
