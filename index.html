@@ -515,7 +515,13 @@
                     <div class="market-nota">O rascunho fica vinculado a este subsite e não aparece publicamente.</div>
                     <button type="button" id="btn-market-salvar" class="botao-principal" style="margin-top:14px">Salvar rascunho</button>
                     <p id="market-status" role="status" aria-live="polite" style="margin-top:10px;text-align:left">Ainda não publicado.</p>
-                    <button type="button" id="market-publicar">Publicar vitrine</button><button type="button" id="market-despublicar">Retirar do ar</button>
+                    <button type="button" id="market-publicar">Publicar vitrine</button>
+                    <button type="button" id="market-despublicar">Retirar do ar</button>
+                     <button type="button" id="market-qr-abrir">
+                     <i data-lucide="qr-code"></i>
+                          Meu QR Code
+                      </button>
+
                 </div>
                 <div class="market-preview" aria-label="Prévia da vitrine">
                     <span class="market-preview-tag">PRÉVIA DO PERFIL</span>
@@ -1495,6 +1501,27 @@
     <p id="neo-notif-erro" role="status"></p>
   </div>
 </div>
-    
+  
+<div id="neo-qr-modal" class="neo-qr-overlay" hidden>
+  <div class="neo-qr-card">
+    <button id="neo-qr-fechar" type="button" class="neo-qr-close">
+      <i data-lucide="x"></i>
+    </button>
+
+    <h2>Meu QR Code</h2>
+    <p>Compartilhe sua vitrine com seus clientes!</p>
+
+    <div id="neo-qr-imagem"></div>
+
+    <label for="neo-qr-cor">Cor do QR Code</label>
+    <input id="neo-qr-cor" type="color" value="#6d28d9">
+
+    <button id="neo-qr-baixar" type="button">
+      <i data-lucide="download"></i>
+      Baixar PNG
+    </button>
+  </div>
+</div>
+  
 </body>
 </html>
