@@ -379,6 +379,29 @@
         <section id="tela-cliente" class="tela">
             <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <h2 style="margin: 0;">Área do Cliente</h2>
+                <div class="neo-notif-area">
+  <button id="neo-notif-btn" type="button"
+          aria-label="Abrir notificações"
+          aria-expanded="false">
+    <i data-lucide="bell"></i>
+    <span id="neo-notif-count" hidden>0</span>
+  </button>
+
+  <div id="neo-notif-painel" class="neo-notif-painel" hidden>
+    <div class="neo-notif-topo">
+      <strong><i data-lucide="bell-ring"></i> Notificações</strong>
+      <button id="neo-notif-fechar" type="button"
+              aria-label="Fechar notificações">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <div id="neo-notif-lista">
+      <p>Carregando notificações...</p>
+    </div>
+    <p id="neo-notif-erro" role="status"></p>
+  </div>
+</div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button id="btn-voltar-escolha-admin" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #f39c12; display: none;">🔙 Voltar ao Portal Admin</button>
                     
