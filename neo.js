@@ -2616,6 +2616,34 @@ window.resetarTraducaoFVM = function() {
    }
  }
 
+async function abrirVitrinePorLink() {
+  const parametros = new URLSearchParams(window.location.search);
+  const id = parametros.get("vitrine");
+
+  if (!id) return;
+
+  try {
+    const snap = await getDoc(doc(db, "marketplacePublicos", id));
+
+    if (!snap.exists() || snap.data().publicado !== true) {
+      alert("Esta vitrine não está disponível.");
+      return;
+    }
+
+    const vitrine = { id: snap.id, ...snap.data() };
+
+    retorno = "tela-boas-vindas";
+    escolha(vitrine.segmento);
+    abrirPerfil(vitrine);
+
+  } catch (erro) {
+    console.error("Erro ao abrir vitrine:", erro);
+    alert("Não foi possível abrir esta vitrine.");
+  }
+}
+
+abrirVitrinePorLink();
+
  $('btn-abrir-marketplace')?.addEventListener('click',abrirEditor);
  $('btn-market-explorar')?.addEventListener('click',()=>{retorno='tela-subsite';escolha('neo');buscar()});
  $('btn-market-publico')?.addEventListener('click',()=>{retorno='tela-boas-vindas';escolha('neo');buscar()});
@@ -3232,4 +3260,22 @@ function configurarQRCodeNeoFlux(obterLinkVitrine) {
     a.click();
   });
 }
+
+configurarQRCodeNeoFlux(async () => {
+  if (!subsiteAtualId) return "";
+
+  const snap = await getDoc(
+    doc(db, "marketplacePublicos", subsiteAtualId)
+  );
+
+  if (!snap.exists() || snap.data().publicado !== true) {
+    return "";
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("vitrine", subsiteAtualId);
+  url.hash = "";
+
+  return url.href;
+});
 
