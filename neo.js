@@ -2649,6 +2649,10 @@ async function abrirVitrinePorLink() {
 
 
 
+if (new URLSearchParams(window.location.search).has("vitrine")) {
+  abrirVitrinePorLink();
+}
+
  $('btn-abrir-marketplace')?.addEventListener('click',abrirEditor);
  $('btn-market-explorar')?.addEventListener('click',()=>{retorno='tela-subsite';escolha('neo');buscar()});
  $('btn-market-publico')?.addEventListener('click',()=>{retorno='tela-boas-vindas';escolha('neo');buscar()});
@@ -3282,11 +3286,5 @@ configurarQRCodeNeoFlux(async () => {
   url.hash = "";
 
   return url.href;
-});
-
-window.addEventListener("load", async () => {
-  if (new URLSearchParams(window.location.search).has("vitrine")) {
-    await abrirVitrinePorLink();
-  }
 });
 
