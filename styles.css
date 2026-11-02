@@ -1451,3 +1451,53 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
     max-height: min(500px, calc(100vh - 110px));
     overflow-y: auto;
 }
+
+/* NEO FLUX - ORGANIZAÇÃO DA ÁREA DO CLIENTE */
+
+#tela-cliente {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+#tela-cliente .neo-cliente-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+#tela-cliente .neo-cliente-titulo {
+    margin: 0;
+    text-align: left;
+}
+
+#tela-cliente .neo-cliente-acoes {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#tela-cliente .neo-cliente-acoes .botao-principal {
+    margin: 0;
+}
+
+#tela-cliente > .caixa-termos {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    margin: 0 0 18px;
+    text-align: left;
+}
+
+@media (max-width: 700px) {
+    #tela-cliente .neo-cliente-acoes {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
