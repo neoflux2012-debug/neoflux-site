@@ -2889,6 +2889,7 @@ document.getElementById("btn-abrir-fvm")?.addEventListener("click", () => {
     console.log(" Modal FVM aberto!");
 });
 
+
 /* ==========================================
    NEO FLUX - CENTRAL DE NOTIFICAÇÕES
 ========================================== */
@@ -2899,17 +2900,36 @@ const neoNotifLista = document.getElementById("neo-notif-lista");
 const neoNotifCount = document.getElementById("neo-notif-count");
 const neoNotifErro = document.getElementById("neo-notif-erro");
 
+const neoNotifBtnSubsite =
+    document.getElementById("neo-notif-btn-subsite");
+
+const neoNotifCountSubsite =
+    document.getElementById("neo-notif-count-subsite");
+
 let neoNotifUsuario = null;
 let neoNotifComunicados = [];
 let neoNotifLidos = new Set();
 
+// Atualiza os contadores dos dois sininhos
 function neoNotifAtualizarContador() {
     const quantidade = neoNotifComunicados.filter(
         item => !neoNotifLidos.has(item.id)
     ).length;
 
-    neoNotifCount.textContent = quantidade > 99 ? "99+" : quantidade;
-    neoNotifCount.hidden = quantidade === 0;
+    const texto = quantidade > 99 ? "99+" : quantidade;
+    const ocultar = quantidade === 0;
+
+    // Fora do subsite: Área do Cliente
+    if (neoNotifCount) {
+        neoNotifCount.textContent = texto;
+        neoNotifCount.hidden = ocultar;
+    }
+
+    // Dentro do subsite
+    if (neoNotifCountSubsite) {
+        neoNotifCountSubsite.textContent = texto;
+        neoNotifCountSubsite.hidden = ocultar;
+    }
 }
 
 function neoNotifRenderizar() {
