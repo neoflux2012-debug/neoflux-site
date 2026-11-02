@@ -1166,6 +1166,7 @@ function iniciarNavegacaoAdmin() {
         inicio: [".admin-header"],
         planos: ["#admin-precos-painel"],
         clientes: [".admin-caixa-clientes:not(#neo-teste-admin)"],
+        comunicados: ["#neo-comunicados-admin"],
         teste: ["#neo-teste-admin"],
         wave: [".admin-card-monitor", ".admin-card-autopilot"],
         marketplace: [".admin-marketplace:not(#admin-precos-painel)"]
