@@ -375,47 +375,112 @@
             <button id="btn-logout-admin-escolha" class="botao-principal" style="background: #333; margin-top: 30px;">Sair da Conta</button>
         </section>
 
-        <!-- TELA 9: ÁREA DO CLIENTE -->
-        <section id="tela-cliente" class="tela">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <h2 style="margin: 0;">Área do Cliente</h2>
-                <div class="neo-notif-area">
-  <button id="neo-notif-btn" type="button"
-          aria-label="Abrir notificações"
-          aria-expanded="false">
-    <i data-lucide="bell"></i>
-    <span id="neo-notif-count" hidden>0</span>
-  </button>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="btn-voltar-escolha-admin" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #f39c12; display: none;">🔙 Voltar ao Portal Admin</button>
-                    
-                    <button id="btn-testar-plano" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem; background: #8a2be2; display: none;" onclick="window.adminTestarPlano()">🎭 Testar Planos</button>
+<!-- TELA 9: ÁREA DO CLIENTE -->
+<section id="tela-cliente" class="tela">
 
-                    <button id="btn-pedir-upgrade" class="botao-principal" style="width: auto; padding: 10px 15px; font-size: 0.9rem;">Fazer Upgrade</button>
-                </div>
-            </div>
-            <div class="caixa-termos">
-                <p><strong>Nome:</strong> <span id="cliente-nome">...</span></p>
-                <p><strong>Plano:</strong> <span id="cliente-plano">...</span></p>
-                <p><strong>Status:</strong> <span id="cliente-status">...</span></p>
-            </div>
-            <div class="caixa-termos">
-                <h3>Meus Subsites</h3>
-                <div id="area-criar-subsite" style="display: flex; gap: 10px;">
-                    <input type="text" id="titulo-subsite" placeholder="Título do subsite" style="flex: 1; padding: 10px;">
-                    <button id="btn-criar-subsite" class="botao-principal" style="width: auto;">Criar</button>
-                </div>
-                <ul id="lista-subsites" style="margin-top: 20px; list-style: none; padding: 0;"></ul>
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                <button id="btn-enviar-feedback" class="botao-principal" style="width: auto; background: transparent; border: 1px solid var(--cor-azul); color: var(--cor-azul); display: inline-flex; align-items: center; gap: 8px;">
-                    <i data-lucide="message-square-plus" style="width: 18px;"></i> Enviar Feedback / Ideia
+    <!-- Cabeçalho -->
+    <div class="neo-cliente-cabecalho">
+
+        <h2 class="neo-cliente-titulo">Área do Cliente</h2>
+
+        <div class="neo-cliente-acoes">
+
+            <!-- Notificações -->
+            <div class="neo-notif-area">
+                <button id="neo-notif-btn"
+                        type="button"
+                        aria-label="Abrir notificações"
+                        aria-expanded="false">
+                    <i data-lucide="bell"></i>
+                    <span id="neo-notif-count" hidden>0</span>
                 </button>
             </div>
 
-            <button id="btn-logout" class="botao-principal" style="background: #333;">Sair da Conta</button>
-        </section>
+            <!-- Botões administrativos -->
+            <button id="btn-voltar-escolha-admin"
+                    class="botao-principal"
+                    style="width:auto;padding:10px 15px;font-size:0.9rem;background:#f39c12;display:none;">
+                🔙 Voltar ao Portal Admin
+            </button>
+
+            <button id="btn-testar-plano"
+                    class="botao-principal"
+                    style="width:auto;padding:10px 15px;font-size:0.9rem;background:#8a2be2;display:none;"
+                    onclick="window.adminTestarPlano()">
+                🎭 Testar Planos
+            </button>
+
+            <button id="btn-pedir-upgrade"
+                    class="botao-principal"
+                    style="width:auto;padding:10px 15px;font-size:0.9rem;">
+                Fazer Upgrade
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Informações da conta -->
+    <div class="caixa-termos">
+        <p>
+            <strong>Nome:</strong>
+            <span id="cliente-nome">...</span>
+        </p>
+
+        <p>
+            <strong>Plano:</strong>
+            <span id="cliente-plano">...</span>
+        </p>
+
+        <p>
+            <strong>Status:</strong>
+            <span id="cliente-status">...</span>
+        </p>
+    </div>
+
+    <!-- Meus Subsites -->
+    <div class="caixa-termos">
+        <h3>Meus Subsites</h3>
+
+        <div id="area-criar-subsite"
+             style="display:flex;gap:10px;">
+
+            <input type="text"
+                   id="titulo-subsite"
+                   placeholder="Título do subsite"
+                   style="flex:1;padding:10px;min-width:0;">
+
+            <button id="btn-criar-subsite"
+                    class="botao-principal"
+                    style="width:auto;">
+                Criar
+            </button>
+        </div>
+
+        <ul id="lista-subsites"
+            style="margin-top:20px;list-style:none;padding:0;">
+        </ul>
+    </div>
+
+    <!-- Feedback -->
+    <div style="text-align:center;margin-top:30px;margin-bottom:20px;">
+        <button id="btn-enviar-feedback"
+                class="botao-principal"
+                style="width:auto;background:transparent;border:1px solid var(--cor-azul);color:var(--cor-azul);display:inline-flex;align-items:center;gap:8px;">
+            <i data-lucide="message-square-plus"
+               style="width:18px;"></i>
+            Enviar Feedback / Ideia
+        </button>
+    </div>
+
+    <!-- Sair -->
+    <button id="btn-logout"
+            class="botao-principal"
+            style="background:#333;">
+        Sair da Conta
+    </button>
+
+</section>
+
 
               <!-- NEO FLUX MARKETPLACE: editor inicial local, ainda sem publicação -->
         <section id="tela-marketplace" class="tela">
