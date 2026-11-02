@@ -1274,3 +1274,134 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
     margin: 8px 0 15px;
     text-align: center;
 }
+
+/* ==========================================
+   NEO FLUX - CENTRAL DE NOTIFICAÇÕES
+========================================== */
+
+.neo-notif-area {
+    position: relative;
+    margin-left: auto;
+}
+
+#neo-notif-btn {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    background: #171124;
+    border: 1px solid #8a2be2;
+    border-radius: 14px;
+    color: #fff;
+    cursor: pointer;
+}
+
+#neo-notif-btn:hover {
+    background: #281640;
+    box-shadow: 0 0 18px #8a2be244;
+}
+
+#neo-notif-count {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    background: #e63966;
+    color: #fff;
+    border-radius: 20px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+#neo-notif-count[hidden],
+.neo-notif-painel[hidden] {
+    display: none !important;
+}
+
+.neo-notif-painel {
+    position: absolute;
+    top: 55px;
+    left: 0;
+    width: min(360px, calc(100vw - 40px));
+    max-height: 430px;
+    overflow-y: auto;
+    z-index: 999;
+    padding: 16px;
+    background: #121018;
+    border: 1px solid #49316b;
+    border-radius: 16px;
+    box-shadow: 0 18px 45px #0009;
+}
+
+.neo-notif-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.neo-notif-topo strong {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#neo-notif-fechar {
+    background: transparent;
+    border: 0;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.neo-notif-item {
+    padding: 13px;
+    margin-bottom: 10px;
+    border: 1px solid #292331;
+    border-radius: 11px;
+    background: #19171f;
+}
+
+.neo-notif-item.nao-lida {
+    border-color: #8a2be2;
+    background: #21162e;
+}
+
+.neo-notif-item h4 {
+    margin-bottom: 6px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.neo-notif-item p {
+    margin-bottom: 8px;
+    color: #ccc;
+    font-size: 13px;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.neo-notif-item small {
+    display: block;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.neo-notif-ler {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border: 1px solid #8a2be2;
+    border-radius: 8px;
+    background: transparent;
+    color: #c99bff;
+    cursor: pointer;
+}
+
+#neo-notif-erro {
+    font-size: 12px;
+    color: #ff9b9b;
+    text-align: left;
+}
