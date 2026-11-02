@@ -2888,3 +2888,172 @@ document.getElementById("btn-abrir-fvm")?.addEventListener("click", () => {
     modal.style.display = "flex";
     console.log(" Modal FVM aberto!");
 });
+
+/* ==========================================
+   NEO FLUX - CENTRAL DE NOTIFICAÇÕES
+========================================== */
+
+const neoNotifBtn = document.getElementById("neo-notif-btn");
+const neoNotifPainel = document.getElementById("neo-notif-painel");
+const neoNotifLista = document.getElementById("neo-notif-lista");
+const neoNotifCount = document.getElementById("neo-notif-count");
+const neoNotifErro = document.getElementById("neo-notif-erro");
+
+let neoNotifUsuario = null;
+let neoNotifComunicados = [];
+let neoNotifLidos = new Set();
+
+function neoNotifAtualizarContador() {
+    const quantidade = neoNotifComunicados.filter(
+        item => !neoNotifLidos.has(item.id)
+    ).length;
+
+    neoNotifCount.textContent = quantidade > 99 ? "99+" : quantidade;
+    neoNotifCount.hidden = quantidade === 0;
+}
+
+function neoNotifRenderizar() {
+    neoNotifLista.replaceChildren();
+
+    if (!neoNotifComunicados.length) {
+        const vazio = document.createElement("p");
+        vazio.textContent = "Nenhuma notificação por enquanto.";
+        neoNotifLista.append(vazio);
+        neoNotifAtualizarContador();
+        return;
+    }
+
+    for (const item of neoNotifComunicados) {
+        const lida = neoNotifLidos.has(item.id);
+
+        const card = document.createElement("article");
+        card.className = "neo-notif-item" + (lida ? "" : " nao-lida");
+
+        const titulo = document.createElement("h4");
+        titulo.textContent = item.titulo || "Comunicado";
+
+        const mensagem = document.createElement("p");
+        mensagem.textContent = item.mensagem || "";
+
+        const data = document.createElement("small");
+        const criada = item.criadoEm?.toDate?.();
+        data.textContent = criada
+            ? criada.toLocaleString("pt-BR")
+            : "Comunicado Neo Flux";
+
+        card.append(titulo, mensagem, data);
+
+        if (!lida) {
+            const botao = document.createElement("button");
+            botao.type = "button";
+            botao.className = "neo-notif-ler";
+            botao.textContent = "✓ Marcar como lida";
+
+            botao.addEventListener("click", async () => {
+                botao.disabled = true;
+
+                try {
+                    const usuario = auth.currentUser;
+                    if (!usuario || usuario.uid !== neoNotifUsuario) {
+                        throw new Error("Sessão alterada.");
+                    }
+
+                    await setDoc(
+                        doc(db, "usuarios", usuario.uid,
+                            "comunicadosLidos", item.id),
+                        { lido: true }
+                    );
+
+                    neoNotifLidos.add(item.id);
+                    neoNotifRenderizar();
+                } catch (erro) {
+                    neoNotifErro.textContent =
+                        "Não foi possível marcar como lida.";
+                    botao.disabled = false;
+                    console.error(erro);
+                }
+            });
+
+            card.append(botao);
+        }
+
+        neoNotifLista.append(card);
+    }
+
+    neoNotifAtualizarContador();
+}
+
+async function neoNotifCarregar() {
+    const usuario = auth.currentUser;
+    if (!usuario || !usuario.emailVerified) return;
+
+    const uid = usuario.uid;
+    neoNotifUsuario = uid;
+    neoNotifErro.textContent = "";
+    neoNotifLista.textContent = "Carregando notificações...";
+
+    try {
+        const [avisos, leituras] = await Promise.all([
+            getDocs(collection(db, "comunicados")),
+            getDocs(collection(
+                db, "usuarios", uid, "comunicadosLidos"
+            ))
+        ]);
+
+        if (auth.currentUser?.uid !== uid) return;
+
+        neoNotifLidos = new Set(
+            leituras.docs
+                .filter(snap => snap.data().lido === true)
+                .map(snap => snap.id)
+        );
+
+        neoNotifComunicados = avisos.docs
+            .map(snap => ({ id: snap.id, ...snap.data() }))
+            .filter(item =>
+                item.publico === "todos" &&
+                item.criadoEm
+            )
+            .sort((a, b) =>
+                (b.criadoEm?.toMillis?.() || 0) -
+                (a.criadoEm?.toMillis?.() || 0)
+            )
+            .slice(0, 50);
+
+        neoNotifRenderizar();
+
+        if (window.lucide) window.lucide.createIcons();
+
+    } catch (erro) {
+        console.error("Erro nas notificações:", erro);
+        neoNotifErro.textContent =
+            "Não foi possível carregar as notificações.";
+        neoNotifLista.textContent = "";
+    }
+}
+
+neoNotifBtn?.addEventListener("click", async () => {
+    const abrir = neoNotifPainel.hidden;
+    neoNotifPainel.hidden = !abrir;
+    neoNotifBtn.setAttribute("aria-expanded", String(abrir));
+
+    if (abrir) await neoNotifCarregar();
+});
+
+document.getElementById("neo-notif-fechar")
+    ?.addEventListener("click", () => {
+        neoNotifPainel.hidden = true;
+        neoNotifBtn.setAttribute("aria-expanded", "false");
+    });
+
+onAuthStateChanged(auth, user => {
+    if (!user) {
+        neoNotifUsuario = null;
+        neoNotifComunicados = [];
+        neoNotifLidos.clear();
+        neoNotifPainel.hidden = true;
+        neoNotifCount.hidden = true;
+    } else if (user.emailVerified) {
+        neoNotifCarregar();
+    }
+});
