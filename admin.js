@@ -6,6 +6,7 @@ import {
     onAuthStateChanged,
     signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 import {
     getFirestore,
     collection,
@@ -15,7 +16,9 @@ import {
     setDoc,
     getDoc,
     deleteDoc,
-    writeBatch
+    writeBatch,
+    addDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1522,3 +1525,36 @@ document.getElementById("neo-teste-busca")
 
 document.getElementById("neo-teste-filtro")
     ?.addEventListener("change", renderizarTestesGratisAdmin);
+
+ // ==========================================
+ // NEO FLUX - COMUNICADOS GERAIS
+ // ==========================================
+
+async function publicarComunicadoNeo(titulo, mensagem) {
+    if (
+        auth.currentUser?.email !== emailAdmin ||
+        auth.currentUser?.emailVerified !== true
+    ) {
+        throw new Error("Administrador não autorizado.");
+    }
+
+    titulo = titulo.trim();
+    mensagem = mensagem.trim();
+
+    if (!titulo || !mensagem) {
+        throw new Error("Preencha o título e a mensagem.");
+    }
+
+    if (titulo.length > 100 || mensagem.length > 2000) {
+        throw new Error("O comunicado ultrapassou o limite de caracteres.");
+    }
+
+    await addDoc(collection(db, "comunicados"), {
+        titulo,
+        mensagem,
+        tipo: "atualizacao",
+        publico: "todos",
+        criadoEm: serverTimestamp(),
+        criadoPor: auth.currentUser.uid
+    });
+}
