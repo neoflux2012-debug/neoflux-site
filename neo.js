@@ -3337,8 +3337,9 @@ function neoAtendenteAbrirPainel(painel = "") {
     }
 }
 
+
 document.getElementById("btn-abrir-neo-atendente")
-    ?.addEventListener("click", () => {
+    ?.addEventListener("click", async () => {
 
         const permitido = [
             "elite_premium",
@@ -3350,36 +3351,41 @@ document.getElementById("btn-abrir-neo-atendente")
             return;
         }
 
-        neoAtendenteAbrirPainel();
-        mostrarTela("tela-neo-atendente");
+        const botao = document.getElementById(
+            "btn-abrir-neo-atendente"
+        );
 
-        if (typeof lucide !== "undefined") {
-            lucide.createIcons();
+        if (botao) botao.disabled = true;
+
+        try {
+            // Carrega o treinamento salvo no Firestore
+            await neoCarregarDaNuvem();
+
+            // Monta a interface com os dados carregados
+            neoAtendenteAbrirPainel();
+
+            // Abre a tela
+            mostrarTela("tela-neo-atendente");
+
+            if (typeof lucide !== "undefined") {
+                lucide.createIcons();
+            }
+
+        } catch (erro) {
+            console.error(
+                "Erro ao abrir Neo Atendente:",
+                erro
+            );
+
+            alert(
+                "Não foi possível carregar o treinamento. " +
+                "Verifique a assinatura e as permissões do Firebase."
+            );
+
+        } finally {
+            if (botao) botao.disabled = false;
         }
     });
-
-document.getElementById("neo-atendente-voltar")
-    ?.addEventListener("click", () => {
-        mostrarTela("tela-subsite");
-    });
-
-document.getElementById("neo-ir-personalizar")
-    ?.addEventListener("click", () => {
-        neoAtendenteAbrirPainel("personalizar");
-    });
-
-document.getElementById("neo-ir-treinamento")
-    ?.addEventListener("click", () => {
-        neoAtendenteAbrirPainel("treinamento");
-    });
-
-document.querySelectorAll(".neo-voltar-menu")
-    .forEach(botao => {
-        botao.addEventListener("click", () => {
-            neoAtendenteAbrirPainel();
-        });
-    });
-
 
 /* ==========================================
    NEO ATENDENTE - ETAPA 2
@@ -3476,6 +3482,7 @@ function neoCarregarDados() {
     }
 }
 
+
 function neoSalvarDados(dados) {
     try {
         localStorage.setItem(
@@ -3483,13 +3490,28 @@ function neoSalvarDados(dados) {
             JSON.stringify(dados)
         );
 
+        // Sincroniza com o Firebase
+        neoEnviarParaNuvem()
+            .then(sucesso => {
+                if (!sucesso) {
+                    console.warn(
+                        "Salvo localmente, mas não sincronizado."
+                    );
+                }
+            })
+            .catch(erro => {
+                console.error("Erro no Firebase:", erro);
+            });
+
         return true;
+
     } catch (erro) {
         console.error("Erro ao salvar:", erro);
         alert("Não foi possível salvar neste navegador.");
         return false;
     }
 }
+
 
 function neoCriarElemento(tag, texto, classe = "") {
     const elemento = document.createElement(tag);
@@ -3546,6 +3568,127 @@ function neoAbrirConteudo(tipo) {
     if (tipo === "regras") neoMontarRegras(area);
     if (tipo === "analise") neoMontarAnalise(area);
     if (tipo === "teste") neoMontarTeste(area);
+}
+
+/* ==========================================
+   NEO ATENDENTE - FIRESTORE
+========================================== */
+
+let neoSincronizacaoPendente = false;
+
+function neoReferenciaFirestore() {
+    if (!auth.currentUser || !subsiteAtualId) {
+        throw new Error("Nenhuma empresa selecionada.");
+    }
+
+    return doc(db, "neo_atendentes", subsiteAtualId);
+}
+
+function neoDadosParaFirestore(dados) {
+    return {
+        nome: String(dados.nome || "Neo").slice(0, 60),
+        estilo: dados.estilo || "acolhedor",
+        saudacao: String(dados.saudacao || "").slice(0, 1000),
+        comandos: dados.comandos || [],
+        regras: dados.regras || [],
+        ensinos: dados.ensinos || [],
+        permitirAnalise: dados.permitirAnalise === true
+    };
+}
+
+async function neoCarregarDaNuvem() {
+    const idInicial = subsiteAtualId;
+
+    try {
+        const referencia = neoReferenciaFirestore();
+        const snapshot = await getDoc(referencia);
+
+        if (idInicial !== subsiteAtualId) return;
+
+        if (snapshot.exists()) {
+            const dados = {
+                ...neoDadosPadrao(),
+                ...snapshot.data()
+            };
+
+            localStorage.setItem(
+                neoChaveLocal(),
+                JSON.stringify(dados)
+            );
+
+            console.log("Neo Atendente carregado da nuvem.");
+
+        } else {
+            console.log(
+                "Empresa ainda não possui treinamento na nuvem."
+            );
+        }
+
+    } catch (erro) {
+        console.error(
+            "Não foi possível carregar Neo Atendente:",
+            erro
+        );
+        throw erro;
+    }
+}
+
+
+let neoFilaSalvamento = Promise.resolve();
+
+function neoEnviarParaNuvem() {
+    const usuario = auth.currentUser;
+    const idSubsite = subsiteAtualId;
+
+    if (!usuario || !idSubsite) {
+        return Promise.resolve(false);
+    }
+
+    // Captura os dados no momento do salvamento
+    const dados = neoDadosParaFirestore(
+        neoCarregarDados()
+    );
+
+    const referencia = doc(
+        db,
+        "neo_atendentes",
+        idSubsite
+    );
+
+    // Executa os salvamentos na ordem
+    const tarefa = neoFilaSalvamento
+        .catch(() => {})
+        .then(async () => {
+            // Evita enviar dados de outra sessão
+            if (
+                auth.currentUser?.uid !== usuario.uid
+            ) {
+                return false;
+            }
+
+            try {
+                await setDoc(referencia, dados);
+
+                console.log(
+                    "Neo Atendente sincronizado:",
+                    idSubsite
+                );
+
+                return true;
+
+            } catch (erro) {
+                console.error(
+                    "Erro ao sincronizar Neo Atendente:",
+                    erro
+                );
+
+                return false;
+            }
+        });
+
+    neoFilaSalvamento = tarefa;
+
+    return tarefa;
 }
 
 /* ==========================================
