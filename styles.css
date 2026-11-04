@@ -1784,3 +1784,154 @@ main:has(#tela-neo-atendente.ativa) {
         padding: 16px;
     }
 }
+/* ==========================================
+   NEO ATENDENTE - ETAPA 2
+========================================== */
+
+.neo-titulo-principal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.neo-titulo-principal svg {
+    width: 36px;
+    height: 36px;
+    color: #8a2be2;
+    flex-shrink: 0;
+    -webkit-text-fill-color: initial;
+}
+
+.neo-treino-conteudo h3 {
+    color: #b57bff;
+    margin-bottom: 15px;
+}
+
+.neo-treino-conteudo p {
+    text-align: left;
+}
+
+.neo-treino-conteudo label {
+    display: block;
+    margin: 12px 0 7px;
+}
+
+.neo-treino-conteudo input,
+.neo-treino-conteudo textarea {
+    width: 100%;
+}
+
+.neo-comando-item {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    background: #151515;
+    border: 1px solid #333;
+    border-radius: 10px;
+    cursor: pointer;
+    margin: 10px 0 !important;
+}
+
+.neo-comando-item input {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: #8a2be2;
+}
+
+.neo-comando-item strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.neo-comando-item small {
+    display: block;
+    color: #aaa;
+    line-height: 1.5;
+}
+
+.neo-regra-item {
+    background: #151515;
+    border: 1px solid #333;
+    padding: 14px;
+    border-radius: 10px;
+    margin: 10px 0;
+    overflow-wrap: anywhere;
+}
+
+.neo-regra-item p {
+    margin: 6px 0 12px;
+}
+
+.neo-btn-excluir {
+    background: #351818;
+    color: #ff9999;
+    border: 1px solid #703333;
+    padding: 8px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.neo-chat-mensagens {
+    min-height: 180px;
+    max-height: 350px;
+    overflow-y: auto;
+    background: #080808;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.neo-chat-bolha {
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    max-width: 90%;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.neo-chat-cliente {
+    background: #17354a;
+    margin-left: auto;
+}
+
+.neo-chat-bot {
+    background: #292039;
+    margin-right: auto;
+}
+
+.neo-aviso {
+    background: rgba(138,43,226,0.1);
+    border: 1px solid #8a2be2;
+    border-radius: 10px;
+    padding: 14px;
+    color: #ccc;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 15px 0;
+}
+
+.neo-linha-botoes {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.neo-linha-botoes button {
+    flex: 1;
+    min-width: 130px;
+}
+
+.neo-btn-secundario {
+    background: #222;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+}
