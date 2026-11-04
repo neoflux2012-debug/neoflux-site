@@ -3304,3 +3304,112 @@ configurarQRCodeNeoFlux(async () => {
   return url.href;
 });
 
+/* ==========================================
+   NEO ATENDENTE - NAVEGAÇÃO
+========================================== */
+
+function neoAtendenteAbrirPainel(painel = "") {
+    const menu = document.getElementById(
+        "neo-atendente-menu"
+    );
+
+    const personalizar = document.getElementById(
+        "neo-painel-personalizar"
+    );
+
+    const treinamento = document.getElementById(
+        "neo-painel-treinamento"
+    );
+
+    if (!menu || !personalizar || !treinamento) return;
+
+    menu.hidden = painel !== "";
+    personalizar.hidden = painel !== "personalizar";
+    treinamento.hidden = painel !== "treinamento";
+
+    const conteudo = document.getElementById(
+        "neo-treino-conteudo"
+    );
+
+    if (conteudo) {
+        conteudo.hidden = true;
+        conteudo.replaceChildren();
+    }
+}
+
+document.getElementById("btn-abrir-neo-atendente")
+    ?.addEventListener("click", () => {
+
+        const permitido = [
+            "elite_premium",
+            "fvm_elite_premium"
+        ].includes(planoAtual);
+
+        if (!permitido || !subsiteAtualId) {
+            alert("Recurso exclusivo do Elite Premium.");
+            return;
+        }
+
+        neoAtendenteAbrirPainel();
+        mostrarTela("tela-neo-atendente");
+
+        if (typeof lucide !== "undefined") {
+            lucide.createIcons();
+        }
+    });
+
+document.getElementById("neo-atendente-voltar")
+    ?.addEventListener("click", () => {
+        mostrarTela("tela-subsite");
+    });
+
+document.getElementById("neo-ir-personalizar")
+    ?.addEventListener("click", () => {
+        neoAtendenteAbrirPainel("personalizar");
+    });
+
+document.getElementById("neo-ir-treinamento")
+    ?.addEventListener("click", () => {
+        neoAtendenteAbrirPainel("treinamento");
+    });
+
+document.querySelectorAll(".neo-voltar-menu")
+    .forEach(botao => {
+        botao.addEventListener("click", () => {
+            neoAtendenteAbrirPainel();
+        });
+    });
+
+const nomesTreinamentoNeo = {
+    comandos: "Comandos padrões",
+    regras: "Regras e Ensino",
+    analise: "Análise de Conversas",
+    teste: "Testar Atendente"
+};
+
+document.querySelectorAll("[data-neo-treino]")
+    .forEach(botao => {
+        botao.addEventListener("click", () => {
+            const tipo = botao.dataset.neoTreino;
+            const area = document.getElementById(
+                "neo-treino-conteudo"
+            );
+
+            if (!area || !nomesTreinamentoNeo[tipo]) {
+                return;
+            }
+
+            area.replaceChildren();
+
+            const titulo = document.createElement("h3");
+            titulo.textContent = nomesTreinamentoNeo[tipo];
+
+            const descricao = document.createElement("p");
+            descricao.textContent =
+                "Área preparada para receber as configurações deste treinamento.";
+
+            area.append(titulo, descricao);
+            area.hidden = false;
+        });
+    });
+
