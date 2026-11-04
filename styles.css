@@ -1669,3 +1669,118 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
     width: 28px;
     height: 28px;
 }
+
+/* ==========================================
+   CENTRAL NEO ATENDENTE
+========================================== */
+
+main:has(#tela-neo-atendente.ativa) {
+    max-width: 1000px;
+}
+
+.neo-atendente-tela {
+    padding: 15px 0 40px;
+}
+
+.neo-atendente-tela > p {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.neo-atendente-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.neo-opcao {
+    background: linear-gradient(
+        145deg,
+        rgba(138,43,226,0.13),
+        rgba(0,210,255,0.05)
+    ), #121212;
+    border: 1px solid #333;
+    border-radius: 14px;
+    padding: 22px 16px;
+    color: white;
+    cursor: pointer;
+    text-align: left;
+    transition: 0.25s;
+    font-family: inherit;
+}
+
+.neo-opcao:hover {
+    border-color: #8a2be2;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 22px rgba(138,43,226,0.2);
+}
+
+.neo-opcao svg {
+    color: #b57bff;
+    width: 28px;
+    height: 28px;
+    margin-bottom: 12px;
+}
+
+.neo-opcao h3 {
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 7px;
+}
+
+.neo-opcao span {
+    color: #aaa;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.neo-painel {
+    background: #121212;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 25px;
+    margin-top: 20px;
+}
+
+.neo-painel[hidden],
+.neo-treino-conteudo[hidden] {
+    display: none !important;
+}
+
+.neo-painel label {
+    display: block;
+    margin: 16px 0 8px;
+}
+
+.neo-painel .botao-principal {
+    margin-top: 20px;
+}
+
+.neo-voltar {
+    background: transparent;
+    color: #00d2ff;
+    border: none;
+    cursor: pointer;
+    padding: 10px 0;
+    margin-bottom: 15px;
+    font-family: inherit;
+}
+
+.neo-treino-conteudo {
+    margin-top: 20px;
+    border: 1px solid #333;
+    background: #0a0a0a;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+@media (max-width: 600px) {
+    .neo-atendente-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .neo-painel {
+        padding: 16px;
+    }
+}
