@@ -112,10 +112,51 @@ async function carregarClientes() {
                 if (!confirm("Confirmar upgrade para Elite Premium?")) return;
 
                 try {
-                    await updateDoc(doc(db, "usuarios", cliente.id), {
-                        statusPagamento: "ativo",
-                        planoPreferido: "elite_premium"
-                    });
+                   
+const vencimentoAtual = cliente.vencimento;
+
+const hoje = new Date();
+hoje.setHours(0, 0, 0, 0);
+
+let vencimento;
+
+if (
+    vencimentoAtual &&
+    new Date(vencimentoAtual + "T00:00:00") >= hoje
+) {
+    vencimento = vencimentoAtual;
+} else {
+    const novaData = new Date(hoje);
+    novaData.setDate(novaData.getDate() + 30);
+
+    vencimento = [
+        novaData.getFullYear(),
+        String(novaData.getMonth() + 1).padStart(2, "0"),
+        String(novaData.getDate()).padStart(2, "0")
+    ].join("-");
+}
+
+
+const [ano, mes, dia] = vencimento.split("-").map(Number);
+
+const vencimentoEm = new Date(
+    ano,
+    mes - 1,
+    dia,
+    23,
+    59,
+    59,
+    999
+);
+
+await updateDoc(doc(db, "usuarios", cliente.id), {
+    statusPagamento: "ativo",
+    planoPreferido: "elite_premium",
+    vencimento,
+    vencimentoEm
+});
+
+
 
                     alert("Upgrade aprovado!");
                     await carregarClientes();
@@ -258,10 +299,25 @@ async function adminConfirmarPagamento(uid) {
     if (!confirm(`Confirmar pagamento de ${cliente.nome}?`)) return;
 
     try {
-        await updateDoc(doc(db, "usuarios", uid), {
-            statusPagamento: "ativo",
-            vencimento
-        });
+       
+const [ano, mes, dia] = vencimento.split("-").map(Number);
+
+const vencimentoEm = new Date(
+    ano,
+    mes - 1,
+    dia,
+    23,
+    59,
+    59,
+    999
+);
+
+await updateDoc(doc(db, "usuarios", uid), {
+    statusPagamento: "ativo",
+    vencimento,
+    vencimentoEm
+});
+
 
         alert("Pagamento confirmado!");
         await carregarClientes();
