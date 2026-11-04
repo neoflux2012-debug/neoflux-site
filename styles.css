@@ -1570,3 +1570,51 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
   font-weight: bold;
   cursor: pointer;
 }
+
+/* ==========================================
+   NEO ATENDENTE - ELITE PREMIUM
+========================================== */
+
+.card-neo-atendente {
+    background: linear-gradient(
+        135deg,
+        rgba(138,43,226,0.18),
+        rgba(0,210,255,0.10)
+    ), #121212;
+
+    border: 1px solid #8a2be2;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.card-neo-atendente:hover {
+    border-color: #00d2ff;
+    box-shadow: 0 0 25px rgba(138,43,226,0.3);
+    transform: translateY(-3px);
+}
+
+.card-neo-atendente h3 {
+    color: #b57bff;
+    margin: 12px 0;
+}
+
+.card-neo-atendente p {
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.neo-atendente-icone {
+    width: 38px;
+    height: 38px;
+    color: #b57bff;
+}
+
+.card-neo-atendente button {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
