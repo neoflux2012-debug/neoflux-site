@@ -3380,36 +3380,596 @@ document.querySelectorAll(".neo-voltar-menu")
         });
     });
 
-const nomesTreinamentoNeo = {
-    comandos: "Comandos padrões",
-    regras: "Regras e Ensino",
-    analise: "Análise de Conversas",
-    teste: "Testar Atendente"
-};
+
+/* ==========================================
+   NEO ATENDENTE - ETAPA 2
+   Protótipo local de treinamento
+========================================== */
+
+const NEO_COMANDOS_PADRAO = [
+    {
+        id: "horarios",
+        nome: "Informar horários",
+        descricao: "Responder sobre horários de atendimento."
+    },
+    {
+        id: "precos",
+        nome: "Informar preços",
+        descricao: "Consultar informações cadastradas sobre valores."
+    },
+    {
+        id: "agenda",
+        nome: "Consultar disponibilidade",
+        descricao: "Orientar o cliente sobre reservas e datas."
+    },
+    {
+        id: "frete",
+        nome: "Entrega e frete",
+        descricao: "Explicar como funciona a entrega."
+    },
+    {
+        id: "descontos",
+        nome: "Negociação e descontos",
+        descricao: "Seguir as regras comerciais cadastradas."
+    },
+    {
+        id: "orcamento",
+        nome: "Coletar dados para orçamento",
+        descricao: "Perguntar data, tema, local e tipo de serviço."
+    },
+    {
+        id: "humano",
+        nome: "Transferir para humano",
+        descricao: "Encaminhar quando o cliente solicitar."
+    }
+];
+
+function neoDadosPadrao() {
+    return {
+        nome: "Neo",
+        estilo: "acolhedor",
+        saudacao: "Olá! Seja bem-vindo! Como posso ajudar?",
+        comandos: ["humano", "orcamento"],
+        regras: [],
+        ensinos: [],
+        permitirAnalise: false
+    };
+}
+
+function neoChaveLocal() {
+    const uid = auth.currentUser?.uid || "sem-usuario";
+    const subsite = subsiteAtualId || "sem-subsite";
+
+    return `neo_atendente_rascunho_${uid}_${subsite}`;
+}
+
+function neoCarregarDados() {
+    const padrao = neoDadosPadrao();
+
+    try {
+        const salvo = JSON.parse(
+            localStorage.getItem(neoChaveLocal()) || "null"
+        );
+
+        if (!salvo || typeof salvo !== "object") {
+            return padrao;
+        }
+
+        return {
+            ...padrao,
+            ...salvo,
+            comandos: Array.isArray(salvo.comandos)
+                ? salvo.comandos
+                : padrao.comandos,
+            regras: Array.isArray(salvo.regras)
+                ? salvo.regras
+                : [],
+            ensinos: Array.isArray(salvo.ensinos)
+                ? salvo.ensinos
+                : [],
+            permitirAnalise: salvo.permitirAnalise === true
+        };
+
+    } catch (erro) {
+        console.error("Erro ao ler rascunho:", erro);
+        return padrao;
+    }
+}
+
+function neoSalvarDados(dados) {
+    try {
+        localStorage.setItem(
+            neoChaveLocal(),
+            JSON.stringify(dados)
+        );
+
+        return true;
+    } catch (erro) {
+        console.error("Erro ao salvar:", erro);
+        alert("Não foi possível salvar neste navegador.");
+        return false;
+    }
+}
+
+function neoCriarElemento(tag, texto, classe = "") {
+    const elemento = document.createElement(tag);
+
+    if (texto !== undefined) {
+        elemento.textContent = texto;
+    }
+
+    if (classe) {
+        elemento.className = classe;
+    }
+
+    return elemento;
+}
+
+function neoCriarBotao(texto, acao, classe = "botao-principal") {
+    const botao = neoCriarElemento("button", texto, classe);
+    botao.type = "button";
+    botao.addEventListener("click", acao);
+    return botao;
+}
+
+function neoCriarCampo(tipo, placeholder = "") {
+    const campo = document.createElement(tipo);
+    campo.placeholder = placeholder;
+
+    if (tipo === "textarea") {
+        campo.rows = 3;
+    }
+
+    return campo;
+}
+
+function neoAbrirConteudo(tipo) {
+    const area = document.getElementById("neo-treino-conteudo");
+
+    if (!area) return;
+
+    area.replaceChildren();
+    area.hidden = false;
+
+    const titulos = {
+        comandos: "Comandos padrões",
+        regras: "Regras e Ensino",
+        analise: "Análise de Conversas",
+        teste: "Testar Atendente"
+    };
+
+    area.append(
+        neoCriarElemento("h3", titulos[tipo] || "Treinamento")
+    );
+
+    if (tipo === "comandos") neoMontarComandos(area);
+    if (tipo === "regras") neoMontarRegras(area);
+    if (tipo === "analise") neoMontarAnalise(area);
+    if (tipo === "teste") neoMontarTeste(area);
+}
+
+/* ==========================================
+   PERSONALIZAÇÃO
+========================================== */
+
+function neoPreencherPersonalizacao() {
+    const dados = neoCarregarDados();
+
+    document.getElementById("neo-nome").value = dados.nome;
+    document.getElementById("neo-estilo").value = dados.estilo;
+    document.getElementById("neo-saudacao").value = dados.saudacao;
+}
+
+document.getElementById("neo-ir-personalizar")
+    ?.addEventListener("click", neoPreencherPersonalizacao);
+
+document.getElementById("neo-salvar-personalizacao")
+    ?.addEventListener("click", () => {
+
+        const dados = neoCarregarDados();
+
+        const nome = document.getElementById("neo-nome")
+            .value.trim();
+
+        const saudacao = document.getElementById("neo-saudacao")
+            .value.trim();
+
+        if (!nome || !saudacao) {
+            alert("Preencha o nome e a saudação.");
+            return;
+        }
+
+        dados.nome = nome;
+        dados.estilo = document.getElementById("neo-estilo").value;
+        dados.saudacao = saudacao;
+
+        if (neoSalvarDados(dados)) {
+            alert("Personalização salva neste navegador!");
+        }
+    });
+
+/* ==========================================
+   COMANDOS PADRÕES
+========================================== */
+
+function neoMontarComandos(area) {
+    area.append(
+        neoCriarElemento(
+            "p",
+            "Escolha os comportamentos que deseja habilitar."
+        )
+    );
+
+    const dados = neoCarregarDados();
+
+    NEO_COMANDOS_PADRAO.forEach(comando => {
+        const label = document.createElement("label");
+        label.className = "neo-comando-item";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = dados.comandos.includes(comando.id);
+
+        const texto = document.createElement("span");
+
+        texto.append(
+            neoCriarElemento("strong", comando.nome),
+            neoCriarElemento("small", comando.descricao)
+        );
+
+        checkbox.addEventListener("change", () => {
+            const atual = neoCarregarDados();
+            const selecionados = new Set(atual.comandos);
+
+            if (checkbox.checked) {
+                selecionados.add(comando.id);
+            } else {
+                selecionados.delete(comando.id);
+            }
+
+            atual.comandos = [...selecionados];
+            neoSalvarDados(atual);
+        });
+
+        label.append(checkbox, texto);
+        area.append(label);
+    });
+
+    area.append(
+        neoCriarElemento(
+            "div",
+            "Os comandos serão utilizados pelo motor de atendimento quando ele estiver integrado.",
+            "neo-aviso"
+        )
+    );
+}
+
+/* ==========================================
+   REGRAS E ENSINO
+========================================== */
+
+function neoMontarRegras(area) {
+    area.append(
+        neoCriarElemento(
+            "p",
+            "Cadastre regras de comportamento e ensine respostas para perguntas frequentes."
+        )
+    );
+
+    const tituloRegra = neoCriarElemento("h4", "Nova regra");
+    const campoRegra = neoCriarCampo(
+        "textarea",
+        "Ex.: Nunca oferecer descontos sem autorização."
+    );
+
+    const listaRegras = document.createElement("div");
+
+    const salvarRegra = neoCriarBotao("Adicionar regra", () => {
+        const texto = campoRegra.value.trim();
+
+        if (!texto) return alert("Digite uma regra.");
+
+        const dados = neoCarregarDados();
+
+        dados.regras.push({
+            id: crypto.randomUUID(),
+            texto
+        });
+
+        if (neoSalvarDados(dados)) {
+            campoRegra.value = "";
+            neoRenderizarRegras(listaRegras);
+        }
+    });
+
+    area.append(
+        tituloRegra,
+        campoRegra,
+        salvarRegra,
+        listaRegras
+    );
+
+    neoRenderizarRegras(listaRegras);
+
+    area.append(
+        document.createElement("hr"),
+        neoCriarElemento("h4", "Ensinar perguntas e respostas")
+    );
+
+    const pergunta = neoCriarCampo(
+        "input",
+        "Pergunta: Tem desconto?"
+    );
+
+    const resposta = neoCriarCampo(
+        "textarea",
+        "Resposta que o atendente deverá utilizar..."
+    );
+
+    const listaEnsinos = document.createElement("div");
+
+    const salvarEnsino = neoCriarBotao(
+        "Salvar ensinamento",
+        () => {
+            const p = pergunta.value.trim();
+            const r = resposta.value.trim();
+
+            if (!p || !r) {
+                alert("Preencha a pergunta e a resposta.");
+                return;
+            }
+
+            const dados = neoCarregarDados();
+
+            dados.ensinos.push({
+                id: crypto.randomUUID(),
+                pergunta: p,
+                resposta: r
+            });
+
+            if (neoSalvarDados(dados)) {
+                pergunta.value = "";
+                resposta.value = "";
+                neoRenderizarEnsinos(listaEnsinos);
+            }
+        }
+    );
+
+    area.append(
+        neoCriarElemento("label", "Pergunta"),
+        pergunta,
+        neoCriarElemento("label", "Resposta"),
+        resposta,
+        salvarEnsino,
+        listaEnsinos
+    );
+
+    neoRenderizarEnsinos(listaEnsinos);
+}
+
+function neoRenderizarRegras(container) {
+    container.replaceChildren();
+
+    const dados = neoCarregarDados();
+
+    dados.regras.forEach(regra => {
+        const item = document.createElement("div");
+        item.className = "neo-regra-item";
+
+        const excluir = neoCriarBotao(
+            "Excluir",
+            () => {
+                if (!confirm("Excluir esta regra?")) return;
+
+                const atual = neoCarregarDados();
+                atual.regras = atual.regras.filter(
+                    r => r.id !== regra.id
+                );
+
+                if (neoSalvarDados(atual)) {
+                    neoRenderizarRegras(container);
+                }
+            },
+            "neo-btn-excluir"
+        );
+
+        item.append(
+            neoCriarElemento("p", regra.texto),
+            excluir
+        );
+
+        container.append(item);
+    });
+}
+
+function neoRenderizarEnsinos(container) {
+    container.replaceChildren();
+
+    const dados = neoCarregarDados();
+
+    dados.ensinos.forEach(ensino => {
+        const item = document.createElement("div");
+        item.className = "neo-regra-item";
+
+        const excluir = neoCriarBotao(
+            "Excluir",
+            () => {
+                if (!confirm("Excluir este ensinamento?")) return;
+
+                const atual = neoCarregarDados();
+                atual.ensinos = atual.ensinos.filter(
+                    e => e.id !== ensino.id
+                );
+
+                if (neoSalvarDados(atual)) {
+                    neoRenderizarEnsinos(container);
+                }
+            },
+            "neo-btn-excluir"
+        );
+
+        item.append(
+            neoCriarElemento("strong", ensino.pergunta),
+            neoCriarElemento("p", ensino.resposta),
+            excluir
+        );
+
+        container.append(item);
+    });
+}
+
+/* ==========================================
+   ANÁLISE DE CONVERSAS
+========================================== */
+
+function neoMontarAnalise(area) {
+    const dados = neoCarregarDados();
+
+    area.append(
+        neoCriarElemento(
+            "div",
+            "A análise automática ainda não está conectada. Esta opção salva apenas a preferência de autorização. Nenhuma conversa será coletada nesta etapa.",
+            "neo-aviso"
+        )
+    );
+
+    const label = document.createElement("label");
+    label.className = "neo-comando-item";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = dados.permitirAnalise;
+
+    const descricao = document.createElement("span");
+
+    descricao.append(
+        neoCriarElemento(
+            "strong",
+            "Permitir análise de conversas"
+        ),
+        neoCriarElemento(
+            "small",
+            "Quando implementada, a análise deverá respeitar a privacidade dos clientes e gerar sugestões que precisam de aprovação."
+        )
+    );
+
+    checkbox.addEventListener("change", () => {
+        const atual = neoCarregarDados();
+        atual.permitirAnalise = checkbox.checked;
+        neoSalvarDados(atual);
+    });
+
+    label.append(checkbox, descricao);
+    area.append(label);
+
+    area.append(
+        neoCriarElemento(
+            "h4",
+            "Sugestões de aprendizado"
+        ),
+        neoCriarElemento(
+            "p",
+            "Nenhuma sugestão disponível. O recurso será implementado junto com a integração segura."
+        )
+    );
+}
+
+/* ==========================================
+   SIMULADOR LOCAL
+========================================== */
+
+function neoNormalizarTexto(texto) {
+    return String(texto || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[?!.,;:]/g, "")
+        .trim()
+        .replace(/\s+/g, " ");
+}
+
+function neoRespostaSimulada(mensagem) {
+    const dados = neoCarregarDados();
+
+    const pergunta = neoNormalizarTexto(mensagem);
+
+    const ensino = dados.ensinos.find(
+        e => neoNormalizarTexto(e.pergunta) === pergunta
+    );
+
+    if (ensino) return ensino.resposta;
+
+    if (/^(oi|ola|bom dia|boa tarde|boa noite)$/.test(pergunta)) {
+        return dados.saudacao;
+    }
+
+    return "Ainda não tenho uma resposta cadastrada para essa pergunta. Você pode ensiná-la na área Regras e Ensino.";
+}
+
+function neoMontarTeste(area) {
+    area.append(
+        neoCriarElemento(
+            "div",
+            "Simulação local: usa respostas cadastradas, sem inteligência artificial ou WhatsApp.",
+            "neo-aviso"
+        )
+    );
+
+    const mensagens = document.createElement("div");
+    mensagens.className = "neo-chat-mensagens";
+
+    const entrada = neoCriarCampo(
+        "input",
+        "Digite uma mensagem como cliente..."
+    );
+
+    function adicionarMensagem(texto, classe) {
+        const bolha = neoCriarElemento(
+            "div",
+            texto,
+            `neo-chat-bolha ${classe}`
+        );
+
+        mensagens.append(bolha);
+        mensagens.scrollTop = mensagens.scrollHeight;
+    }
+
+    function enviar() {
+        const texto = entrada.value.trim();
+
+        if (!texto) return;
+
+        adicionarMensagem(texto, "neo-chat-cliente");
+
+        adicionarMensagem(
+            neoRespostaSimulada(texto),
+            "neo-chat-bot"
+        );
+
+        entrada.value = "";
+    }
+
+    entrada.addEventListener("keydown", e => {
+        if (e.key === "Enter") enviar();
+    });
+
+    const botao = neoCriarBotao(
+        "Simular resposta",
+        enviar
+    );
+
+    area.append(mensagens, entrada, botao);
+}
+
+/* ==========================================
+   ABERTURA DOS TREINAMENTOS
+========================================== */
 
 document.querySelectorAll("[data-neo-treino]")
     .forEach(botao => {
         botao.addEventListener("click", () => {
-            const tipo = botao.dataset.neoTreino;
-            const area = document.getElementById(
-                "neo-treino-conteudo"
-            );
-
-            if (!area || !nomesTreinamentoNeo[tipo]) {
-                return;
-            }
-
-            area.replaceChildren();
-
-            const titulo = document.createElement("h3");
-            titulo.textContent = nomesTreinamentoNeo[tipo];
-
-            const descricao = document.createElement("p");
-            descricao.textContent =
-                "Área preparada para receber as configurações deste treinamento.";
-
-            area.append(titulo, descricao);
-            area.hidden = false;
+            neoAbrirConteudo(botao.dataset.neoTreino);
         });
     });
 
+console.log("Neo Atendente - protótipo carregado.");
