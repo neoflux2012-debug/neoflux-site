@@ -1514,6 +1514,111 @@
             </div>
         </div>
 
+<!-- CENTRAL NEO ATENDENTE -->
+<section id="tela-neo-atendente" class="tela neo-atendente-tela">
+
+  <button type="button" id="neo-atendente-voltar"
+    class="neo-voltar">← Voltar ao painel</button>
+
+  <h2>🤖 Neo Atendente</h2>
+  <p>Configure e treine seu atendente virtual.</p>
+
+  <div id="neo-atendente-menu" class="neo-atendente-grid">
+
+    <button type="button" id="neo-ir-personalizar"
+      class="neo-opcao">
+      <i data-lucide="sliders-horizontal"></i>
+      <h3>Personalizar Atendente</h3>
+      <span>Nome, personalidade e mensagem inicial</span>
+    </button>
+
+    <button type="button" id="neo-ir-treinamento"
+      class="neo-opcao">
+      <i data-lucide="graduation-cap"></i>
+      <h3>Treinamento</h3>
+      <span>Comandos, regras, análise e testes</span>
+    </button>
+
+  </div>
+
+  <!-- PERSONALIZAÇÃO -->
+  <div id="neo-painel-personalizar" class="neo-painel" hidden>
+
+    <button type="button" class="neo-voltar neo-voltar-menu">
+      ← Voltar às opções
+    </button>
+
+    <h3>Personalizar Atendente</h3>
+
+    <label for="neo-nome">Nome do atendente</label>
+    <input id="neo-nome" maxlength="60"
+      placeholder="Ex.: Luna">
+
+    <label for="neo-estilo">Estilo de comunicação</label>
+    <select id="neo-estilo">
+      <option value="acolhedor">Carinhoso e acolhedor</option>
+      <option value="profissional">Profissional e objetivo</option>
+      <option value="animado">Descontraído e animado</option>
+      <option value="consultivo">Consultivo e atencioso</option>
+      <option value="direto">Rápido e direto</option>
+    </select>
+
+    <label for="neo-saudacao">Mensagem de boas-vindas</label>
+    <textarea id="neo-saudacao" rows="4"
+      placeholder="Olá! Seja bem-vindo! Como posso ajudar?"></textarea>
+
+    <button type="button" id="neo-salvar-personalizacao"
+      class="botao-principal">
+      Salvar personalização
+    </button>
+
+  </div>
+
+  <!-- TREINAMENTO -->
+  <div id="neo-painel-treinamento" class="neo-painel" hidden>
+
+    <button type="button" class="neo-voltar neo-voltar-menu">
+      ← Voltar às opções
+    </button>
+
+    <h3>Central de Treinamento</h3>
+
+    <div class="neo-atendente-grid">
+      <button type="button" class="neo-opcao"
+        data-neo-treino="comandos">
+        <i data-lucide="list-checks"></i>
+        <h3>Comandos padrões</h3>
+        <span>Selecione instruções prontas</span>
+      </button>
+
+      <button type="button" class="neo-opcao"
+        data-neo-treino="regras">
+        <i data-lucide="book-open"></i>
+        <h3>Regras e Ensino</h3>
+        <span>Ensine como o atendente deve agir</span>
+      </button>
+
+      <button type="button" class="neo-opcao"
+        data-neo-treino="analise">
+        <i data-lucide="messages-square"></i>
+        <h3>Análise de Conversas</h3>
+        <span>Aprendizado supervisionado</span>
+      </button>
+
+      <button type="button" class="neo-opcao"
+        data-neo-treino="teste">
+        <i data-lucide="flask-conical"></i>
+        <h3>Testar Atendente</h3>
+        <span>Simule um atendimento</span>
+      </button>
+    </div>
+
+    <div id="neo-treino-conteudo" class="neo-treino-conteudo"
+      hidden></div>
+
+  </div>
+</section>
+
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
