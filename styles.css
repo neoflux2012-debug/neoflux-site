@@ -1618,3 +1618,54 @@ main:has(#tela-market-busca.ativa){max-width:1500px!important;padding-left:clamp
     justify-content: center;
     gap: 8px;
 }
+
+/* ==========================================
+   NEO FLUX - CARDS COMPACTOS DO SUBSITE
+========================================== */
+
+/* Grade de cards */
+#tela-subsite > div:nth-child(2) {
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(180px, 1fr)
+    );
+    gap: 12px;
+}
+
+/* Reduz o espaço interno */
+#tela-subsite .card-neo-atendente,
+#tela-subsite .card-analista,
+#tela-subsite .card-orcamento-inteligente {
+    padding: 16px !important;
+}
+
+/* Títulos menores */
+#tela-subsite .card-neo-atendente h3,
+#tela-subsite .card-analista h3,
+#tela-subsite .card-orcamento-inteligente h3 {
+    font-size: 1rem !important;
+    margin-bottom: 7px;
+}
+
+/* Descrições compactas */
+#tela-subsite .card-neo-atendente p,
+#tela-subsite .card-analista p,
+#tela-subsite .card-orcamento-inteligente p {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+/* Botões menores */
+#tela-subsite .card-neo-atendente button,
+#tela-subsite .card-analista button,
+#tela-subsite .card-orcamento-inteligente button {
+    padding: 10px;
+    font-size: 0.82rem;
+}
+
+/* Ícone do Neo Atendente */
+#tela-subsite .neo-atendente-icone {
+    width: 28px;
+    height: 28px;
+}
