@@ -656,6 +656,22 @@ async function abrirSubsite(id) {
 
     const cardAnalista = document.getElementById('card-analista');
     if (cardAnalista) cardAnalista.style.display = regras.analista ? 'block' : 'none';
+  
+    // Neo Atendente - exclusivo Elite Premium
+    const cardNeoAtendente = document.getElementById(
+        'card-neo-atendente'
+    );
+
+    const temNeoAtendente = [
+        'elite_premium',
+        'fvm_elite_premium'
+    ].includes(planoAtual);
+
+    if (cardNeoAtendente) {
+        cardNeoAtendente.style.display =
+            temNeoAtendente ? 'block' : 'none';
+    }
+
 
     const datalist = document.getElementById('lista-kits-salvos');
     if(datalist) {
