@@ -257,24 +257,50 @@ const recursosPlanosBase = {
     elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  }
 };
 
+
+
 function getRecursos(plano) {
+    plano = String(plano || "").trim().toLowerCase();
+
     if (plano.startsWith('fvm_')) {
         const planoBase = plano.replace('fvm_', '');
-        
+
         if (planoBase === 'start') {
-            return { kits: true, maxKits: 3, relatorios: false, assistente: true, valores: false, contratos: false, sugestaoMensagem: false, analista: false };
+            return {
+                kits: true,
+                maxKits: 3,
+                relatorios: false,
+                assistente: true,
+                valores: false,
+                contratos: false,
+                sugestaoMensagem: false,
+                analista: false
+            };
         }
-        
-        const regrasBase = recursosPlanosBase[planoBase] || recursosPlanosBase.start;
-        
-        // 🔹 AQUI: Libera contratos APENAS para o FVM Elite Premium e FVM Elite.
-        const temContrato = (
-    plano === 'fvm_elite' ||
-    plano === 'fvm_elite_premium'
-);
-        
-        return { ...regrasBase, maxKits: 999, contratos: temContrato };
+
+        const regrasBase =
+            recursosPlanosBase[planoBase] || recursosPlanosBase.start;
+
+        const temContrato =
+            plano === 'fvm_elite' ||
+            plano === 'fvm_elite_premium';
+
+        return {
+            ...regrasBase,
+            maxKits: 999,
+            contratos: temContrato
+        };
     }
+
+    const regrasBase =
+        recursosPlanosBase[plano] || recursosPlanosBase.start;
+
+    return {
+        ...regrasBase,
+        maxKits: 999
+    };
+}
+
     
     const regrasBase = recursosPlanosBase[plano] || recursosPlanosBase.start;
     return { ...regrasBase, maxKits: 999 };
@@ -528,7 +554,11 @@ async function carregarDadosCliente(uid) {
         if (snap.exists()) {
             const dados = snap.data();
             
-            planoAtual = dados.planoPreferido;
+           
+planoAtual = String(dados.planoPreferido || "")
+    .trim()
+    .toLowerCase();
+
             window.planoAtualNeoWave = planoAtual;
             document.getElementById('cliente-nome').textContent = dados.nome;
             document.getElementById('cliente-plano').textContent = (nomesPlanos[planoAtual] || planoAtual).toUpperCase();
