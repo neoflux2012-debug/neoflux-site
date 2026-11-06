@@ -4115,4 +4115,4 @@ document.querySelectorAll("[data-neo-treino]")
         });
     });
 
-console.log("Neo Atendente - protótipo carregado.");
+console.log("Neo Atendente --- carregado.");
