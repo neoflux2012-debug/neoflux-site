@@ -639,7 +639,29 @@ async function abrirSubsite(id) {
     }
 
     const regras = getRecursos(planoAtual);
+// ==========================================
+// NEO SECRETÁRIO - CONTROLE DE ACESSO
+// ==========================================
 
+window.neoSecretarioContexto = {
+    subsiteId: id
+};
+
+const btnSecretario = document.getElementById(
+    "btn-neo-secretario"
+);
+
+const planosSecretario = [
+    "elite_premium",
+    "fvm_elite_premium"
+];
+
+if (btnSecretario) {
+    btnSecretario.style.display =
+        planosSecretario.includes(planoAtual)
+            ? "block"
+            : "none";
+}
     const btnKits = document.getElementById('btn-abrir-kits');
     if(btnKits) { btnKits.disabled = !regras.kits; btnKits.style.background = regras.kits ? "var(--gradiente-neo)" : "#333"; }
     const btnRel = document.getElementById('btn-relatorios');
