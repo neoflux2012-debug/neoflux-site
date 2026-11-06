@@ -1,6 +1,4 @@
-
-import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { auth, db } from "./firebase-config.js";
 import {
     getFirestore,
     doc,
@@ -15,9 +13,6 @@ import {
 // NEO SECRETÁRIO - CONFIGURAÇÃO
 // ==========================================
 
-const app = getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 const planosPermitidos = new Set([
     "elite_premium",
