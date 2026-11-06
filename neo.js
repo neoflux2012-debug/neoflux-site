@@ -302,8 +302,13 @@ function getRecursos(plano) {
 }
 
     
-    const regrasBase = recursosPlanosBase[plano] || recursosPlanosBase.start;
-    return { ...regrasBase, maxKits: 999 };
+       const regrasBase =
+        recursosPlanosBase[plano] || recursosPlanosBase.start;
+
+    return {
+        ...regrasBase,
+        maxKits: 999
+    };
 }
 
 function getLimite(plano) {
