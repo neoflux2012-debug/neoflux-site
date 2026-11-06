@@ -1278,7 +1278,14 @@
                 onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'; document.getElementById('btn-agendar-festa').click();">
                 Novo Pedido / Festa
             </button>
-
+<!-- NEO SECRETÁRIO: EXCLUSIVO ELITE PREMIUM -->
+<button
+    type="button"
+    id="btn-neo-secretario"
+    class="botao-principal"
+    style="display:none; background:linear-gradient(135deg,#5220a0,#8a2be2);">
+    🗂️ Neo Secretário
+</button>
             <!-- REINICIAR TUTORIAL -->
             <button class="botao-principal"
                 style="background: #241332; border: 1px solid #8a2be2;"
@@ -1294,6 +1301,111 @@
             onclick="document.getElementById('modal-comandos-neo-wave').style.display='none'">
             Fechar
         </button>
+
+    </div>
+</div>
+
+<!-- ======================================
+     NEO SECRETÁRIO - JANELA PRINCIPAL
+====================================== -->
+<div
+    id="modal-neo-secretario"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="neo-secretario-titulo"
+    hidden
+    style="
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.9);
+        z-index:10010;
+        align-items:center;
+        justify-content:center;
+        padding:16px;
+    ">
+
+    <div style="
+        background:#121212;
+        border:1px solid #8a2be2;
+        border-radius:14px;
+        width:100%;
+        max-width:680px;
+        max-height:90vh;
+        overflow:auto;
+        padding:22px;
+        color:#fff;
+    ">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+        ">
+            <h2
+                id="neo-secretario-titulo"
+                style="margin:0;color:#c9a5ff;">
+                🗂️ Neo Secretário
+            </h2>
+
+            <button
+                type="button"
+                id="neo-secretario-fechar"
+                aria-label="Fechar Neo Secretário"
+                style="
+                    background:#333;
+                    color:white;
+                    border:0;
+                    border-radius:8px;
+                    padding:9px 14px;
+                    cursor:pointer;
+                ">
+                ✕
+            </button>
+        </div>
+
+        <p style="color:#bbb;">
+            Seu painel de prioridades e compromissos.
+        </p>
+
+        <div style="
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+            margin:16px 0;
+        ">
+
+            <button
+                type="button"
+                class="botao-principal"
+                data-secretario-acao="hoje"
+                style="flex:1;min-width:125px;">
+                ☀️ Meu dia
+            </button>
+
+            <button
+                type="button"
+                class="botao-principal"
+                data-secretario-acao="semana"
+                style="flex:1;min-width:125px;">
+                📅 Semana
+            </button>
+
+            <button
+                type="button"
+                class="botao-principal"
+                data-secretario-acao="pendencias"
+                style="flex:1;min-width:125px;">
+                🔔 Pendências
+            </button>
+
+        </div>
+
+        <div
+            id="neo-secretario-resultado"
+            aria-live="polite"
+            style="line-height:1.6;color:#ddd;">
+        </div>
 
     </div>
 </div>
