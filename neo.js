@@ -11,9 +11,7 @@ const firebaseConfig = {
   appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { app, auth, db } from "./firebase-config.js";
 
 /* ==========================================
    NEO FLUX - PREÇOS PÚBLICOS DO FIREBASE
