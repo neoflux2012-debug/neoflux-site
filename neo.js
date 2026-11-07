@@ -13,6 +13,21 @@ import {
     writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import {
+    setPersistence,
+    browserLocalPersistence,
+    createUserWithEmailAndPassword,
+    updateProfile,
+    sendEmailVerification,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+    signOut,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import { app, auth, db } from "./firebase-config.js";
+
+
 // ==========================================
 // FIREBASE - CONFIGURAÇÃO COMPARTILHADA
 // ==========================================
