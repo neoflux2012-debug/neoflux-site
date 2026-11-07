@@ -749,6 +749,17 @@ async function abrirSubsite(id) {
     }
 
     const regras = getRecursos(planoAtual);
+    
+// ==========================================
+// CONTEXTO DAS PLANILHAS
+// ==========================================
+
+window.neoPlanilhasContexto = {
+    subsiteId: id,
+    plano: planoAtual,
+    permitido: !!regras.planilhas
+};
+
 // ==========================================
 // NEO SECRETÁRIO - CONTROLE DE ACESSO
 // ==========================================
