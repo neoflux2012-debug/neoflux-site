@@ -794,15 +794,6 @@ if (btnSecretario) {
 // INCLUI OS PLANOS FVM
 // ==========================================
 
-const cardPlanilhas = document.getElementById(
-    "card-planilhas"
-);
-
-if (cardPlanilhas) {
-    cardPlanilhas.style.display =
-        regras.planilhas ? "block" : "none";
-}
-
     // Neo Atendente - exclusivo Elite Premium
     const cardNeoAtendente = document.getElementById(
         'card-neo-atendente'
