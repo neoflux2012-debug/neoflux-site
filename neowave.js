@@ -1,15 +1,17 @@
-// ==========================================
-// NEOWAVE.JS - Chat, Comandos, Quebra e Tutorial
-// ==========================================
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, updateDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app = getApps().length ? getApps()[0] : initializeApp({});
-const db = getFirestore(app);
+import { db } from "./firebase-config.js";
+
+import {
+    doc,
+    updateDoc,
+    getDoc,
+    collection,
+    query,
+    where,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 let subsiteAtualIdWave = "";
-
-
 /* ==========================================
    1 E 2. TUTORIAL INTERATIVO NEO WAVE
    ========================================== */
