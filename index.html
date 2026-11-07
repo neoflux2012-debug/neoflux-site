@@ -682,53 +682,7 @@
                     </button>
                 </div>
 
-<!-- NEO FLUX - PLANILHAS -->
-<div id="card-planilhas"
-     style="display:none;background:#121212;
-     border:1px solid #27ae60;border-radius:12px;
-     padding:25px;">
 
-    <i data-lucide="sheet"
-       style="color:#27ae60;width:28px;
-       height:28px;margin-bottom:10px;"></i>
-
-    <h3 style="color:white;margin:0 0 8px;">
-        Planilhas Inteligentes
-    </h3>
-
-    <p style="color:#aaa;font-size:12px;">
-        Crie, edite e organize suas planilhas.
-        Disponível a partir do Plano Pro.
-    </p>
-
-    <button id="btn-abrir-planilhas"
-            type="button"
-            class="botao-principal"
-            style="width:100%;background:#27ae60;">
-        📊 Abrir Planilhas
-    </button>
-</div>
-
-                <div id="card-analista" class="card-analista">
-                    <i data-lucide="bar-chart-3" style="color: #f39c12; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="margin: 0 0 6px 0;">Neo Wave Analista</h3>
-                    <p style="color: #ffd699; font-size: 0.75rem; margin: 0 0 12px 0; text-align: left;">
-                        <i data-lucide="trending-up" style="width: 13px; vertical-align: middle;"></i> Exclusivo Elite+
-                    </p>
-                    <button id="btn-abrir-analista" class="btn-analista">Ver Análises</button>
-                </div>
-                
-                <div id="card-contratos" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="file-text" style="color: #e67e22; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;">Contratos</h3>
-                    <button id="btn-abrir-contratos" class="botao-principal" style="width: 100%; background: #e67e22;">Gerenciar</button>
-                </div>
-
-                <div id="card-relatorios" style="background: #121212; border: 1px solid #333; border-radius: 12px; padding: 25px;">
-                    <i data-lucide="bar-chart-2" style="color: #27ae60; width: 28px; height: 28px; margin-bottom: 10px;"></i>
-                    <h3 style="color: white; margin: 0 0 10px 0;">Relatórios</h3>
-                    <button id="btn-relatorios" class="botao-principal" style="width: 100%;">Ver Planilha</button>
-                </div>
                 
 <!-- CLIENTES E CAMPANHAS -->
 <div id="card-clientes-campanhas"
@@ -1177,6 +1131,18 @@
         <div id="modal-analista" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #f39c12; padding: 30px; border-radius: 12px; width: 100%; max-width: 900px; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 40px rgba(243,156,18,0.2);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    
+<button id="btn-planilhas-analista"
+        type="button"
+        style="background:linear-gradient(135deg,#00c853,#008f45);
+               color:white;border:none;border-radius:8px;
+               padding:11px 18px;font-weight:600;
+               cursor:pointer;margin-left:auto;margin-right:15px;
+               display:flex;align-items:center;gap:8px;">
+    <i data-lucide="table-2" style="width:18px;"></i>
+    Planilhas
+</button>
+
                     <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;"><i data-lucide="bar-chart-3" style="color: #f39c12; width: 28px;"></i> Neo Wave Analista</h2>
                     <button id="btn-fechar-modal-analista" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
                 </div>
