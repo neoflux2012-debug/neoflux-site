@@ -1,15 +1,21 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, collection, query, where, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, setPersistence, browserLocalPersistence, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAdwwjbpyvTU5afvNzcHaBm-T-ShueHicU",
-  authDomain: "neo-flux-c91c8.firebaseapp.com",
-  projectId: "neo-flux-c91c8",
-  storageBucket: "neo-flux-c91c8.firebasestorage.app",
-  messagingSenderId: "6686219198",
-  appId: "1:6686219198:web:e2f0b16808e5f3d251b7ef"
-};
+import {
+    doc,
+    collection,
+    query,
+    where,
+    getDoc,
+    getDocs,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    addDoc,
+    writeBatch
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ==========================================
+// FIREBASE - CONFIGURAÇÃO COMPARTILHADA
+// ==========================================
 
 import { app, auth, db } from "./firebase-config.js";
 
@@ -236,6 +242,7 @@ window.neoflux_planoFVM = null;
 // ==========================================
 // 3. REGRAS E TEXTOS
 // ==========================================
+
 const termosPlanos = {
     start: `<h3>Plano Start</h3><p>Ideal para começar. Inclui 1 subsite, 1 login por subsite e armazenamento local.</p>`,
     pro: `<h3>Plano Pro</h3><p>Para quem quer crescer. Inclui 1 subsite, até 2 logins, armazenamento em nuvem e agendamento de reuniões.</p>`,
@@ -247,23 +254,68 @@ const termosPlanos = {
     fvm_elite_premium: `<h3>Plano FVM Elite Premium</h3><p><strong>Faça Você Mesmo</strong> — avançado. Tudo do Elite, sem contratos.</p>`
 };
 
-const limitesPlanosBase = { start: 1, pro: 1, elite: 999, elite_premium: 9999 };
-const recursosPlanosBase = {
-    start:         { kits: true, relatorios: false, assistente: true,  valores: false, contratos: false, sugestaoMensagem: false, analista: false },
-    pro:           { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: false, sugestaoMensagem: true,  analista: false },
-    elite:         { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true, sugestaoMensagem: true,  analista: true  },
-    elite_premium: { kits: true,  relatorios: true,  assistente: true,  valores: true,  contratos: true,  sugestaoMensagem: true,  analista: true  }
+const limitesPlanosBase = {
+    start: 1,
+    pro: 1,
+    elite: 999,
+    elite_premium: 9999
 };
 
+const recursosPlanosBase = {
+    start: {
+        kits: true,
+        relatorios: false,
+        assistente: true,
+        valores: false,
+        contratos: false,
+        sugestaoMensagem: false,
+        analista: false
+    },
 
+    pro: {
+        kits: true,
+        relatorios: true,
+        assistente: true,
+        valores: true,
+        contratos: false,
+        sugestaoMensagem: true,
+        analista: false
+    },
+
+    elite: {
+        kits: true,
+        relatorios: true,
+        assistente: true,
+        valores: true,
+        contratos: true,
+        sugestaoMensagem: true,
+        analista: true
+    },
+
+    elite_premium: {
+        kits: true,
+        relatorios: true,
+        assistente: true,
+        valores: true,
+        contratos: true,
+        sugestaoMensagem: true,
+        analista: true
+    }
+};
+
+// ==========================================
+// RECURSOS DISPONÍVEIS POR PLANO
+// ==========================================
 
 function getRecursos(plano) {
-    plano = String(plano || "").trim().toLowerCase();
+    plano = String(plano || "")
+        .trim()
+        .toLowerCase();
 
-    if (plano.startsWith('fvm_')) {
-        const planoBase = plano.replace('fvm_', '');
+    if (plano.startsWith("fvm_")) {
+        const planoBase = plano.replace("fvm_", "");
 
-        if (planoBase === 'start') {
+        if (planoBase === "start") {
             return {
                 kits: true,
                 maxKits: 3,
@@ -277,11 +329,12 @@ function getRecursos(plano) {
         }
 
         const regrasBase =
-            recursosPlanosBase[planoBase] || recursosPlanosBase.start;
+            recursosPlanosBase[planoBase] ||
+            recursosPlanosBase.start;
 
         const temContrato =
-            plano === 'fvm_elite' ||
-            plano === 'fvm_elite_premium';
+            plano === "fvm_elite" ||
+            plano === "fvm_elite_premium";
 
         return {
             ...regrasBase,
@@ -291,7 +344,8 @@ function getRecursos(plano) {
     }
 
     const regrasBase =
-        recursosPlanosBase[plano] || recursosPlanosBase.start;
+        recursosPlanosBase[plano] ||
+        recursosPlanosBase.start;
 
     return {
         ...regrasBase,
@@ -299,28 +353,39 @@ function getRecursos(plano) {
     };
 }
 
-    
-       const regrasBase =
-        recursosPlanosBase[plano] || recursosPlanosBase.start;
-
-    return {
-        ...regrasBase,
-        maxKits: 999
-    };
-}
+// ==========================================
+// LIMITE DE SUBSITES POR PLANO
+// ==========================================
 
 function getLimite(plano) {
-    if (plano.startsWith('fvm_')) {
-        const planoBase = plano.replace('fvm_', '');
+    plano = String(plano || "")
+        .trim()
+        .toLowerCase();
+
+    if (plano.startsWith("fvm_")) {
+        const planoBase = plano.replace("fvm_", "");
+
         return limitesPlanosBase[planoBase] || 1;
     }
+
     return limitesPlanosBase[plano] || 1;
 }
 
+// ==========================================
+// NOMES DOS PLANOS
+// ==========================================
+
 const nomesPlanos = {
-    start: "Start", pro: "Pro", elite: "Elite", elite_premium: "Elite Premium",
-    fvm_start: "FVM Start", fvm_pro: "FVM Pro", fvm_elite: "FVM Elite", fvm_elite_premium: "FVM Elite Premium"
+    start: "Start",
+    pro: "Pro",
+    elite: "Elite",
+    elite_premium: "Elite Premium",
+    fvm_start: "FVM Start",
+    fvm_pro: "FVM Pro",
+    fvm_elite: "FVM Elite",
+    fvm_elite_premium: "FVM Elite Premium"
 };
+
 
 /* ==========================================
    RESUMO DE PAGAMENTO - NEO FLUX
