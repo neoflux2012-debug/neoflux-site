@@ -2136,6 +2136,53 @@ async function carregarHistoricoOrcamentos() {
 window.copiarMensagemHistorico = async function(id) { try { const docSnap = await getDoc(doc(db, "historico_orcamentos", id)); if (docSnap.exists()) { await navigator.clipboard.writeText(docSnap.data().mensagem); alert("✅ Mensagem copiada!"); } } catch (e) { alert("Erro ao copiar."); } };
 window.enviarWhatsHistorico = async function(id) { try { const docSnap = await getDoc(doc(db, "historico_orcamentos", id)); if (docSnap.exists()) { window.open(`https://wa.me/?text=${encodeURIComponent(docSnap.data().mensagem)}`, '_blank'); } } catch (e) { alert("Erro ao abrir WhatsApp."); } };
 window.apagarOrcamentoHistorico = async function(id) { if (confirm("Apagar este orçamento do histórico?")) { try { await deleteDoc(doc(db, "historico_orcamentos", id)); carregarHistoricoOrcamentos(); } catch (e) { alert("Erro ao apagar."); } } };
+
+// ==========================================
+// ABRIR E FECHAR PLANILHAS INTELIGENTES
+// ==========================================
+
+function abrirPlanilhasNeo() {
+    const contexto = window.neoPlanilhasContexto;
+
+    if (!contexto?.subsiteId) {
+        alert("Entre em um subsite antes de abrir as Planilhas.");
+        return;
+    }
+
+    if (!contexto.permitido) {
+        alert("Planilhas disponíveis a partir do Plano Pro.");
+        return;
+    }
+
+    const modal = document.getElementById("modal-planilhas");
+
+    if (!modal) {
+        console.error("Modal de Planilhas não encontrado no HTML.");
+        alert("A janela das Planilhas não foi encontrada.");
+        return;
+    }
+
+    modal.style.display = "flex";
+
+    if (typeof lucide !== "undefined") {
+        lucide.createIcons();
+    }
+}
+
+// Botão dentro do Neo Wave Analista
+document.getElementById("btn-planilhas-analista")
+    ?.addEventListener("click", abrirPlanilhasNeo);
+
+// Botão independente, para o Plano Pro
+document.getElementById("btn-abrir-planilhas")
+    ?.addEventListener("click", abrirPlanilhasNeo);
+
+// Fechar Planilhas
+document.getElementById("planilhas-fechar")
+    ?.addEventListener("click", () => {
+        document.getElementById("modal-planilhas").style.display = "none";
+    });
+
 // ==========================================
 // 12. NEO WAVE ANALISTA (DASHBOARD ELITE)
 // ==========================================
