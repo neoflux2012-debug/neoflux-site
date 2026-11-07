@@ -276,7 +276,8 @@ const recursosPlanosBase = {
         valores: false,
         contratos: false,
         sugestaoMensagem: false,
-        analista: false
+        analista: false,
+        planilhas: false
     },
 
     pro: {
@@ -286,7 +287,8 @@ const recursosPlanosBase = {
         valores: true,
         contratos: false,
         sugestaoMensagem: true,
-        analista: false
+        analista: false,
+        planilhas: true
     },
 
     elite: {
@@ -296,7 +298,8 @@ const recursosPlanosBase = {
         valores: true,
         contratos: true,
         sugestaoMensagem: true,
-        analista: true
+        analista: true,
+        planilhas: true
     },
 
     elite_premium: {
@@ -306,7 +309,8 @@ const recursosPlanosBase = {
         valores: true,
         contratos: true,
         sugestaoMensagem: true,
-        analista: true
+        analista: true,
+        planilhas: true
     }
 };
 
@@ -331,7 +335,8 @@ function getRecursos(plano) {
                 valores: false,
                 contratos: false,
                 sugestaoMensagem: false,
-                analista: false
+                analista: false,
+                planilhas: false
             };
         }
 
