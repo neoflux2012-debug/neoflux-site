@@ -2079,7 +2079,7 @@
     
        <!-- Carrega o cérebro principal do sistema (Festas, FVM, Gráficos) -->
     <script type="module" src="./neo.js?v=2"></script>
-    
+    <script type="module" src="./neoplanilhas.js"></script>
     <!-- Carrega o cérebro do chat (Neo Wave) -->
     <script type="module" src="./neowave.js?v=2"></script>
     <script type="module" src="./neosecretario.js?v=1"></script>
@@ -2120,5 +2120,131 @@
   </div>
 </div>
   
+<!-- NEO FLUX - PLANILHAS INTELIGENTES -->
+<div id="modal-planilhas"
+     style="display:none;position:fixed;inset:0;z-index:10050;
+            background:rgba(0,0,0,.94);padding:16px;
+            box-sizing:border-box;align-items:center;justify-content:center;">
+
+  <div style="width:100%;max-width:1050px;max-height:94vh;
+              overflow:auto;background:#121212;color:white;
+              border:1px solid #00c853;border-radius:16px;
+              padding:24px;box-sizing:border-box;">
+
+    <div style="display:flex;justify-content:space-between;
+                align-items:center;gap:12px;flex-wrap:wrap;">
+
+      <h2 style="margin:0;color:#00c853;">
+        📊 Planilhas Inteligentes
+      </h2>
+
+      <div style="display:flex;gap:10px;">
+        <button id="planilhas-config" type="button"
+                aria-expanded="false"
+                style="background:#252525;color:white;border:1px solid #555;
+                       border-radius:8px;padding:10px;cursor:pointer;">
+          ⚙️ Configurações
+        </button>
+
+        <button id="planilhas-fechar" type="button"
+                style="background:#333;color:white;border:0;
+                       border-radius:8px;padding:10px 15px;cursor:pointer;">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <div id="planilhas-opcoes" hidden
+         style="background:#1b1b1b;padding:15px;border-radius:10px;
+                margin-top:16px;border:1px solid #333;">
+      <label for="planilhas-modo">Modo da planilha</label>
+      <select id="planilhas-modo"
+              style="display:block;margin-top:8px;padding:10px;
+                     background:#080808;color:white;border:1px solid #555;
+                     border-radius:8px;">
+        <option value="automatica">Automática</option>
+        <option value="manual">Manual</option>
+      </select>
+      <p style="color:#aaa;font-size:13px;">
+        Automática: consulta as festas cadastradas no Neo Flux.
+        Manual: você preenche as informações.
+      </p>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;
+                margin:20px 0 12px;">
+      <input id="planilhas-nome" type="text"
+             maxlength="70" value="Minha Planilha"
+             placeholder="Nome da planilha"
+             style="flex:1;min-width:180px;background:#080808;
+                    border:1px solid #444;color:white;
+                    padding:12px;border-radius:8px;">
+
+      <button id="planilhas-carregar" type="button"
+              style="background:#333;color:white;border:0;
+                     padding:11px;border-radius:8px;cursor:pointer;">
+        Carregar
+      </button>
+
+      <button id="planilhas-salvar" type="button"
+              style="background:#008f45;color:white;border:0;
+                     padding:11px;border-radius:8px;cursor:pointer;">
+        Salvar na nuvem
+      </button>
+    </div>
+
+    <p id="planilhas-info-auto" style="color:#aaa;font-size:13px;"></p>
+
+    <div style="overflow-x:auto;">
+      <table style="width:100%;min-width:650px;border-collapse:collapse;
+                    color:white;text-align:left;">
+        <thead>
+          <tr style="background:#242424;">
+            <th style="padding:12px;">Data</th>
+            <th style="padding:12px;">Descrição</th>
+            <th style="padding:12px;">Tipo</th>
+            <th style="padding:12px;">Valor (R$)</th>
+            <th style="padding:12px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="planilhas-linhas"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
+      <button id="planilhas-adicionar" type="button"
+              style="background:#008f45;color:white;border:0;
+                     border-radius:8px;padding:12px;cursor:pointer;">
+        + Adicionar linha
+      </button>
+
+      <button id="planilhas-exportar" type="button"
+              style="background:#333;color:white;border:0;
+                     border-radius:8px;padding:12px;cursor:pointer;">
+        Exportar CSV
+      </button>
+
+      <label style="background:#333;color:white;border-radius:8px;
+                    padding:12px;cursor:pointer;">
+        Importar CSV
+        <input id="planilhas-importar" type="file"
+               accept=".csv,text/csv" style="display:none;">
+      </label>
+    </div>
+
+    <div id="planilhas-resumo"
+         style="margin-top:20px;padding:18px;background:#080808;
+                border:1px solid #333;border-radius:10px;
+                color:#00c853;font-weight:600;">
+      Receitas: R$ 0,00
+    </div>
+
+    <p id="planilhas-mensagem" role="status"
+       style="color:#aaa;margin-top:12px;"></p>
+
+  </div>
+</div>
+<!-- FIM DAS PLANILHAS -->
+
 </body>
 </html>
