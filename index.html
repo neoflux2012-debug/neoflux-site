@@ -1199,23 +1199,74 @@
                 Neo Wave Analista
             </h2>
 
-            <!-- BOTÕES -->
+        
+<!-- MODAL NEO WAVE ANALISTA -->
+<div id="modal-analista"
+     style="display:none;position:fixed;inset:0;
+            width:100%;height:100%;
+            background:rgba(0,0,0,0.95);
+            z-index:9999;
+            justify-content:center;
+            align-items:center;
+            padding:20px;
+            box-sizing:border-box;">
+
+    <!-- CONTAINER PRINCIPAL -->
+    <div style="background:#121212;
+                border:1px solid #f39c12;
+                padding:30px;
+                border-radius:12px;
+                width:100%;
+                max-width:900px;
+                max-height:92vh;
+                overflow-y:auto;
+                min-width:0;
+                box-shadow:0 0 40px rgba(243,156,18,0.2);">
+
+        <!-- CABEÇALHO -->
+        <div style="display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    flex-wrap:wrap;
+                    gap:15px;
+                    margin-bottom:25px;">
+
+            <h2 style="margin:0;
+                       display:flex;
+                       align-items:center;
+                       gap:10px;
+                       font-size:1.6rem;
+                       text-align:left;">
+
+                <i data-lucide="bar-chart-3"
+                   style="color:#f39c12;
+                          width:28px;height:28px;
+                          flex-shrink:0;"></i>
+
+                Neo Wave Analista
+            </h2>
+
+            <!-- BOTÕES DO CABEÇALHO -->
             <div style="display:flex;
-                        align-items:center;gap:10px;">
+                        align-items:center;
+                        gap:12px;">
 
                 <button id="btn-planilhas-analista"
                         type="button"
-                        style="background:linear-gradient(
-                               135deg,#00c853,#008f45);
-                               color:white;border:none;
+                        style="background:linear-gradient(135deg,#00c853,#008f45);
+                               color:white;
+                               border:none;
                                border-radius:8px;
                                padding:11px 18px;
                                font-weight:600;
                                cursor:pointer;
                                display:flex;
-                               align-items:center;gap:8px;">
+                               align-items:center;
+                               gap:8px;">
+
                     <i data-lucide="table-2"
                        style="width:18px;height:18px;"></i>
+
                     Planilhas
                 </button>
 
@@ -1223,7 +1274,8 @@
                         type="button"
                         aria-label="Fechar Analista"
                         style="background:transparent;
-                               border:none;color:#aaa;
+                               border:none;
+                               color:#aaa;
                                font-size:26px;
                                cursor:pointer;
                                padding:5px;">
@@ -1232,84 +1284,310 @@
 
             </div>
         </div>
-                    <h2 style="margin: 0; color: white; display: flex; align-items: center; gap: 10px;"><i data-lucide="bar-chart-3" style="color: #f39c12; width: 28px;"></i> Neo Wave Analista</h2>
-                    <button id="btn-fechar-modal-analista" style="background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer;">✕</button>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333; text-align: center;">
-                        <i data-lucide="trending-up" style="color: #00c853; width: 24px; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #888; font-size: 0.85rem;">Faturamento do Mês</p>
-                        <h3 style="margin: 5px 0 0 0; color: #00c853; font-size: 1.8rem;" id="analista-total-mes">R$ 0,00</h3>
-                    </div>
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333; text-align: center;">
-                        <i data-lucide="party-popper" style="color: #00d2ff; width: 24px; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #888; font-size: 0.85rem;">Festas Agendadas</p>
-                        <h3 style="margin: 5px 0 0 0; color: white; font-size: 1.8rem;" id="analista-qtd-festas">0</h3>
-                    </div>
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333; text-align: center;">
-                        <i data-lucide="gift" style="color: #9b59b6; width: 24px; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #888; font-size: 0.85rem;">Kit Mais Vendido</p>
-                        <h3 style="margin: 5px 0 0 0; color: white; font-size: 1.2rem;" id="analista-kit-top">—</h3>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                        <h4 style="color: white; margin-top: 0; margin-bottom: 15px; font-size: 0.9rem;">Pico de Vendas (Faturamento por dia)</h4>
-                        <div style="position: relative; height: 220px; width: 100%;"><canvas id="graficoPicoVendas"></canvas></div>
-                    </div>
-                    <div style="background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                        <h4 style="color: white; margin-top: 0; margin-bottom: 15px; font-size: 0.9rem;">Modelos de Kits Mais Vendidos</h4>
-                        <div style="position: relative; height: 220px; width: 100%;"><canvas id="graficoKitsVendidos"></canvas></div>
-                    </div>
-                </div>
 
-                <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 25px;">
-                    <h3 style="color: white; margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px;">
-                        <i data-lucide="receipt" style="color: #00c853; width: 22px;"></i>
-                        Gerador de Recibo
-                    </h3>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <label style="color: #ccc; font-size: 0.85rem;">Selecione a Festa:</label>
-                            <select id="recibo-festa-select" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                                <option value="">Carregando festas...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="color: #ccc; font-size: 0.85rem;">Tipo de Recibo:</label>
-                            <select id="recibo-tipo" style="width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; border-radius: 8px;">
-                                <option value="sinal">Sinal (Entrada)</option>
-                                <option value="total">Quitação Total</option>
-                            </select>
-                        </div>
-                    </div>
+        <!-- INDICADORES -->
+        <div style="display:grid;
+                    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+                    gap:15px;
+                    margin-bottom:25px;">
 
-                    <div id="recibo-preview" style="display: none; background: #0a0a0a; border: 1px solid #00c853; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
-                        <div style="text-align: center; border-bottom: 1px dashed #333; padding-bottom: 15px; margin-bottom: 15px;">
-                            <h4 style="color: white; margin: 0;">RECIBO DE PAGAMENTO</h4>
-                            <p style="color: #888; margin: 5px 0 0 0; font-size: 0.8rem;">Neo Flux - Gestão de Eventos</p>
-                        </div>
-                        <p style="color: #ccc; text-align: left; margin: 0 0 8px 0; font-size: 0.9rem;"><b>Valor:</b> <span id="recibo-valor" style="color: #00c853; font-weight: bold; font-size: 1.1rem;">R$ 0,00</span></p>
-                        <p style="color: #ccc; text-align: left; margin: 0 0 8px 0; font-size: 0.9rem;"><b>Cliente:</b> <span id="recibo-cliente">—</span></p>
-                        <p style="color: #ccc; text-align: left; margin: 0 0 8px 0; font-size: 0.9rem;"><b>Referente a:</b> <span id="recibo-referente">—</span></p>
-                        <p style="color: #ccc; text-align: left; margin: 0 0 8px 0; font-size: 0.9rem;"><b>Data do Evento:</b> <span id="recibo-data-evento">—</span></p>
-                        <p style="color: #888; text-align: left; margin: 15px 0 0 0; font-size: 0.75rem; font-style: italic;">Para maior clareza, firmamos o presente recibo.</p>
-                        <div style="text-align: center; margin-top: 20px;">
-                            <div style="border-top: 1px solid #555; width: 60%; margin: 0 auto; padding-top: 5px; color: #ccc; font-size: 0.8rem;">Assinatura da Empresa</div>
-                        </div>
-                    </div>
+            <!-- FATURAMENTO -->
+            <div style="background:#0a0a0a;
+                        padding:20px;
+                        border-radius:10px;
+                        border:1px solid #333;
+                        text-align:center;">
 
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" id="btn-gerar-recibo" class="botao-principal" style="flex: 1; min-width: 150px; background: #00c853;">Gerar Recibo</button>
-                        <button type="button" id="btn-imprimir-recibo" class="botao-principal" style="flex: 1; min-width: 150px; background: #333;">Imprimir / PDF</button>
-                    </div>
-                </div>
+                <i data-lucide="trending-up"
+                   style="color:#00c853;
+                          width:24px;
+                          margin-bottom:10px;"></i>
 
-                <button type="button" id="btn-fechar-modal-analista-footer" class="botao-principal" style="background: #333; margin-top: 25px;">Fechar Painel</button>
+                <p style="margin:0;color:#888;font-size:0.85rem;">
+                    Faturamento do Mês
+                </p>
+
+                <h3 id="analista-total-mes"
+                    style="margin:5px 0 0;
+                           color:#00c853;
+                           font-size:1.8rem;">
+                    R$ 0,00
+                </h3>
+            </div>
+
+            <!-- FESTAS AGENDADAS -->
+            <div style="background:#0a0a0a;
+                        padding:20px;
+                        border-radius:10px;
+                        border:1px solid #333;
+                        text-align:center;">
+
+                <i data-lucide="party-popper"
+                   style="color:#00d2ff;
+                          width:24px;
+                          margin-bottom:10px;"></i>
+
+                <p style="margin:0;color:#888;font-size:0.85rem;">
+                    Festas Agendadas
+                </p>
+
+                <h3 id="analista-qtd-festas"
+                    style="margin:5px 0 0;
+                           color:white;
+                           font-size:1.8rem;">
+                    0
+                </h3>
+            </div>
+
+            <!-- KIT MAIS VENDIDO -->
+            <div style="background:#0a0a0a;
+                        padding:20px;
+                        border-radius:10px;
+                        border:1px solid #333;
+                        text-align:center;">
+
+                <i data-lucide="gift"
+                   style="color:#9b59b6;
+                          width:24px;
+                          margin-bottom:10px;"></i>
+
+                <p style="margin:0;color:#888;font-size:0.85rem;">
+                    Kit Mais Vendido
+                </p>
+
+                <h3 id="analista-kit-top"
+                    style="margin:5px 0 0;
+                           color:white;
+                           font-size:1.2rem;">
+                    —
+                </h3>
             </div>
         </div>
 
+        <!-- GRÁFICOS -->
+        <div style="display:grid;
+                    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+                    gap:20px;
+                    margin-bottom:25px;">
+
+            <!-- GRÁFICO DE VENDAS -->
+            <div style="background:#0a0a0a;
+                        padding:20px;
+                        border-radius:10px;
+                        border:1px solid #333;
+                        min-width:0;">
+
+                <h4 style="color:white;
+                           margin:0 0 15px;
+                           font-size:0.9rem;">
+                    Pico de Vendas (Faturamento por dia)
+                </h4>
+
+                <div style="position:relative;
+                            height:220px;
+                            width:100%;">
+
+                    <canvas id="graficoPicoVendas"></canvas>
+
+                </div>
+            </div>
+
+            <!-- GRÁFICO DE KITS -->
+            <div style="background:#0a0a0a;
+                        padding:20px;
+                        border-radius:10px;
+                        border:1px solid #333;
+                        min-width:0;">
+
+                <h4 style="color:white;
+                           margin:0 0 15px;
+                           font-size:0.9rem;">
+                    Modelos de Kits Mais Vendidos
+                </h4>
+
+                <div style="position:relative;
+                            height:220px;
+                            width:100%;">
+
+                    <canvas id="graficoKitsVendidos"></canvas>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- GERADOR DE RECIBO -->
+        <div style="border-top:1px solid #333;
+                    padding-top:25px;">
+
+            <h3 style="color:white;
+                       margin:0 0 15px;
+                       display:flex;
+                       align-items:center;
+                       gap:10px;">
+
+                <i data-lucide="receipt"
+                   style="color:#00c853;width:22px;"></i>
+
+                Gerador de Recibo
+            </h3>
+
+            <!-- SELETORES -->
+            <div style="display:grid;
+                        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+                        gap:15px;
+                        margin-bottom:15px;">
+
+                <div>
+                    <label style="color:#ccc;font-size:0.85rem;">
+                        Selecione a Festa:
+                    </label>
+
+                    <select id="recibo-festa-select"
+                            style="width:100%;
+                                   padding:10px;
+                                   background:#000;
+                                   border:1px solid #333;
+                                   color:white;
+                                   border-radius:8px;">
+                        <option value="">
+                            Carregando festas...
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="color:#ccc;font-size:0.85rem;">
+                        Tipo de Recibo:
+                    </label>
+
+                    <select id="recibo-tipo"
+                            style="width:100%;
+                                   padding:10px;
+                                   background:#000;
+                                   border:1px solid #333;
+                                   color:white;
+                                   border-radius:8px;">
+
+                        <option value="sinal">
+                            Sinal (Entrada)
+                        </option>
+
+                        <option value="total">
+                            Quitação Total
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PRÉVIA DO RECIBO -->
+            <div id="recibo-preview"
+                 style="display:none;
+                        background:#0a0a0a;
+                        border:1px solid #00c853;
+                        border-radius:10px;
+                        padding:20px;
+                        margin-bottom:15px;">
+
+                <div style="text-align:center;
+                            border-bottom:1px dashed #333;
+                            padding-bottom:15px;
+                            margin-bottom:15px;">
+
+                    <h4 style="color:white;margin:0;">
+                        RECIBO DE PAGAMENTO
+                    </h4>
+
+                    <p style="color:#888;
+                              margin:5px 0 0;
+                              font-size:0.8rem;">
+                        Neo Flux - Gestão de Eventos
+                    </p>
+                </div>
+
+                <p style="color:#ccc;text-align:left;margin:0 0 8px;font-size:0.9rem;">
+                    <b>Valor:</b>
+                    <span id="recibo-valor"
+                          style="color:#00c853;
+                                 font-weight:bold;
+                                 font-size:1.1rem;">
+                        R$ 0,00
+                    </span>
+                </p>
+
+                <p style="color:#ccc;text-align:left;margin:0 0 8px;font-size:0.9rem;">
+                    <b>Cliente:</b>
+                    <span id="recibo-cliente">—</span>
+                </p>
+
+                <p style="color:#ccc;text-align:left;margin:0 0 8px;font-size:0.9rem;">
+                    <b>Referente a:</b>
+                    <span id="recibo-referente">—</span>
+                </p>
+
+                <p style="color:#ccc;text-align:left;margin:0 0 8px;font-size:0.9rem;">
+                    <b>Data do Evento:</b>
+                    <span id="recibo-data-evento">—</span>
+                </p>
+
+                <p style="color:#888;
+                          text-align:left;
+                          margin:15px 0 0;
+                          font-size:0.75rem;
+                          font-style:italic;">
+                    Para maior clareza, firmamos o presente recibo.
+                </p>
+
+                <div style="text-align:center;margin-top:20px;">
+                    <div style="border-top:1px solid #555;
+                                width:60%;
+                                margin:0 auto;
+                                padding-top:5px;
+                                color:#ccc;
+                                font-size:0.8rem;">
+                        Assinatura da Empresa
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÕES DO RECIBO -->
+            <div style="display:flex;
+                        gap:10px;
+                        flex-wrap:wrap;">
+
+                <button type="button"
+                        id="btn-gerar-recibo"
+                        class="botao-principal"
+                        style="flex:1;
+                               min-width:150px;
+                               background:#00c853;">
+                    Gerar Recibo
+                </button>
+
+                <button type="button"
+                        id="btn-imprimir-recibo"
+                        class="botao-principal"
+                        style="flex:1;
+                               min-width:150px;
+                               background:#333;">
+                    Imprimir / PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- FECHAR PAINEL -->
+        <button type="button"
+                id="btn-fechar-modal-analista-footer"
+                class="botao-principal"
+                style="background:#333;
+                       margin-top:25px;">
+            Fechar Painel
+        </button>
+
+    </div>
+</div>
+            
+<!-- FIM DO MODAL NEO WAVE ANALISTA -->
+ 
         <!-- BOTÃO FLUTUANTE NEO WAVE + BOTÃO DE COMANDOS -->
         <button id="btn-comandos-neo-wave" class="neo-wave-btn" style="display: none; bottom: 90px; width: 60px; height: 60px; background: #121212; border: 2px solid #8a2be2;">
             <i data-lucide="terminal" style="color: #8a2be2;"></i>
