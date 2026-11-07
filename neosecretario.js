@@ -1,6 +1,7 @@
+
 import { auth, db } from "./firebase-config.js";
+
 import {
-    getFirestore,
     doc,
     getDoc,
     collection,
@@ -8,6 +9,7 @@ import {
     where,
     getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 // ==========================================
 // NEO SECRETÁRIO - CONFIGURAÇÃO
