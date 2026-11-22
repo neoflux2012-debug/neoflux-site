@@ -271,7 +271,7 @@ const limitesPlanosBase = {
 const recursosPlanosBase = {
     start: {
         kits: true,
-        relatorios: false,
+        relatorios: true,
         assistente: true,
         valores: false,
         contratos: false,
@@ -330,7 +330,7 @@ function getRecursos(plano) {
             return {
                 kits: true,
                 maxKits: 3,
-                relatorios: false,
+                relatorios: true,
                 assistente: true,
                 valores: false,
                 contratos: false,
