@@ -785,8 +785,19 @@ if (btnSecretario) {
 }
     const btnKits = document.getElementById('btn-abrir-kits');
     if(btnKits) { btnKits.disabled = !regras.kits; btnKits.style.background = regras.kits ? "var(--gradiente-neo)" : "#333"; }
-    const btnRel = document.getElementById('btn-relatorios');
-    if(btnRel) { btnRel.disabled = !regras.relatorios; btnRel.style.background = regras.relatorios ? "var(--gradiente-neo)" : "#333"; }
+    const cardRel = document.getElementById('card-relatorios');
+const btnRel = document.getElementById('btn-relatorios');
+
+if (cardRel) {
+    cardRel.style.display = regras.relatorios ? 'block' : 'none';
+}
+
+if (btnRel) {
+    btnRel.disabled = !regras.relatorios;
+    btnRel.style.background = regras.relatorios
+        ? "var(--gradiente-neo)"
+        : "#333";
+}
     const btnContratos = document.getElementById('btn-abrir-contratos');
     if(btnContratos) { btnContratos.disabled = !regras.contratos; btnContratos.style.background = regras.contratos ? "#e67e22" : "#333"; }
     const btnNeo = document.getElementById('btn-neo-wave');
@@ -1303,18 +1314,93 @@ document.getElementById('btn-agendar-festa')?.addEventListener('click', () => {
 });
 
 document.getElementById('btn-relatorios')?.addEventListener('click', () => {
-    document.getElementById('modal-relatorios').style.display = 'flex';
-    const tbody = document.getElementById('tabela-relatorio'); tbody.innerHTML = "";
-    const hoje = new Date(); const mesAtual = hoje.getMonth(); const anoAtual = hoje.getFullYear(); let totalMes = 0;
-    festasGlobais.forEach(f => {
+
+    const modal = document.getElementById('modal-relatorios');
+    const tbody = document.getElementById('tabela-relatorio');
+
+    if (!modal || !tbody) {
+        console.error('Neo Flux: modal ou tabela de relatórios não encontrados.');
+        return;
+    }
+
+    modal.style.display = 'flex';
+    tbody.innerHTML = '';
+
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+
+    let totalMes = 0;
+    let custoMes = 0;
+
+    const formatarMoeda = valor => {
+        return (Number(valor) || 0).toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    };
+
+    (festasGlobais || []).forEach(f => {
+
+        if (!f.data) return;
+
         const dataFesta = new Date(f.data + 'T00:00:00');
-        if (dataFesta.getMonth() === mesAtual && dataFesta.getFullYear() === anoAtual) {
-            tbody.innerHTML += `<tr style="border-bottom: 1px solid #333;"><td style="padding: 10px;">${f.nome}</td><td style="padding: 10px;">${f.tema}</td><td style="padding: 10px;">${f.data.split('-').reverse().join('/')}</td></tr>`;
-            totalMes += parseFloat(f.total) || 0;
+
+        if (
+            dataFesta.getMonth() === mesAtual &&
+            dataFesta.getFullYear() === anoAtual
+        ) {
+
+            const valor = Number(f.total) || 0;
+            const custo = Number(f.custo) || 0;
+
+            totalMes += valor;
+            custoMes += custo;
+
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #333';
+
+            const dados = [
+                f.nome || 'Sem nome',
+                f.tema || 'Não informado',
+                f.data.split('-').reverse().join('/'),
+                formatarMoeda(valor),
+                formatarMoeda(custo)
+            ];
+
+            dados.forEach(texto => {
+                const td = document.createElement('td');
+                td.style.padding = '10px';
+                td.textContent = texto;
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
         }
     });
-    if (tbody.innerHTML === "") tbody.innerHTML = "<tr><td colspan='3' style='padding: 10px; text-align: center; color: #888;'>Nenhuma festa agendada para este mês.</td></tr>";
-    document.getElementById('total-mes').textContent = `R$ ${totalMes.toFixed(2).replace('.', ',')}`;
+
+    if (tbody.innerHTML === '') {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="padding:10px; text-align:center; color:#888;">
+                    Nenhuma festa agendada para este mês.
+                </td>
+            </tr>
+        `;
+    }
+
+    const lucroMes = totalMes - custoMes;
+
+    document.getElementById('total-mes').textContent =
+        formatarMoeda(totalMes);
+
+    document.getElementById('custo-mes').textContent =
+        formatarMoeda(custoMes);
+
+    document.getElementById('lucro-mes').textContent =
+        formatarMoeda(lucroMes);
+
+    modal.style.display = 'flex';
 });
 
 document.getElementById('form-kit')?.addEventListener('submit', async (e) => {
