@@ -1115,17 +1115,13 @@ function lerCardPreco(card) {
         }
 
         if (
-            promocional !== null &&
-            (!Number.isFinite(promocional) ||
-             promocional < 0 ||
-             promocional >= normal)
-        ) {
-            throw new Error(
-                "O preço promocional deve ser menor que o normal: " +
-                identificacao
-            );
-        }
-
+    promocional !== null &&
+    (!Number.isFinite(promocional) || promocional < 0)
+) {
+    throw new Error(
+        "Informe um preço promocional válido: " + identificacao
+    );
+}
         if (ativo && (!inicio || !fim || promocional === null)) {
             throw new Error(
                 "Preencha o preço promocional e as duas datas: " +
