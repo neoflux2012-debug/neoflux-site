@@ -273,7 +273,7 @@ const recursosPlanosBase = {
         kits: true,
         relatorios: true,
         assistente: true,
-        valores: false,
+        valores: true,
         contratos: false,
         sugestaoMensagem: false,
         analista: false,
