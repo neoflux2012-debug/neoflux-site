@@ -1045,6 +1045,54 @@
                 </form>
             </div>
         </div>
+        <!-- MODAL RELATÓRIOS -->
+<div id="modal-relatorios" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; padding:20px;">
+    <div style="background:#121212; border:1px solid #00d2ff; padding:25px; border-radius:12px; width:100%; max-width:900px; max-height:90vh; overflow-y:auto;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <h2 style="color:white; margin:0;">Relatórios do Mês</h2>
+            <button type="button" id="btn-fechar-relatorios" style="background:#333; color:white; border:none; padding:10px 15px; border-radius:6px; cursor:pointer;">Fechar</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin:20px 0;">
+            <div style="background:#0a0a0a; padding:18px; border-radius:10px; border:1px solid #333;">
+                <p style="color:#aaa; margin:0 0 8px;">Faturamento</p>
+                <strong id="total-mes" style="color:#00d2ff; font-size:1.4rem;">R$ 0,00</strong>
+            </div>
+
+            <div style="background:#0a0a0a; padding:18px; border-radius:10px; border:1px solid #333;">
+                <p style="color:#aaa; margin:0 0 8px;">Custos</p>
+                <strong id="custo-mes" style="color:#ff9800; font-size:1.4rem;">R$ 0,00</strong>
+            </div>
+
+            <div style="background:#0a0a0a; padding:18px; border-radius:10px; border:1px solid #333;">
+                <p style="color:#aaa; margin:0 0 8px;">Lucro</p>
+                <strong id="lucro-mes" style="color:#00c853; font-size:1.4rem;">R$ 0,00</strong>
+            </div>
+        </div>
+
+        <h3 style="color:white;">Festas do mês</h3>
+
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; color:white; min-width:650px;">
+                <thead>
+                    <tr style="background:#222; text-align:left;">
+                        <th style="padding:10px;">Cliente</th>
+                        <th style="padding:10px;">Tema / Kit</th>
+                        <th style="padding:10px;">Data</th>
+                        <th style="padding:10px;">Valor</th>
+                        <th style="padding:10px;">Custo</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-relatorio"></tbody>
+            </table>
+        </div>
+
+        <p style="color:#888; font-size:0.8rem; margin-top:15px;">
+            O lucro é calculado subtraindo os custos informados do faturamento das festas com data neste mês. Festas antigas sem custo registrado serão consideradas com custo zero.
+        </p>
+    </div>
+</div>
                 <!-- MODAL CONTRATOS -->
         <div id="modal-contratos" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
             <div style="background: #121212; border: 1px solid #333; padding: 30px; border-radius: 12px; width: 100%; max-width: 1000px; max-height: 90vh; overflow-y: auto;">
