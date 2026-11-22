@@ -1204,10 +1204,21 @@ window.apagarFesta = async function(id) { if(confirm("Tem certeza que deseja apa
 
 window.editarFesta = function(id) {
     const festa = festasGlobais.find(f => f.id === id); if(!festa) return;
-    document.getElementById('festa-id-edicao').value = id; document.getElementById('titulo-modal-festa').textContent = "Editar Festa";
-    document.getElementById('festa-nome').value = festa.nome || ""; document.getElementById('festa-cpf').value = festa.cpf || ""; document.getElementById('festa-telefone').value = festa.telefone || "";
-    document.getElementById('festa-data').value = festa.data || ""; document.getElementById('festa-tema').value = festa.tema || ""; document.getElementById('festa-local').value = festa.local || "";
-    document.getElementById('festa-obs').value = festa.obs || ""; document.getElementById('festa-total').value = festa.total || "0.00"; document.getElementById('festa-sinal').value = festa.sinal || "0.00";
+   document.getElementById('festa-id-edicao').value = id;
+document.getElementById('titulo-modal-festa').textContent = "Editar Festa";
+
+document.getElementById('festa-nome').value = festa.nome || "";
+document.getElementById('festa-cpf').value = festa.cpf || "";
+document.getElementById('festa-telefone').value = festa.telefone || "";
+
+document.getElementById('festa-data').value = festa.data || "";
+document.getElementById('festa-tema').value = festa.tema || "";
+document.getElementById('festa-local').value = festa.local || "";
+
+document.getElementById('festa-obs').value = festa.obs || "";
+document.getElementById('festa-total').value = festa.total || "0.00";
+document.getElementById('festa-sinal').value = festa.sinal || "0.00";
+document.getElementById('festa-custo').value = festa.custo || "0.00";
     const selectPecas = document.getElementById('festa-pecas');
     if (selectPecas && festa.pecas) { for (let i = 0; i < selectPecas.options.length; i++) { selectPecas.options[i].selected = festa.pecas.includes(selectPecas.options[i].value); } }
     document.getElementById('modal-agendar-festa').style.display = 'flex';
